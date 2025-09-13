@@ -9,6 +9,7 @@ import {
   StatusBar
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { 
   ArrowLeft, 
   MoreHorizontal, 
@@ -76,19 +77,29 @@ export default function ProfileScreen() {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.profileImageContainer}>
-            <View style={styles.gradientBorder}>
+            <LinearGradient
+              colors={['rgba(119, 132, 248, 0.40)', 'rgba(27, 26, 38, 0.20)', 'rgba(198, 149, 248, 0.40)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.gradientBorder}
+            >
               <View style={styles.profileImageWrapper}>
                 <ImageBackground
                   source={{ uri: mockUser.avatar }}
                   style={styles.profileImage}
                   imageStyle={styles.profileImageStyle}
                 >
-                  <View style={styles.profileOverlay}>
+                  <LinearGradient
+                    colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.8)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.profileOverlay}
+                  >
                     <Text style={styles.profileName}>{mockUser.displayName}</Text>
-                  </View>
+                  </LinearGradient>
                 </ImageBackground>
               </View>
-            </View>
+            </LinearGradient>
             <TouchableOpacity style={styles.editProfileButton}>
               <Edit3 size={14} color="black" />
             </TouchableOpacity>
@@ -218,21 +229,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 18,
     marginBottom: 20,
+    position: 'relative',
   },
   gradientBorder: {
     width: 350,
     height: 350,
     borderRadius: 18,
     padding: 2,
-    backgroundColor: '#7784F8',
-    shadowColor: '#C695F8',
+    shadowColor: 'rgba(255, 255, 255, 0.10)',
     shadowOffset: {
       width: 0,
-      height: 0,
+      height: 2.5,
     },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   profileImageWrapper: {
     width: 346,
@@ -242,30 +253,33 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   profileImage: {
-    width: 346,
-    height: 346,
-    borderRadius: 16,
-    overflow: 'hidden',
+    width: '100%',
+    height: '100%',
     justifyContent: 'flex-end',
   },
   profileImageStyle: {
     borderRadius: 16,
   },
   profileOverlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     paddingVertical: 20,
     alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   profileName: {
-    fontSize: 50,
+    fontSize: 36,
     fontWeight: '900',
     color: '#A0B2F8',
     letterSpacing: 3,
     textAlign: 'center',
+    lineHeight: 36,
   },
   editProfileButton: {
     position: 'absolute',
-    right: 30,
+    right: 32,
     bottom: -10,
     width: 52,
     height: 52,
