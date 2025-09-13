@@ -20,8 +20,8 @@ import {
 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
 import { TournamentDetail } from '@/components/tournaments/TournamentDetail';
-import { RankingScreen } from '@/components/tournaments/RankingScreen';
 import { TournamentListItem } from '@/components/tournaments/TournamentListItem';
+import { router } from 'expo-router';
 
 interface Tournament {
   id: string;
@@ -94,7 +94,7 @@ export default function TournamentsScreen() {
   };
 
   const handleShowRanking = () => {
-    setCurrentView('ranking');
+    router.push('/ranking');
   };
 
   const tournaments = tournamentsQuery.data?.tournaments || [];
@@ -169,12 +169,7 @@ export default function TournamentsScreen() {
     );
   }
 
-  // Show ranking view
-  if (currentView === 'ranking') {
-    return (
-      <RankingScreen onBack={handleBackToList} />
-    );
-  }
+
 
   return (
     <SafeAreaView style={styles.container}>
