@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -6,10 +6,13 @@ import {
   ScrollView, 
   TouchableOpacity, 
   ImageBackground,
-  StatusBar
+  StatusBar,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { 
   ArrowLeft, 
   MoreHorizontal, 
@@ -22,20 +25,55 @@ import {
   Users,
   DollarSign
 } from 'lucide-react-native';
+import { trpc } from '@/lib/trpc';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const [activeTab, setActiveTab] = useState<'ready' | 'live' | 'done'>('ready');
   
-  const mockUser = {
-    username: '@longsang',
-    displayName: 'Anh Long Magic',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
-    rank: 'G',
-    elo: 1485,
-    spa: 320,
-    ranking: 89,
-    matches: 37
+  const profileQuery = trpc.user.getProfile.useQuery({});
+  const tournamentsQuery = trpc.tournaments.list.useQuery({ 
+    status: activeTab === 'ready' ? 'upcoming' : activeTab === 'live' ? 'live' : 'completed'
+  });
+  
+  const user = profileQuery.data;
+  
+  const handleEditProfile = () => {
+    Alert.alert('Chỉnh sửa hồ sơ', 'Tính năng chỉnh sửa hồ sơ sẽ có sớm!');
   };
+  
+  const handleBack = () => {
+    router.back();
+  };
+  
+  const handleMoreOptions = () => {
+    Alert.alert(
+      'Tùy chọn',
+      'Chọn hành động',
+      [
+        { text: 'Cài đặt', onPress: () => console.log('Settings') },
+        { text: 'Đăng xuất', style: 'destructive', onPress: () => console.log('Logout') },
+        { text: 'Hủy', style: 'cancel' }
+      ]
+    );
+  };
+  
+  if (profileQuery.isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#0A5C6D" />
+        <Text style={{ marginTop: 16, color: '#666' }}>Đang tải hồ sơ...</Text>
+      </View>
+    );
+  }
+  
+  if (!user) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: '#666' }}>Không thể tải hồ sơ</Text>
+      </View>
+    );
+  }
 
   const tournaments = [
     {
@@ -64,11 +102,11 @@ export default function ProfileScreen() {
       
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#161722" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{mockUser.username}</Text>
-        <TouchableOpacity style={styles.headerButton}>
+        <Text style={styles.headerTitle}>{user.username}</Text>
+        <TouchableOpacity style={styles.headerButton} onPress={handleMoreOptions}>
           <MoreHorizontal size={24} color="#161722" />
         </TouchableOpacity>
       </View>
@@ -85,7 +123,7 @@ export default function ProfileScreen() {
             >
               <View style={styles.profileImageWrapper}>
                 <ImageBackground
-                  source={{ uri: mockUser.avatar }}
+                  source={{ uri: user.avatar }}
                   style={styles.profileImage}
                   imageStyle={styles.profileImageStyle}
                 >
@@ -95,12 +133,12 @@ export default function ProfileScreen() {
                     end={{ x: 0, y: 1 }}
                     style={styles.profileOverlay}
                   >
-                    <Text style={styles.profileName}>{mockUser.displayName}</Text>
+                    <Text style={styles.profileName}>{user.displayName}</Text>
                   </LinearGradient>
                 </ImageBackground>
               </View>
             </LinearGradient>
-            <TouchableOpacity style={styles.editProfileButton}>
+            <TouchableOpacity style={styles.editProfileButton} onPress={handleEditProfile}>
               <Edit3 size={14} color="black" />
             </TouchableOpacity>
           </View>
@@ -110,7 +148,7 @@ export default function ProfileScreen() {
             <View style={styles.rankIcon}>
               <Crown size={14} color="#19127B" />
             </View>
-            <Text style={styles.rankText}>RANK : {mockUser.rank}</Text>
+            <Text style={styles.rankText}>RANK : {user.rank}</Text>
           </View>
 
           {/* Stats Row */}
@@ -118,22 +156,22 @@ export default function ProfileScreen() {
             <View style={styles.statItem}>
               <Crown size={16} color="#081122" />
               <Text style={styles.statLabel}>ELO</Text>
-              <Text style={styles.statValue}>{mockUser.elo}</Text>
+              <Text style={styles.statValue}>{user.elo}</Text>
             </View>
             <View style={styles.statItem}>
               <Star size={18} color="#081122" />
               <Text style={styles.statLabel}>SPA</Text>
-              <Text style={styles.statValue}>{mockUser.spa}</Text>
+              <Text style={styles.statValue}>{user.spa}</Text>
             </View>
             <View style={styles.statItem}>
               <TrendingUp size={18} color="#081122" />
               <Text style={styles.statLabel}>XH</Text>
-              <Text style={styles.statValue}>#{mockUser.ranking}</Text>
+              <Text style={styles.statValue}>#{user.ranking}</Text>
             </View>
             <View style={styles.statItem}>
               <Gamepad2 size={16} color="#081122" />
               <Text style={styles.statLabel}>TRẬN</Text>
-              <Text style={styles.statValue}>{mockUser.matches}</Text>
+              <Text style={styles.statValue}>{user.matches}</Text>
             </View>
           </View>
         </View>
@@ -141,48 +179,72 @@ export default function ProfileScreen() {
         {/* Tournament Tabs */}
         <View style={styles.tabsContainer}>
           <View style={styles.tabsHeader}>
-            <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-              <Text style={[styles.tabText, styles.activeTabText]}>Ready</Text>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'ready' && styles.activeTab]}
+              onPress={() => setActiveTab('ready')}
+            >
+              <Text style={[styles.tabText, activeTab === 'ready' && styles.activeTabText]}>Ready</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.tab}>
-              <Text style={styles.tabText}>Live</Text>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'live' && styles.activeTab]}
+              onPress={() => setActiveTab('live')}
+            >
+              <Text style={[styles.tabText, activeTab === 'live' && styles.activeTabText]}>Live</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.tab}>
-              <Text style={styles.tabText}>Done</Text>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'done' && styles.activeTab]}
+              onPress={() => setActiveTab('done')}
+            >
+              <Text style={[styles.tabText, activeTab === 'done' && styles.activeTabText]}>Done</Text>
             </TouchableOpacity>
           </View>
 
           {/* Tournament List */}
           <View style={styles.tournamentList}>
-            {tournaments.map((tournament) => (
-              <View key={tournament.id} style={styles.tournamentCard}>
-                <View style={styles.tournamentIcon}>
-                  <Text style={styles.tournamentNumber}>8</Text>
-                </View>
-                <View style={styles.tournamentInfo}>
-                  <Text style={styles.tournamentName}>{tournament.name}</Text>
-                  <View style={styles.tournamentDetails}>
-                    <Calendar size={11} color="#0A5C6D" />
-                    <Text style={styles.tournamentDate}>{tournament.date}</Text>
-                  </View>
-                </View>
-                <View style={styles.tournamentMeta}>
-                  <Text style={styles.tournamentRank}>{tournament.rankRange}</Text>
-                  <View style={styles.tournamentStats}>
-                    <Users size={14} color="#801515" />
-                    <Text style={styles.tournamentPlayers}>{tournament.players}</Text>
-                    <DollarSign size={14} color="#801515" />
-                    <Text style={styles.tournamentPrize}>{tournament.prize}</Text>
-                  </View>
-                </View>
-                <View style={styles.tournamentAction}>
-                  <Text style={styles.tournamentLives}>{tournament.lives}</Text>
-                  <TouchableOpacity style={styles.joinButton}>
-                    <View style={styles.joinIcon} />
-                  </TouchableOpacity>
-                </View>
+            {tournamentsQuery.isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#0A5C6D" />
+                <Text style={styles.loadingText}>Đang tải...</Text>
               </View>
-            ))}
+            ) : tournamentsQuery.data?.tournaments.length ? (
+              tournamentsQuery.data.tournaments.map((tournament) => (
+                <TouchableOpacity key={tournament.id} style={styles.tournamentCard}>
+                  <View style={styles.tournamentIcon}>
+                    <Text style={styles.tournamentNumber}>8</Text>
+                  </View>
+                  <View style={styles.tournamentInfo}>
+                    <Text style={styles.tournamentName}>{tournament.title}</Text>
+                    <View style={styles.tournamentDetails}>
+                      <Calendar size={11} color="#0A5C6D" />
+                      <Text style={styles.tournamentDate}>
+                        {new Date(tournament.start_time).toLocaleDateString('vi-VN')}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.tournamentMeta}>
+                    <Text style={styles.tournamentRank}>{tournament.min_rank} - {tournament.max_rank}</Text>
+                    <View style={styles.tournamentStats}>
+                      <Users size={14} color="#801515" />
+                      <Text style={styles.tournamentPlayers}>{tournament.current_players}/{tournament.max_players}</Text>
+                      <DollarSign size={14} color="#801515" />
+                      <Text style={styles.tournamentPrize}>
+                        {(tournament.prize_pool / 1000000).toFixed(0)}M
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.tournamentAction}>
+                    <Text style={styles.tournamentLives}>2 Mạng</Text>
+                    <TouchableOpacity style={styles.joinButton}>
+                      <View style={styles.joinIcon} />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Không có giải đấu nào</Text>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -467,5 +529,25 @@ const styles = StyleSheet.create({
     height: 8,
     backgroundColor: 'white',
     borderRadius: 1,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });

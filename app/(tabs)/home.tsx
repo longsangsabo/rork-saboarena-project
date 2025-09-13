@@ -7,8 +7,11 @@ import {
   Image,
   ImageBackground,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { NavigationHelper } from '@/utils/NavigationHelper';
 import {
   Bell,
   Trophy,
@@ -20,6 +23,7 @@ import {
   Sun,
   MessageSquare,
 } from 'lucide-react-native';
+import { trpc } from '@/lib/trpc';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -29,9 +33,60 @@ export default function HomeScreen() {
   const [commentCount] = useState(578);
   const [shareCount] = useState(99);
 
+  const feedQuery = trpc.social.getFeed.useQuery({ 
+    type: activeTab === 'nearby' ? 'nearby' : 'following' 
+  });
+  
+  const interactMutation = trpc.social.interact.useMutation({
+    onSuccess: (data) => {
+      if (data.likeCount !== undefined) {
+        setLikeCount(data.likeCount);
+        setIsLiked(data.isLiked || false);
+      }
+    }
+  });
+
   const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+    interactMutation.mutate({
+      postId: '1',
+      action: isLiked ? 'unlike' : 'like'
+    });
+  };
+
+  const handlePlayNow = () => {
+    NavigationHelper.showConfirmDialog(
+      'Chơi ngay',
+      'Tìm kiếm đối thủ gần bạn?',
+      () => NavigationHelper.goToChallenges()
+    );
+  };
+
+  const handleSchedule = () => {
+    NavigationHelper.showConfirmDialog(
+      'Lên lịch',
+      'Đặt lịch chơi cho sau?',
+      () => console.log('Schedule match')
+    );
+  };
+
+  const handleComment = () => {
+    NavigationHelper.showFeatureComingSoon('bình luận');
+  };
+
+  const handleShare = () => {
+    interactMutation.mutate({
+      postId: '1',
+      action: 'share'
+    });
+    NavigationHelper.showSuccessMessage('Đã chia sẻ thành công!');
+  };
+
+  const handleProfilePress = () => {
+    NavigationHelper.goToProfile();
+  };
+
+  const handleClubPress = () => {
+    NavigationHelper.goToClub();
   };
 
   const formatCount = (count: number) => {
@@ -122,14 +177,14 @@ export default function HomeScreen() {
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={handlePlayNow}>
               <View style={styles.actionIcon}>
                 <Zap size={18} color="#FF004F" />
               </View>
               <Text style={styles.actionText}>Chơi luôn</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleSchedule}>
               <View style={styles.actionIcon}>
                 <Calendar size={18} color="#FF004F" />
               </View>
@@ -148,24 +203,24 @@ export default function HomeScreen() {
               <Text style={styles.socialCount}>{formatCount(likeCount)}</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.socialAction}>
+            <TouchableOpacity style={styles.socialAction} onPress={handleComment}>
               <MessageCircle size={35} color="white" />
               <Text style={styles.socialCount}>{commentCount}</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.socialAction}>
+            <TouchableOpacity style={styles.socialAction} onPress={handleComment}>
               <MessageSquare size={35} color="white" />
               <Text style={styles.socialCount}>{shareCount}</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.socialAction}>
+            <TouchableOpacity style={styles.socialAction} onPress={handleShare}>
               <Share size={35} color="white" />
               <Text style={styles.socialCount}>Share</Text>
             </TouchableOpacity>
           </View>
 
           {/* Club Info */}
-          <View style={styles.clubInfo}>
+          <TouchableOpacity style={styles.clubInfo} onPress={handleClubPress}>
             <Image 
               source={{ uri: 'https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=50&h=50&fit=crop' }}
               style={styles.clubAvatar}
@@ -177,13 +232,13 @@ export default function HomeScreen() {
                 <Text style={styles.clubLocationText}>Vũng Tàu</Text>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
 
           {/* Post Content */}
-          <View style={styles.postContent}>
+          <TouchableOpacity style={styles.postContent} onPress={handleProfilePress}>
             <Text style={styles.postUser}>@longsang · 03-09</Text>
             <Text style={styles.postText}>Tìm đối tối nay   #sabo #rankG</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </ImageBackground>
     </View>

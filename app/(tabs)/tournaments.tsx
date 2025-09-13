@@ -6,7 +6,8 @@ import {
   ScrollView, 
   TouchableOpacity, 
   Image, 
-  ActivityIndicator 
+  ActivityIndicator,
+  Alert 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -17,6 +18,7 @@ import {
   DollarSign, 
   TrendingUp
 } from 'lucide-react-native';
+import { trpc } from '@/lib/trpc';
 
 interface Tournament {
   id: string;
@@ -35,40 +37,7 @@ interface Tournament {
   status: 'upcoming' | 'live' | 'completed';
 }
 
-const mockTournaments: Tournament[] = [
-  {
-    id: '1',
-    title: 'SABO POOL 8 BALL Championship',
-    description: 'Giải đấu bi-a 8 bi hàng tuần với giải thưởng hấp dẫn',
-    image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
-    prize_pool: 10000000,
-    entry_fee: 300000,
-    current_players: 8,
-    max_players: 16,
-    min_rank: 'K',
-    max_rank: 'I+',
-    location: '601A Nguyễn An Ninh - TP Vũng Tàu',
-    start_time: '2024-09-07T19:00:00Z',
-    end_time: '2024-09-07T23:00:00Z',
-    status: 'upcoming'
-  },
-  {
-    id: '2',
-    title: 'SABO Weekly Tournament',
-    description: 'Giải đấu hàng tuần cho các tay cơ chuyên nghiệp',
-    image_url: 'https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=300&h=200&fit=crop',
-    prize_pool: 5000000,
-    entry_fee: 200000,
-    current_players: 12,
-    max_players: 16,
-    min_rank: 'G',
-    max_rank: 'A+',
-    location: 'SABO Billiards Club',
-    start_time: '2024-09-08T18:00:00Z',
-    end_time: '2024-09-08T22:00:00Z',
-    status: 'live'
-  }
-];
+
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('vi-VN', {
@@ -78,22 +47,38 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function TournamentsScreen() {
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
-  const [isJoining, setIsJoining] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'upcoming' | 'live' | 'completed'>('all');
+  
+  const tournamentsQuery = trpc.tournaments.list.useQuery({ 
+    status: selectedFilter,
+    limit: 20 
+  });
+  
+  const joinMutation = trpc.tournaments.join.useMutation({
+    onSuccess: () => {
+      Alert.alert('Thành công', 'Đã tham gia giải đấu thành công!');
+      tournamentsQuery.refetch();
+    },
+    onError: (error) => {
+      Alert.alert('Lỗi', error.message || 'Không thể tham gia giải đấu');
+    }
+  });
 
   const handleJoinTournament = (tournamentId: string) => {
-    console.log('Joining tournament:', tournamentId);
-    setIsJoining(true);
-    setTimeout(() => setIsJoining(false), 2000);
+    Alert.alert(
+      'Xác nhận tham gia',
+      'Bạn có chắc chắn muốn tham gia giải đấu này?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { 
+          text: 'Tham gia', 
+          onPress: () => joinMutation.mutate({ tournamentId })
+        }
+      ]
+    );
   };
 
-  const filteredTournaments = mockTournaments.filter(tournament => {
-    if (selectedFilter === 'all') return true;
-    if (selectedFilter === 'upcoming') return tournament.status === 'upcoming';
-    if (selectedFilter === 'live') return tournament.status === 'live';
-    if (selectedFilter === 'completed') return tournament.status === 'completed';
-    return true;
-  });
+  const tournaments = tournamentsQuery.data?.tournaments || [];
 
   const renderTournamentCard = (tournament: Tournament) => {
     const startTime = new Date(tournament.start_time);
@@ -161,11 +146,11 @@ export default function TournamentsScreen() {
           </View>
           
           <TouchableOpacity 
-            style={[styles.joinButton, isJoining && styles.joinButtonDisabled]}
+            style={[styles.joinButton, (joinMutation.isLoading || tournament.status !== 'upcoming') && styles.joinButtonDisabled]}
             onPress={() => handleJoinTournament(tournament.id)}
-            disabled={isJoining || tournament.status !== 'upcoming'}
+            disabled={joinMutation.isLoading || tournament.status !== 'upcoming'}
           >
-            {isJoining ? (
+            {joinMutation.isLoading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
               <Text style={styles.joinButtonText}>
@@ -237,8 +222,13 @@ export default function TournamentsScreen() {
         
         {/* Tournament List */}
         <View style={styles.content}>
-          {filteredTournaments.length > 0 ? (
-            filteredTournaments.map(renderTournamentCard)
+          {tournamentsQuery.isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#0A5C6D" />
+              <Text style={styles.loadingText}>Đang tải giải đấu...</Text>
+            </View>
+          ) : tournaments.length > 0 ? (
+            tournaments.map(renderTournamentCard)
           ) : (
             <View style={styles.emptyContainer}>
               <Trophy size={48} color="#666" />
@@ -322,6 +312,17 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 16,
     color: '#666',
     textAlign: 'center',
   },

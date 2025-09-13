@@ -6,7 +6,8 @@ import {
   Image, 
   TouchableOpacity, 
   StatusBar,
-  ImageBackground 
+  ImageBackground,
+  Alert 
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
@@ -20,6 +21,7 @@ import {
   MessageSquare
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { trpc } from '@/lib/trpc';
 
 export default function ChallengesScreen() {
   const [activeTab, setActiveTab] = useState<'giaoluu' | 'thachdau'>('giaoluu');
@@ -27,9 +29,62 @@ export default function ChallengesScreen() {
   const [likeCount, setLikeCount] = useState(328700);
   const insets = useSafeAreaInsets();
 
+  const challengesQuery = trpc.challenges.list.useQuery({ 
+    type: activeTab,
+    limit: 10 
+  });
+  
+  const likeMutation = trpc.challenges.like.useMutation({
+    onSuccess: (data) => {
+      setIsLiked(data.isLiked);
+      setLikeCount(data.likeCount);
+    }
+  });
+  
+  const createChallengeMutation = trpc.challenges.create.useMutation({
+    onSuccess: () => {
+      Alert.alert('Thành công', 'Đã tạo thách đấu thành công!');
+      challengesQuery.refetch();
+    }
+  });
+
   const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+    likeMutation.mutate({ challengeId: '1' });
+  };
+  
+  const handlePlayNow = () => {
+    createChallengeMutation.mutate({
+      type: activeTab,
+      message: 'Tìm đối ngay bây giờ!'
+    });
+  };
+  
+  const handleSchedule = () => {
+    Alert.alert(
+      'Lên lịch',
+      'Đặt lịch chơi cho sau?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { 
+          text: 'Đặt lịch', 
+          onPress: () => {
+            createChallengeMutation.mutate({
+              type: activeTab,
+              message: 'Lên lịch chơi tối nay!',
+              scheduled_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString()
+            });
+          }
+        }
+      ]
+    );
+  };
+  
+  const handleComment = () => {
+    Alert.alert('Bình luận', 'Tính năng bình luận sẽ có sớm!');
+  };
+  
+  const handleShare = () => {
+    Alert.alert('Chia sẻ', 'Đã chia sẻ thành công!');
   };
 
   const formatCount = (count: number) => {
@@ -131,14 +186,14 @@ export default function ChallengesScreen() {
         
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={handlePlayNow}>
             <View style={styles.actionIcon}>
               <Zap size={18} color="#FF004F" />
             </View>
             <Text style={styles.actionText}>Chơi luôn</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleSchedule}>
             <View style={styles.actionIcon}>
               <Calendar size={18} color="#FF004F" />
             </View>
@@ -157,17 +212,17 @@ export default function ChallengesScreen() {
             <Text style={styles.socialCount}>{formatCount(likeCount)}</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.socialAction}>
+          <TouchableOpacity style={styles.socialAction} onPress={handleComment}>
             <MessageCircle size={35} color="white" />
             <Text style={styles.socialCount}>578</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.socialAction}>
+          <TouchableOpacity style={styles.socialAction} onPress={handleComment}>
             <MessageSquare size={35} color="white" />
             <Text style={styles.socialCount}>99</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.socialAction}>
+          <TouchableOpacity style={styles.socialAction} onPress={handleShare}>
             <Share size={35} color="white" />
             <Text style={styles.socialCount}>Share</Text>
           </TouchableOpacity>

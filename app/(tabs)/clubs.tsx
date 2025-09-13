@@ -1,8 +1,10 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { MapPin, MoreHorizontal, Camera } from 'lucide-react-native';
+import { trpc } from '@/lib/trpc';
 
 interface Member {
   id: string;
@@ -13,32 +15,60 @@ interface Member {
   joinDate: string;
 }
 
-const mockMembers: Member[] = [
-  {
-    id: '1',
-    name: 'Anh Long Magic',
-    rank: 'G',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-    isOnline: true,
-    joinDate: '04/09/2025'
-  },
-  {
-    id: '2',
-    name: 'SABO',
-    rank: 'H',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    isOnline: false,
-    joinDate: '04/09/2025'
-  }
-];
+
 
 export default function ClubsScreen() {
+  const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'challenges' | 'profile'>('members');
+  
+  const clubsQuery = trpc.clubs.list.useQuery({ limit: 1 });
+  const membersQuery = trpc.clubs.getMembers.useQuery({ clubId: '1' });
+  
+  const club = clubsQuery.data?.clubs[0];
+  const members = membersQuery.data?.members || [];
+  
+  const handleBack = () => {
+    router.back();
+  };
+  
+  const handleMoreOptions = () => {
+    Alert.alert(
+      'Tùy chọn',
+      'Chọn hành động',
+      [
+        { text: 'Thiết lập club', onPress: () => console.log('Club settings') },
+        { text: 'Rời khỏi club', style: 'destructive', onPress: () => console.log('Leave club') },
+        { text: 'Hủy', style: 'cancel' }
+      ]
+    );
+  };
+  
+  const handleCameraPress = () => {
+    Alert.alert('Thay đổi ảnh', 'Tính năng thay đổi ảnh sẽ có sớm!');
+  };
+  
+  if (clubsQuery.isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#0A5C6D" />
+        <Text style={{ marginTop: 16, color: '#666' }}>Đang tải thông tin club...</Text>
+      </View>
+    );
+  }
+  
+  if (!club) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: '#666' }}>Không thể tải thông tin club</Text>
+      </View>
+    );
+  }
+  
   return (
     <View style={styles.container}>
       <Stack.Screen 
         options={{
           headerShown: true,
-          title: '@sabobilliards',
+          title: club.username,
           headerTitleAlign: 'center',
           headerStyle: {
             backgroundColor: 'white',
@@ -49,12 +79,12 @@ export default function ClubsScreen() {
             color: '#161722'
           },
           headerLeft: () => (
-            <TouchableOpacity style={styles.headerButton}>
+            <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
               <View style={styles.backIcon} />
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity style={styles.headerButton}>
+            <TouchableOpacity style={styles.headerButton} onPress={handleMoreOptions}>
               <MoreHorizontal size={18} color="#161722" />
             </TouchableOpacity>
           ),
@@ -73,19 +103,19 @@ export default function ClubsScreen() {
               style={styles.gradientBorder}
             >
               <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=400&h=400&fit=crop' }}
+                source={{ uri: club.cover_image }}
                 style={styles.clubImage}
               />
               <LinearGradient
                 colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.80)']}
                 style={styles.imageOverlay}
               >
-                <Text style={styles.clubName}>SABO Billiards</Text>
+                <Text style={styles.clubName}>{club.name}</Text>
               </LinearGradient>
             </LinearGradient>
           </View>
           
-          <TouchableOpacity style={styles.cameraButton}>
+          <TouchableOpacity style={styles.cameraButton} onPress={handleCameraPress}>
             <Camera size={20} color="black" />
           </TouchableOpacity>
         </View>
@@ -94,68 +124,116 @@ export default function ClubsScreen() {
         <View style={styles.locationContainer}>
           <View style={styles.locationBadge}>
             <MapPin size={12} color="#BA1900" />
-            <Text style={styles.locationText}>601A Nguyễn An Ninh - TP Vũng Tàu</Text>
+            <Text style={styles.locationText}>{club.location}</Text>
           </View>
         </View>
 
         {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>25</Text>
+            <Text style={styles.statNumber}>{club.member_count}</Text>
             <Text style={styles.statLabel}>Thành viên</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>15</Text>
+            <Text style={styles.statNumber}>{club.tournament_count}</Text>
             <Text style={styles.statLabel}>Giải đấu</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>89.9 Tr</Text>
+            <Text style={styles.statNumber}>{(club.prize_pool / 1000000).toFixed(1)} Tr</Text>
             <Text style={styles.statLabel}>Prize Pool</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>37</Text>
+            <Text style={styles.statNumber}>{club.challenge_count}</Text>
             <Text style={styles.statLabel}>Thách đấu</Text>
           </View>
         </View>
 
         {/* Tab Navigation */}
         <View style={styles.tabContainer}>
-          <TouchableOpacity style={[styles.tab, styles.activeTab]}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'members' && styles.activeTab]}
+            onPress={() => setActiveTab('members')}
+          >
             <View style={styles.tabIcon} />
-            <Text style={[styles.tabText, styles.activeTabText]}>Thành viên</Text>
-            <View style={styles.activeTabIndicator} />
+            <Text style={[styles.tabText, activeTab === 'members' && styles.activeTabText]}>Thành viên</Text>
+            {activeTab === 'members' && <View style={styles.activeTabIndicator} />}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.tab}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'tournaments' && styles.activeTab]}
+            onPress={() => setActiveTab('tournaments')}
+          >
             <View style={styles.tabIcon} />
-            <Text style={styles.tabText}>Giải đấu</Text>
+            <Text style={[styles.tabText, activeTab === 'tournaments' && styles.activeTabText]}>Giải đấu</Text>
+            {activeTab === 'tournaments' && <View style={styles.activeTabIndicator} />}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.tab}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'challenges' && styles.activeTab]}
+            onPress={() => setActiveTab('challenges')}
+          >
             <View style={styles.tabIcon} />
-            <Text style={styles.tabText}>Thách đấu</Text>
+            <Text style={[styles.tabText, activeTab === 'challenges' && styles.activeTabText]}>Thách đấu</Text>
+            {activeTab === 'challenges' && <View style={styles.activeTabIndicator} />}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.tab}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'profile' && styles.activeTab]}
+            onPress={() => setActiveTab('profile')}
+          >
             <View style={styles.tabIcon} />
-            <Text style={styles.tabText}>Hồ sơ</Text>
+            <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]}>Hồ sơ</Text>
+            {activeTab === 'profile' && <View style={styles.activeTabIndicator} />}
           </TouchableOpacity>
         </View>
 
-        {/* Members List */}
-        <View style={styles.membersContainer}>
-          {mockMembers.map((member) => (
-            <TouchableOpacity key={member.id} style={styles.memberItem}>
-              <View style={styles.memberInfo}>
-                <View style={styles.avatarWrapper}>
-                  <Image source={{ uri: member.avatar }} style={styles.memberAvatar} />
-                  <View style={[styles.onlineIndicator, { backgroundColor: member.isOnline ? '#5AD439' : '#86878B' }]} />
+        {/* Content based on active tab */}
+        <View style={styles.contentContainer}>
+          {activeTab === 'members' && (
+            <View style={styles.membersContainer}>
+              {membersQuery.isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#0A5C6D" />
+                  <Text style={styles.loadingText}>Đang tải danh sách thành viên...</Text>
                 </View>
-                <View style={styles.memberDetails}>
-                  <Text style={styles.memberName}>{member.name}</Text>
-                  <Text style={styles.memberRank}>Rank {member.rank}</Text>
+              ) : members.length > 0 ? (
+                members.map((member) => (
+                  <TouchableOpacity key={member.id} style={styles.memberItem}>
+                    <View style={styles.memberInfo}>
+                      <View style={styles.avatarWrapper}>
+                        <Image source={{ uri: member.avatar }} style={styles.memberAvatar} />
+                        <View style={[styles.onlineIndicator, { backgroundColor: member.isOnline ? '#5AD439' : '#86878B' }]} />
+                      </View>
+                      <View style={styles.memberDetails}>
+                        <Text style={styles.memberName}>{member.name}</Text>
+                        <Text style={styles.memberRank}>Rank {member.rank}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.joinDate}>{member.joinDate}</Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>Chưa có thành viên nào</Text>
                 </View>
-              </View>
-              <Text style={styles.joinDate}>{member.joinDate}</Text>
-            </TouchableOpacity>
-          ))}
+              )}
+            </View>
+          )}
+          
+          {activeTab === 'tournaments' && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Danh sách giải đấu sẽ có sớm</Text>
+            </View>
+          )}
+          
+          {activeTab === 'challenges' && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Danh sách thách đấu sẽ có sớm</Text>
+            </View>
+          )}
+          
+          {activeTab === 'profile' && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Thông tin chi tiết club sẽ có sớm</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -312,9 +390,32 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: '#161722',
   },
+  contentContainer: {
+    flex: 1,
+  },
   membersContainer: {
     paddingHorizontal: 22,
     paddingTop: 20,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
   memberItem: {
     flexDirection: 'row',
