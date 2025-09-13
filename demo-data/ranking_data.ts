@@ -1,5 +1,6 @@
 import { RankingUser } from '@/components/shared/RankingCard';
-import { RankingType } from '@/components/shared/RankingTabs';
+
+type RankingType = 'prizepool' | 'elo' | 'spa';
 
 export const mockRankingData: Record<RankingType, RankingUser[]> = {
   prizepool: [

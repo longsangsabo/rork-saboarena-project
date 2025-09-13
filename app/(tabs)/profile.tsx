@@ -1,31 +1,21 @@
 import React, { useState } from 'react';
 import { 
   StyleSheet, 
-  Text, 
   View, 
   ScrollView, 
   TouchableOpacity, 
   ImageBackground,
-  StatusBar,
   Alert,
-  ActivityIndicator
+  Text
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { 
   ArrowLeft, 
-  MoreHorizontal, 
-  Edit3, 
-  Crown,
-  Star,
-  TrendingUp,
-  Gamepad2,
-  Calendar,
-  Users,
-  DollarSign
+  MoreHorizontal
 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import { ProfileCard, StatsRow, TabNavigation } from '@/components/shared';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -113,35 +103,14 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileImageContainer}>
-            <LinearGradient
-              colors={['rgba(119, 132, 248, 0.40)', 'rgba(27, 26, 38, 0.20)', 'rgba(198, 149, 248, 0.40)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientBorder}
-            >
-              <View style={styles.profileImageWrapper}>
-                <ImageBackground
-                  source={{ uri: user.avatar }}
-                  style={styles.profileImage}
-                  imageStyle={styles.profileImageStyle}
-                >
-                  <LinearGradient
-                    colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.8)']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={styles.profileOverlay}
-                  >
-                    <Text style={styles.profileName}>{user.displayName}</Text>
-                  </LinearGradient>
-                </ImageBackground>
-              </View>
-            </LinearGradient>
-            <TouchableOpacity style={styles.editProfileButton} onPress={handleEditProfile}>
-              <Edit3 size={14} color="black" />
-            </TouchableOpacity>
-          </View>
+        <ProfileCard 
+          imageUrl={user.avatar}
+          name={user.displayName}
+          showEditButton={true}
+          onEditPress={handleEditProfile}
+          size="large"
+          style={styles.profileCard}
+        />
 
           {/* Rank Badge */}
           <View style={styles.rankBadge}>

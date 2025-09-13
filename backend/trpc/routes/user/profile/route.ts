@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProcedure } from "@/backend/trpc/create-context";
+import { publicProcedure, protectedProcedure } from "../../create-context";
 
 export const getUserProfile = publicProcedure
   .input(z.object({ userId: z.string().optional() }))
@@ -25,16 +25,18 @@ export const getUserProfile = publicProcedure
     };
   });
 
-export const updateUserProfile = publicProcedure
+export const updateUserProfile = protectedProcedure
   .input(z.object({
     displayName: z.string().optional(),
     bio: z.string().optional(),
     avatar: z.string().optional()
   }))
-  .mutation(async ({ input }) => {
-    console.log('Updating user profile:', input);
+  .mutation(async ({ input, ctx }) => {
+    console.log('Updating user profile for user:', ctx.user.id, 'with data:', input);
+    // Here we would update the user in database using ctx.user.id
     return {
       success: true,
-      message: "Profile updated successfully"
+      message: "Profile updated successfully",
+      userId: ctx.user.id
     };
   });

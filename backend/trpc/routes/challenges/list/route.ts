@@ -68,3 +68,46 @@ export const likeChallenge = publicProcedure
       likeCount: 328701
     };
   });
+
+export const joinChallenge = publicProcedure
+  .input(z.object({
+    challengeId: z.string().min(1),
+    userId: z.string().min(1).optional(),
+    teamId: z.string().optional()
+  }))
+  .mutation(async ({ input }) => {
+    console.log('Joining challenge:', input);
+    
+    // Simulate validation
+    const challengeExists = true; // Assume challenge exists
+    
+    if (!challengeExists) {
+      throw new Error('Thách đấu không tồn tại');
+    }
+
+    // Simulate checking if challenge is full
+    const isChallengeFull = Math.random() < 0.1; // 10% chance challenge is full
+    
+    if (isChallengeFull) {
+      throw new Error('Thách đấu đã đầy, không thể tham gia');
+    }
+
+    // Simulate checking if user already joined
+    const alreadyJoined = Math.random() < 0.2; // 20% chance already joined
+    
+    if (alreadyJoined) {
+      throw new Error('Bạn đã tham gia thách đấu này rồi');
+    }
+
+    return {
+      success: true,
+      message: 'Đã tham gia thách đấu thành công!',
+      data: {
+        challengeId: input.challengeId,
+        userId: input.userId || 'current-user',
+        joinedAt: new Date().toISOString(),
+        position: Math.floor(Math.random() * 50) + 1, // Random position in challenge
+        teamId: input.teamId
+      }
+    };
+  });

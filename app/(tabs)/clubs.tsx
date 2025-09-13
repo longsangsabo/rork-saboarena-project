@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
 import { router } from 'expo-router';
 import { MapPin, MoreHorizontal, Camera } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
-import ChallengeTabs from '@/components/challenges/ChallengeTabs';
+import { UniversalTabs } from '@/components/shared/UniversalTabs';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
-import { challengesData } from '@/demo-data/challenges-data';
+import { mockChallenges, getChallengesByStatus } from '@/demo-data/challenges-data';
+import { Users, Trophy, X } from 'lucide-react-native';
+import { ClubCard, MemberList, LoadingContainer, ErrorContainer } from '@/components/shared';
 
 interface Member {
   id: string;
@@ -24,6 +26,17 @@ export default function ClubsScreen() {
   const [mainTab, setMainTab] = useState<'clb' | 'find_opponent'>('clb');
   const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'challenges' | 'profile'>('members');
   const [challengeTab, setChallengeTab] = useState<'waiting' | 'live' | 'finished'>('waiting');
+
+  // Define tabs for UniversalTabs
+  const challengeTabs = [
+    { key: 'waiting', label: 'Chờ đối', icon: Users },
+    { key: 'live', label: 'Lên xe', icon: Trophy },
+    { key: 'finished', label: 'Đã xong', icon: X },
+  ];
+
+  const handleChallengeTabChange = (tabKey: string) => {
+    setChallengeTab(tabKey as 'waiting' | 'live' | 'finished');
+  };
   
   const clubsQuery = trpc.clubs.list.useQuery({ limit: 10 });
   const membersQuery = trpc.clubs.getMembers.useQuery({ clubId: '1' });
@@ -83,7 +96,7 @@ export default function ClubsScreen() {
             fontSize: 24,
             fontWeight: '900',
             color: '#6503C8',
-            letterSpacing: 1.2
+
           },
           headerRight: () => (
             <View style={styles.headerRightContainer}>
@@ -126,25 +139,16 @@ export default function ClubsScreen() {
                 <Text style={styles.loadingText}>Đang tải danh sách club...</Text>
               </View>
             ) : (
-              clubs.map((clubItem, index) => (
-                <View key={clubItem.id} style={styles.clubCard}>
-                  <Image source={{ uri: clubItem.cover_image }} style={styles.clubCardImage} />
-                  <View style={styles.clubCardContent}>
-                    <Text style={styles.clubCardName}>{clubItem.name}</Text>
-                    <View style={styles.clubCardLocation}>
-                      <MapPin size={12} color="#BA1900" />
-                      <Text style={styles.clubCardLocationText}>{clubItem.location}</Text>
-                    </View>
-                    <View style={styles.clubCardActions}>
-                      <TouchableOpacity style={styles.joinButton}>
-                        <Text style={styles.joinButtonText}>Tham gia</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.registerButton}>
-                        <Text style={styles.registerButtonText}>Đăng ký hạng</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
+              clubs.map((clubItem: any) => (
+                <ClubCard
+                  key={clubItem.id}
+                  id={clubItem.id}
+                  name={clubItem.name}
+                  location={clubItem.location}
+                  memberCount={clubItem.member_count || 0}
+                  imageUrl={clubItem.cover_image}
+                  onPress={() => console.log('Club pressed:', clubItem.name)}
+                />
               ))
             )}
           </View>
@@ -247,32 +251,10 @@ export default function ClubsScreen() {
         <View style={styles.contentContainer}>
           {activeTab === 'members' && (
             <View style={styles.membersContainer}>
-              {membersQuery.isLoading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#0A5C6D" />
-                  <Text style={styles.loadingText}>Đang tải danh sách thành viên...</Text>
-                </View>
-              ) : members.length > 0 ? (
-                members.map((member) => (
-                  <TouchableOpacity key={member.id} style={styles.memberItem}>
-                    <View style={styles.memberInfo}>
-                      <View style={styles.avatarWrapper}>
-                        <Image source={{ uri: member.avatar }} style={styles.memberAvatar} />
-                        <View style={[styles.onlineIndicator, { backgroundColor: member.isOnline ? '#5AD439' : '#86878B' }]} />
-                      </View>
-                      <View style={styles.memberDetails}>
-                        <Text style={styles.memberName}>{member.name}</Text>
-                        <Text style={styles.memberRank}>Rank {member.rank}</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.joinDate}>{member.joinDate}</Text>
-                  </TouchableOpacity>
-                ))
-              ) : (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>Chưa có thành viên nào</Text>
-                </View>
-              )}
+              <MemberList 
+                members={members}
+                loading={membersQuery.isLoading}
+              />
             </View>
           )}
           
@@ -284,16 +266,17 @@ export default function ClubsScreen() {
           
           {activeTab === 'challenges' && (
             <View style={styles.challengesContainer}>
-              <ChallengeTabs 
+              <UniversalTabs 
+                tabs={challengeTabs}
                 activeTab={challengeTab}
-                onTabChange={setChallengeTab}
+                onTabChange={handleChallengeTabChange}
+                variant="underline"
               />
               <ScrollView 
                 style={styles.challengesList}
                 showsVerticalScrollIndicator={false}
               >
-                {challengesData
-                  .filter(challenge => challenge.status === challengeTab)
+                {getChallengesByStatus(challengeTab)
                   .map((challenge) => (
                     <ChallengeCard
                       key={challenge.id}
@@ -304,7 +287,7 @@ export default function ClubsScreen() {
                     />
                   ))
                 }
-                {challengesData.filter(challenge => challenge.status === challengeTab).length === 0 && (
+                {getChallengesByStatus(challengeTab).length === 0 && (
                   <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>
                       {challengeTab === 'waiting' && 'Chưa có thách đấu nào đang chờ'}

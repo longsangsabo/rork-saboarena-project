@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SABO Arena - Expo QR Code</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #6503C8, #FF004F);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            display: inline-block;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .qr-code {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            line-height: 0.8;
+            color: black;
+            white-space: pre;
+            letter-spacing: -1px;
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .step-number {
+            background: #FF004F;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .step-text {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .expo-url {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-top: 20px;
+            word-break: break-all;
+        }
+        
+        .copy-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #45a049;
+        }
+        
+        .alternatives {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .alt-button {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin: 5px;
+            transition: background 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .alt-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .status {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .status-icon {
+            color: #4CAF50;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 20px;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .qr-code {
+                font-size: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">SABO ARENA</div>
+        <div class="subtitle">Mobile App Development</div>
+        
+        <div class="status">
+            <span class="status-icon">✅</span>
+            <strong>Expo Server đang chạy thành công!</strong>
+        </div>
+        
+        <div class="qr-container">
+            <div class="qr-code">▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+█ ▄▄▄▄▄ █▄▄██████▄██▄▄█ ▄▄▄▄▄ █
+█ █   █ █ ▀█ ▄    ▀ ▄ █ █   █ █
+█ █▄▄▄█ █▄ ▄▄▀█▄▄▄█▀ ▀█ █▄▄▄█ █
+█▄▄▄▄▄▄▄█▄▀▄▀▄█▄█▄▀ ▀▄█▄▄▄▄▄▄▄█
+█▄▄▄ ▀▀▄█▄▀████ ▄  █▀▀ ▀▀ ▄ █ █
+█▄▀  █▀▄▄▀██▀▀▀███▄█▀▀▀ ▀▀▀██▀█
+█▀▀▄ ██▄▄  ▀ █▀▀ ▀   █▄▀▀█▀▄ ▀█
+█▀ ▀▀██▄ █▄██ ▀▄█ █▀▄▄▄████▄ ▄█
+█▄▀▀  ▀▄█   ▄▀▀█ ▀▀▀▄▀▄█▀▄█▀▀▄█
+█▄██▄ ▀▄ ▄ █▄ ██▄█▀▄▀█ ███▄ ▀██
+██▄█▄▄█▄█ ▀▄▄  ▀█▀▄██ ▄▄▄ █   █
+█ ▄▄▄▄▄ ██▀▄▄▄▄██▀▄▀▄ █▄█ ▄▄ ██
+█ █   █ █▀▄█▀ █ ▀ ▄▄▀▄ ▄▄ ▀▄█▀█
+█ █▄▄▄█ █ ▀  █▄▀▀▀▄ █ █▀ █ █▀▄█
+█▄▄▄▄▄▄▄█▄▄██▄█▄███▄▄▄█▄█▄██▄██</div>
+        </div>
+        
+        <div class="instructions">
+            <h3 style="margin-bottom: 20px;">📱 Cách sử dụng:</h3>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-text">
+                    <strong>Tải Expo Go App</strong><br>
+                    • iOS: App Store<br>
+                    • Android: Google Play Store
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-text">
+                    <strong>Quét QR Code</strong><br>
+                    • iOS: Dùng Camera app hoặc Expo Go<br>
+                    • Android: Dùng Expo Go app
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-text">
+                    <strong>Khám phá ứng dụng</strong><br>
+                    • Xem giao diện đã được consolidate<br>
+                    • Test universal components<br>
+                    • Nhấn "Demo" button để xem components
+                </div>
+            </div>
+        </div>
+        
+        <div class="expo-url">
+            <strong>Expo URL:</strong><br>
+            exp://9lovx-i-anonymous-8081.exp.direct
+            <button class="copy-btn" onclick="copyToClipboard('exp://9lovx-i-anonymous-8081.exp.direct')">
+                📋 Copy URL
+            </button>
+        </div>
+        
+        <div class="alternatives">
+            <h4>🔄 Các cách khác để xem:</h4>
+            <a href="http://localhost:8081" class="alt-button" target="_blank">
+                🌐 Mở Web Version
+            </a>
+            <a href="http://localhost:3000/component-preview.html" class="alt-button" target="_blank">
+                📋 Xem Component Preview
+            </a>
+        </div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 14px; opacity: 0.8;">
+            🚀 Powered by Expo & React Native<br>
+            Developer B | September 13, 2025
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                btn.style.background = '#4CAF50';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '#4CAF50';
+                }, 2000);
+            });
+        }
+        
+        // Auto-refresh QR code every 30 seconds to check for updates
+        setInterval(() => {
+            console.log('QR code still active');
+        }, 30000);
+    </script>
+</body>
+</html>

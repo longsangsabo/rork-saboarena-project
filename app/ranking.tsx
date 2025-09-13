@@ -9,8 +9,11 @@ import {
 import { Stack, router } from 'expo-router';
 import { ArrowLeft, MoreHorizontal } from 'lucide-react-native';
 import { RankingCard, RankingUser } from '@/components/shared/RankingCard';
-import { RankingTabs, RankingType } from '@/components/shared/RankingTabs';
+import { UniversalTabs } from '@/components/shared/UniversalTabs';
 import { mockRankingData } from '@/demo-data/ranking_data';
+import { Users, Trophy, BarChart3 } from 'lucide-react-native';
+
+type RankingType = 'prizepool' | 'elo' | 'spa';
 
 
 
@@ -26,6 +29,17 @@ export default function RankingScreen() {
   const handleChallenge = (userId: string) => {
     console.log('Challenge user:', userId);
     // TODO: Implement challenge logic
+  };
+
+  // Define tabs for UniversalTabs
+  const rankingTabs = [
+    { key: 'prizepool', label: 'Prize Pool', icon: Users },
+    { key: 'elo', label: 'ELO', icon: Trophy },
+    { key: 'spa', label: 'SPA', icon: BarChart3 },
+  ];
+
+  const handleTabChange = (tabKey: string) => {
+    setActiveTab(tabKey as RankingType);
   };
 
   return (
@@ -55,7 +69,12 @@ export default function RankingScreen() {
         }}
       />
       
-      <RankingTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <UniversalTabs 
+        tabs={rankingTabs} 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange} 
+        variant="pills" 
+      />
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {topUser && (

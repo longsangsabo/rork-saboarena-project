@@ -1,29 +1,24 @@
 import React, { useState } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   TouchableOpacity,
-  Image,
+  Text,
   ImageBackground,
-  StatusBar,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { NavigationHelper } from '@/utils/NavigationHelper';
-import {
-  Bell,
-  Trophy,
-  Heart,
-  MessageCircle,
-  Share,
-  Calendar,
-  Zap,
-  Sun,
-  MessageSquare,
-} from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import { CustomStatusBar } from '@/components/shared/StatusBar';
+import { HomeHeader } from '@/components/shared/HomeHeader';
+import { TabNavigation } from '@/components/shared/TabNavigation';
+import { ProfileCard } from '@/components/shared/ProfileCard';
+import { RankBadge } from '@/components/shared/RankBadge';
+import { ActionButtons } from '@/components/shared/ActionButtons';
+import { SocialActions } from '@/components/shared/SocialActions';
+import { ClubInfo } from '@/components/shared/ClubInfo';
+import { PostContent } from '@/components/shared/PostContent';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -39,7 +34,7 @@ export default function HomeScreen() {
   
   const interactMutation = trpc.social.interact.useMutation({
     onSuccess: (data) => {
-      if (data.likeCount !== undefined) {
+      if ('likeCount' in data && data.likeCount !== undefined) {
         setLikeCount(data.likeCount);
         setIsLiked(data.isLiked || false);
       }
@@ -85,17 +80,12 @@ export default function HomeScreen() {
     NavigationHelper.goToProfile();
   };
 
-  const handleClubPress = () => {
-    NavigationHelper.goToClub();
+  const handleComponentDemo = () => {
+    router.push('/component-demo');
   };
 
-  const formatCount = (count: number) => {
-    if (count >= 1000000) {
-      return `${(count / 1000000).toFixed(1)}M`;
-    } else if (count >= 1000) {
-      return `${(count / 1000).toFixed(1)}K`;
-    }
-    return count.toString();
+  const handleClubPress = () => {
+    NavigationHelper.goToClub();
   };
 
 
@@ -106,141 +96,88 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
-      {/* Background Image */}
       <ImageBackground
         source={{ uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=414&h=813&fit=crop' }}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
         {/* Status Bar */}
-        <View style={[styles.statusBar, { paddingTop: insets.top }]}>
-          <Text style={styles.timeText}>9:41</Text>
-          <View style={styles.statusIcons} />
-        </View>
+        <CustomStatusBar />
 
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.saboTitle}>SABO</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.headerIcon}>
-              <Sun size={20} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIcon}>
-              <MessageSquare size={20} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIcon}>
-              <Bell size={20} color="white" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <HomeHeader 
+          onWeatherPress={() => console.log('Weather')}
+          onMessagesPress={() => console.log('Messages')}
+          onNotificationsPress={() => console.log('Notifications')}
+        />
 
         {/* Tab Navigation */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'nearby' && styles.activeTab]}
-            onPress={() => setActiveTab('nearby')}
-          >
-            <Text style={[styles.tabText, activeTab === 'nearby' && styles.activeTabText]}>Lân cận</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'following' && styles.activeTab]}
-            onPress={() => setActiveTab('following')}
-          >
-            <Text style={[styles.tabText, activeTab === 'following' && styles.activeTabText]}>Đã Follow</Text>
-          </TouchableOpacity>
-        </View>
+        <TabNavigation 
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as 'nearby' | 'following')}
+          tabs={[
+            { key: 'nearby', label: 'Lân cận' },
+            { key: 'following', label: 'Đã Follow' }
+          ]}
+        />
 
         {/* Main Content */}
         <View style={styles.mainContent}>
           {/* Profile Card */}
-          <View style={styles.profileCard}>
-            <View style={styles.profileImageContainer}>
-              <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=297&h=292&fit=crop&crop=face' }}
-                style={styles.profileImage}
-              />
-              <View style={styles.profileOverlay}>
-                <Text style={styles.profileName}>Anh Long Magic</Text>
-              </View>
-            </View>
-          </View>
+          <ProfileCard 
+            imageUrl="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=297&h=292&fit=crop&crop=face"
+            name="Anh Long Magic"
+          />
 
           {/* Rank Badge */}
-          <View style={styles.rankBadge}>
-            <Trophy size={14} color="#19127B" />
-            <Text style={styles.rankText}>RANK : G</Text>
-          </View>
+          <RankBadge rank="G" />
 
           {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton} onPress={handlePlayNow}>
-              <View style={styles.actionIcon}>
-                <Zap size={18} color="#FF004F" />
-              </View>
-              <Text style={styles.actionText}>Chơi luôn</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionButton} onPress={handleSchedule}>
-              <View style={styles.actionIcon}>
-                <Calendar size={18} color="#FF004F" />
-              </View>
-              <Text style={styles.actionText}>Lên lịch</Text>
-            </TouchableOpacity>
-          </View>
+          <ActionButtons 
+            onPlayNow={handlePlayNow}
+            onSchedule={handleSchedule}
+          />
 
           {/* Social Actions */}
-          <View style={styles.socialActions}>
-            <TouchableOpacity style={styles.socialAction} onPress={handleLike}>
-              <Heart 
-                size={35} 
-                color={isLiked ? "#FF004F" : "white"} 
-                fill={isLiked ? "#FF004F" : "transparent"}
-              />
-              <Text style={styles.socialCount}>{formatCount(likeCount)}</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.socialAction} onPress={handleComment}>
-              <MessageCircle size={35} color="white" />
-              <Text style={styles.socialCount}>{commentCount}</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.socialAction} onPress={handleComment}>
-              <MessageSquare size={35} color="white" />
-              <Text style={styles.socialCount}>{shareCount}</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.socialAction} onPress={handleShare}>
-              <Share size={35} color="white" />
-              <Text style={styles.socialCount}>Share</Text>
-            </TouchableOpacity>
-          </View>
+          <SocialActions 
+            isLiked={isLiked}
+            likeCount={likeCount}
+            commentCount={commentCount}
+            shareCount={shareCount}
+            onLike={handleLike}
+            onComment={handleComment}
+            onShare={handleShare}
+            style={styles.socialActions}
+          />
 
           {/* Club Info */}
-          <TouchableOpacity style={styles.clubInfo} onPress={handleClubPress}>
-            <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=50&h=50&fit=crop' }}
-              style={styles.clubAvatar}
-            />
-            <View style={styles.clubOnlineIndicator} />
-            <View style={styles.clubDetails}>
-              <Text style={styles.clubName}>SABO Billiards</Text>
-              <View style={styles.clubLocation}>
-                <Text style={styles.clubLocationText}>Vũng Tàu</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
+          <ClubInfo 
+            name="SABO Billiards"
+            location="Vũng Tàu"
+            avatar="https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=50&h=50&fit=crop"
+            isOnline={true}
+            onPress={handleClubPress}
+            style={styles.clubInfo}
+          />
 
           {/* Post Content */}
-          <TouchableOpacity style={styles.postContent} onPress={handleProfilePress}>
-            <Text style={styles.postUser}>@longsang · 03-09</Text>
-            <Text style={styles.postText}>Tìm đối tối nay   #sabo #rankG</Text>
-          </TouchableOpacity>
+          <PostContent 
+            username="longsang"
+            date="03-09"
+            content="Tìm đối tối nay   #sabo #rankG"
+            onPress={handleProfilePress}
+            style={styles.postContent}
+          />
         </View>
       </ImageBackground>
+      
+      {/* Demo Button */}
+      <TouchableOpacity
+        style={styles.demoButton}
+        onPress={handleComponentDemo}
+      >
+        <Text style={styles.demoButtonText}>🎨 Demo</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -253,227 +190,20 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
   },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  timeText: {
-    color: 'white',
-    fontSize: 15,
-    fontFamily: 'SF Pro Text',
-    fontWeight: '600',
-  },
-  statusIcons: {
-    width: 18,
-    height: 6.5,
-    backgroundColor: 'white',
-    borderRadius: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  saboTitle: {
-    color: '#6503C8',
-    fontSize: 24,
-    fontFamily: 'Inter',
-    fontWeight: '900',
-    lineHeight: 32,
-    letterSpacing: 1.2,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  headerIcon: {
-    padding: 4,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  tab: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: 'white',
-  },
-  tabText: {
-    color: '#D7D7D9',
-    fontSize: 16,
-    fontFamily: 'Lexend Exa',
-    fontWeight: '700',
-    opacity: 0.8,
-  },
-  activeTabText: {
-    color: 'white',
-    opacity: 1,
-  },
   mainContent: {
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-  profileCard: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  profileImageContainer: {
-    width: 299,
-    height: 294,
-    borderRadius: 18,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  profileImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 16,
-  },
-  profileOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 56,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  profileName: {
-    color: '#A0B2F8',
-    fontSize: 40,
-    fontFamily: 'Alumni Sans',
-    fontWeight: '900',
-    lineHeight: 36,
-    letterSpacing: 3,
-    textAlign: 'center',
-  },
-  rankBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(35.89, 25.99, 91.95, 0.15)',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#1B1B50',
-    paddingHorizontal: 25,
-    paddingVertical: 7,
-    marginBottom: 20,
-    gap: 8,
-  },
-  rankText: {
-    color: '#19127B',
-    fontSize: 16,
-    fontFamily: 'Roboto',
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 40,
-    paddingHorizontal: 40,
-  },
-  actionButton: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  actionIcon: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionText: {
-    color: 'white',
-    fontSize: 13,
-    fontFamily: 'ABeeZee',
-    fontWeight: '400',
-    textShadowColor: 'rgba(0, 0, 0, 0.30)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 0,
-  },
   socialActions: {
     position: 'absolute',
     right: 20,
     top: 200,
-    alignItems: 'center',
-    gap: 20,
-  },
-  socialAction: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  socialCount: {
-    color: 'white',
-    fontSize: 13,
-    fontFamily: 'ABeeZee',
-    fontWeight: '400',
-    textShadowColor: 'rgba(0, 0, 0, 0.30)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 0,
   },
   clubInfo: {
     position: 'absolute',
     bottom: 120,
     left: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  clubAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 5,
-    borderWidth: 0.83,
-    borderColor: '#161616',
-  },
-  clubOnlineIndicator: {
-    position: 'absolute',
-    left: 34,
-    top: 41,
-    width: 20,
-    height: 20,
-    backgroundColor: '#FF004F',
-    borderRadius: 10,
-  },
-  clubDetails: {
-    flex: 1,
-  },
-  clubName: {
-    color: 'white',
-    fontSize: 20,
-    fontFamily: 'Aldrich',
-    fontWeight: '400',
-    marginBottom: 4,
-  },
-  clubLocation: {
-    backgroundColor: '#0A5C6D',
-    borderRadius: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    alignSelf: 'flex-start',
-  },
-  clubLocationText: {
-    color: 'white',
-    fontSize: 14,
-    fontFamily: 'ABeeZee',
-    fontWeight: '400',
   },
   postContent: {
     position: 'absolute',
@@ -481,18 +211,23 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
   },
-  postUser: {
-    color: 'white',
-    fontSize: 17,
-    fontFamily: 'ABeeZee',
-    fontWeight: '400',
-    marginBottom: 4,
+  demoButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    backgroundColor: '#6503C8',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  postText: {
+  demoButtonText: {
     color: 'white',
-    fontSize: 15,
-    fontFamily: 'ABeeZee',
-    fontWeight: '400',
-    lineHeight: 19.5,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });

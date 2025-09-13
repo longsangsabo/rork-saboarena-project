@@ -7,9 +7,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { trpc } from '@/lib/trpc';
-import ChallengeHeader from '@/components/challenges/ChallengeHeader';
-import ChallengeTabs from '@/components/challenges/ChallengeTabs';
+import { AppHeader } from '@/components/shared/AppHeader';
+import { UniversalTabs } from '@/components/shared/UniversalTabs';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
+import { Users, Trophy, X } from 'lucide-react-native';
 import { getChallengesByStatus, type Challenge } from '@/demo-data/challenges-data';
 
 export default function ChallengesScreen() {
@@ -48,8 +49,20 @@ export default function ChallengesScreen() {
     Alert.alert('Tùy chọn', 'Hiển thị thêm tùy chọn');
   };
 
+  // Define tabs for UniversalTabs
+  const challengeTabs = [
+    { key: 'waiting', label: 'Chờ đối', icon: Users },
+    { key: 'live', label: 'Lên xe', icon: Trophy },
+    { key: 'finished', label: 'Đã xong', icon: X },
+  ];
+
+  const handleTabChange = (tabKey: string) => {
+    setActiveTab(tabKey as 'waiting' | 'live' | 'finished');
+  };
+
   // Use mock data for now, replace with real data when available
-  const challenges = challengesQuery.data || getChallengesByStatus(activeTab);
+  const challengesData = challengesQuery.data || getChallengesByStatus(activeTab);
+  const challenges = Array.isArray(challengesData) ? challengesData : challengesData.challenges || [];
 
   const renderChallenge = ({ item }: { item: Challenge }) => (
     <ChallengeCard
@@ -61,8 +74,13 @@ export default function ChallengesScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ChallengeHeader onBack={handleBack} onMore={handleMore} />
-      <ChallengeTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <AppHeader title="Thách Đấu" showBackButton={true} showMoreButton={true} onBack={handleBack} onMore={handleMore} />
+      <UniversalTabs 
+        tabs={challengeTabs} 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange} 
+        variant="underline" 
+      />
       
       <FlatList
         data={challenges}
