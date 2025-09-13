@@ -17,8 +17,10 @@ import {
   Calendar,
   MapPin,
   Play,
-  Swords
+  Swords,
+  Target
 } from 'lucide-react-native';
+import { router } from 'expo-router';
 
 interface TournamentDetailProps {
   tournament: {
@@ -77,7 +79,7 @@ export const TournamentDetail: React.FC<TournamentDetailProps> = ({
   tournament,
   onBack
 }) => {
-  const [selectedTab, setSelectedTab] = useState<'rewards' | 'info' | 'participants'>('rewards');
+  const [selectedTab, setSelectedTab] = useState<'participants' | 'rewards' | 'bracket'>('participants');
   const [selectedSubTab, setSelectedSubTab] = useState<'ready' | 'live' | 'done'>('ready');
 
   const formatCurrency = (amount: number) => {
@@ -113,18 +115,24 @@ export const TournamentDetail: React.FC<TournamentDetailProps> = ({
         onPress={() => setSelectedTab('participants')}
       >
         <Users size={20} color={selectedTab === 'participants' ? '#060606' : '#8A8B8F'} />
+        <Text style={[styles.tabLabel, selectedTab === 'participants' && styles.tabLabelActive]}>Người tham gia</Text>
+        {selectedTab === 'participants' && <View style={styles.tabIndicator} />}
       </TouchableOpacity>
       <TouchableOpacity 
         style={[styles.tabItem, selectedTab === 'rewards' && styles.tabItemActive]}
         onPress={() => setSelectedTab('rewards')}
       >
         <Trophy size={20} color={selectedTab === 'rewards' ? '#060606' : '#8A8B8F'} />
+        <Text style={[styles.tabLabel, selectedTab === 'rewards' && styles.tabLabelActive]}>Giải thưởng</Text>
+        {selectedTab === 'rewards' && <View style={styles.tabIndicator} />}
       </TouchableOpacity>
       <TouchableOpacity 
-        style={[styles.tabItem, selectedTab === 'info' && styles.tabItemActive]}
-        onPress={() => setSelectedTab('info')}
+        style={[styles.tabItem, selectedTab === 'bracket' && styles.tabItemActive]}
+        onPress={() => setSelectedTab('bracket')}
       >
-        <MapPin size={20} color={selectedTab === 'info' ? '#060606' : '#8A8B8F'} />
+        <Target size={20} color={selectedTab === 'bracket' ? '#060606' : '#8A8B8F'} />
+        <Text style={[styles.tabLabel, selectedTab === 'bracket' && styles.tabLabelActive]}>Bảng đấu</Text>
+        {selectedTab === 'bracket' && <View style={styles.tabIndicator} />}
       </TouchableOpacity>
     </View>
   );
@@ -261,11 +269,32 @@ export const TournamentDetail: React.FC<TournamentDetailProps> = ({
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {renderTournamentInfo()}
         
-        {selectedTab === 'rewards' && renderPrizesTable()}
         {selectedTab === 'participants' && renderParticipants()}
-        {selectedTab === 'info' && (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Thông tin chi tiết sẽ có sớm</Text>
+        {selectedTab === 'rewards' && renderPrizesTable()}
+        {selectedTab === 'bracket' && (
+          <View style={styles.bracketContainer}>
+            <TouchableOpacity style={styles.bracketButton} onPress={() => router.push('/tournament-bracket')}>
+              <Target size={24} color="#0A5C6D" />
+              <Text style={styles.bracketButtonText}>Xem bảng đấu chi tiết</Text>
+            </TouchableOpacity>
+            
+            <Text style={styles.bracketDescription}>
+              Bảng đấu sẽ được tạo tự động khi giải đấu bắt đầu.
+              Bạn có thể theo dõi tiến trình các trận đấu tại đây.
+            </Text>
+            
+            {/* Bracket Sub-tabs */}
+            <View style={styles.bracketSubTabs}>
+              <TouchableOpacity style={styles.bracketSubTab}>
+                <Text style={styles.bracketSubTabText}>Nhánh thắng</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.bracketSubTab}>
+                <Text style={styles.bracketSubTabText}>Nhánh thua</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.bracketSubTab}>
+                <Text style={styles.bracketSubTabText}>Semi-final</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -312,10 +341,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: 8,
+    position: 'relative',
   },
   tabItemActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#060606',
+    // Active styling handled by indicator
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#D7D7D9',
+    letterSpacing: 0.15,
+    marginTop: 4,
+  },
+  tabLabelActive: {
+    color: '#211A2C',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: -8,
+    width: 48,
+    height: 2,
+    backgroundColor: '#161722',
   },
   subTabContainer: {
     flexDirection: 'row',
@@ -570,5 +616,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+  },
+  bracketContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  bracketButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#f0f9ff',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  bracketButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0A5C6D',
+  },
+  bracketDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  bracketSubTabs: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  bracketSubTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+  },
+  bracketSubTabText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
   },
 });

@@ -3,13 +3,14 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIn
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
 import { router } from 'expo-router';
-import { MapPin, MoreHorizontal, Camera } from 'lucide-react-native';
+import { MapPin, MoreHorizontal, Camera, Trophy, Users, Target, BarChart3, X } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
 import { UniversalTabs } from '@/components/shared/UniversalTabs';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
 import { mockChallenges, getChallengesByStatus } from '@/demo-data/challenges-data';
-import { Users, Trophy, X } from 'lucide-react-native';
 import { ClubCard, MemberList, LoadingContainer, ErrorContainer } from '@/components/shared';
+import { TournamentCard } from '@/components/tournaments/TournamentCard';
+import { RankingCard } from '@/components/shared/RankingCard';
 
 interface Member {
   id: string;
@@ -24,7 +25,9 @@ interface Member {
 
 export default function ClubsScreen() {
   const [mainTab, setMainTab] = useState<'clb' | 'find_opponent'>('clb');
-  const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'challenges' | 'profile'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'ranking' | 'challenges'>('members');
+  const [tournamentTab, setTournamentTab] = useState<'ready' | 'live' | 'done'>('ready');
+  const [rankingTab, setRankingTab] = useState<'prize_pool' | 'elo' | 'spa'>('prize_pool');
   const [challengeTab, setChallengeTab] = useState<'waiting' | 'live' | 'finished'>('waiting');
 
   // Define tabs for UniversalTabs
@@ -217,7 +220,7 @@ export default function ClubsScreen() {
             style={[styles.tab, activeTab === 'members' && styles.activeTab]}
             onPress={() => setActiveTab('members')}
           >
-            <View style={styles.tabIcon} />
+            <Users size={20} color={activeTab === 'members' ? '#161722' : '#D7D7D9'} />
             <Text style={[styles.tabText, activeTab === 'members' && styles.activeTabText]}>Thành viên</Text>
             {activeTab === 'members' && <View style={styles.activeTabIndicator} />}
           </TouchableOpacity>
@@ -225,25 +228,25 @@ export default function ClubsScreen() {
             style={[styles.tab, activeTab === 'tournaments' && styles.activeTab]}
             onPress={() => setActiveTab('tournaments')}
           >
-            <View style={styles.tabIcon} />
+            <Trophy size={20} color={activeTab === 'tournaments' ? '#161722' : '#D7D7D9'} />
             <Text style={[styles.tabText, activeTab === 'tournaments' && styles.activeTabText]}>Giải đấu</Text>
             {activeTab === 'tournaments' && <View style={styles.activeTabIndicator} />}
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'ranking' && styles.activeTab]}
+            onPress={() => setActiveTab('ranking')}
+          >
+            <BarChart3 size={20} color={activeTab === 'ranking' ? '#161722' : '#D7D7D9'} />
+            <Text style={[styles.tabText, activeTab === 'ranking' && styles.activeTabText]}>Bảng xếp hạng</Text>
+            {activeTab === 'ranking' && <View style={styles.activeTabIndicator} />}
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.tab, activeTab === 'challenges' && styles.activeTab]}
             onPress={() => setActiveTab('challenges')}
           >
-            <View style={styles.tabIcon} />
+            <Target size={20} color={activeTab === 'challenges' ? '#161722' : '#D7D7D9'} />
             <Text style={[styles.tabText, activeTab === 'challenges' && styles.activeTabText]}>Thách đấu</Text>
             {activeTab === 'challenges' && <View style={styles.activeTabIndicator} />}
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'profile' && styles.activeTab]}
-            onPress={() => setActiveTab('profile')}
-          >
-            <View style={styles.tabIcon} />
-            <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]}>Hồ sơ</Text>
-            {activeTab === 'profile' && <View style={styles.activeTabIndicator} />}
           </TouchableOpacity>
         </View>
 
@@ -259,8 +262,99 @@ export default function ClubsScreen() {
           )}
           
           {activeTab === 'tournaments' && (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Danh sách giải đấu sẽ có sớm</Text>
+            <View style={styles.tournamentsContainer}>
+              {/* Tournament Sub-tabs */}
+              <View style={styles.subTabContainer}>
+                <TouchableOpacity 
+                  style={[styles.subTab, tournamentTab === 'ready' && styles.activeSubTab]}
+                  onPress={() => setTournamentTab('ready')}
+                >
+                  <Text style={[styles.subTabText, tournamentTab === 'ready' && styles.activeSubTabText]}>Ready</Text>
+                  {tournamentTab === 'ready' && <View style={styles.subTabIndicator} />}
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.subTab, tournamentTab === 'live' && styles.activeSubTab]}
+                  onPress={() => setTournamentTab('live')}
+                >
+                  <Text style={[styles.subTabText, tournamentTab === 'live' && styles.activeSubTabText]}>Live</Text>
+                  {tournamentTab === 'live' && <View style={styles.subTabIndicator} />}
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.subTab, tournamentTab === 'done' && styles.activeSubTab]}
+                  onPress={() => setTournamentTab('done')}
+                >
+                  <Text style={[styles.subTabText, tournamentTab === 'done' && styles.activeSubTabText]}>Done</Text>
+                  {tournamentTab === 'done' && <View style={styles.subTabIndicator} />}
+                </TouchableOpacity>
+              </View>
+              
+              {/* Tournament Content */}
+              <ScrollView style={styles.tournamentsList} showsVerticalScrollIndicator={false}>
+                {tournamentTab === 'ready' && (
+                  <View style={styles.tournamentContent}>
+                    <TournamentCard 
+                      title="SABO POOL 8 BALL Championship"
+                      participants="8/16 người"
+                      date="8/9/2024"
+                      prizePool="10.000.000 Million"
+                      rank="K → H+"
+                      status="ready"
+                      onPress={() => router.push('/tournament-detail')}
+                    />
+                  </View>
+                )}
+                {tournamentTab === 'live' && (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>Không có giải đấu nào đang diễn ra</Text>
+                  </View>
+                )}
+                {tournamentTab === 'done' && (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>Chưa có giải đấu nào kết thúc</Text>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          )}
+          
+          {activeTab === 'ranking' && (
+            <View style={styles.rankingContainer}>
+              {/* Ranking Sub-tabs */}
+              <View style={styles.subTabContainer}>
+                <TouchableOpacity 
+                  style={[styles.subTab, rankingTab === 'prize_pool' && styles.activeSubTab]}
+                  onPress={() => setRankingTab('prize_pool')}
+                >
+                  <Text style={[styles.subTabText, rankingTab === 'prize_pool' && styles.activeSubTabText]}>Prize Pool</Text>
+                  {rankingTab === 'prize_pool' && <View style={styles.subTabIndicator} />}
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.subTab, rankingTab === 'elo' && styles.activeSubTab]}
+                  onPress={() => setRankingTab('elo')}
+                >
+                  <Text style={[styles.subTabText, rankingTab === 'elo' && styles.activeSubTabText]}>ELO</Text>
+                  {rankingTab === 'elo' && <View style={styles.subTabIndicator} />}
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.subTab, rankingTab === 'spa' && styles.activeSubTab]}
+                  onPress={() => setRankingTab('spa')}
+                >
+                  <Text style={[styles.subTabText, rankingTab === 'spa' && styles.activeSubTabText]}>SPA</Text>
+                  {rankingTab === 'spa' && <View style={styles.subTabIndicator} />}
+                </TouchableOpacity>
+              </View>
+              
+              {/* Ranking Content */}
+              <ScrollView style={styles.rankingList} showsVerticalScrollIndicator={false}>
+                <RankingCard 
+                  type={rankingTab}
+                  data={[
+                    { rank: 1, name: 'Player 1', value: rankingTab === 'prize_pool' ? '5.000.000' : rankingTab === 'elo' ? '1500' : '1000', avatar: 'https://placehold.co/40x40' },
+                    { rank: 2, name: 'Player 2', value: rankingTab === 'prize_pool' ? '3.000.000' : rankingTab === 'elo' ? '1400' : '800', avatar: 'https://placehold.co/40x40' },
+                    { rank: 3, name: 'Player 3', value: rankingTab === 'prize_pool' ? '2.000.000' : rankingTab === 'elo' ? '1300' : '600', avatar: 'https://placehold.co/40x40' },
+                  ]}
+                />
+              </ScrollView>
             </View>
           )}
           
@@ -300,11 +394,7 @@ export default function ClubsScreen() {
             </View>
           )}
           
-          {activeTab === 'profile' && (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Thông tin chi tiết club sẽ có sớm</Text>
-            </View>
-          )}
+
         </View>
           </View>
         )}
@@ -562,12 +652,7 @@ const styles = StyleSheet.create({
   activeTab: {
     // Active tab styling
   },
-  tabIcon: {
-    width: 20,
-    height: 19.37,
-    backgroundColor: '#D7D7D9',
-    marginBottom: 4,
-  },
+
   tabText: {
     fontSize: 10,
     fontWeight: '400',
@@ -675,5 +760,56 @@ const styles = StyleSheet.create({
   challengesList: {
     flex: 1,
     paddingTop: 8,
+  },
+  tournamentsContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  rankingContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  subTabContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+    paddingHorizontal: 20,
+  },
+  subTab: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    position: 'relative',
+  },
+  activeSubTab: {
+    // Active styling handled by indicator
+  },
+  subTabText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#999',
+  },
+  activeSubTabText: {
+    color: '#0A5C6D',
+    fontWeight: '600',
+  },
+  subTabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 16,
+    right: 16,
+    height: 2,
+    backgroundColor: '#0A5C6D',
+  },
+  tournamentsList: {
+    flex: 1,
+    paddingTop: 16,
+  },
+  tournamentContent: {
+    paddingHorizontal: 16,
+  },
+  rankingList: {
+    flex: 1,
+    paddingTop: 16,
   },
 });
