@@ -18,12 +18,14 @@ interface Member {
 
 
 export default function ClubsScreen() {
+  const [mainTab, setMainTab] = useState<'clb' | 'discover'>('clb');
   const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'challenges' | 'profile'>('members');
   
-  const clubsQuery = trpc.clubs.list.useQuery({ limit: 1 });
+  const clubsQuery = trpc.clubs.list.useQuery({ limit: 10 });
   const membersQuery = trpc.clubs.getMembers.useQuery({ clubId: '1' });
   
-  const club = clubsQuery.data?.clubs[0];
+  const clubs = clubsQuery.data?.clubs || [];
+  const club = clubs[0];
   const members = membersQuery.data?.members || [];
   
   const handleBack = () => {
@@ -68,32 +70,85 @@ export default function ClubsScreen() {
       <Stack.Screen 
         options={{
           headerShown: true,
-          title: club.username,
-          headerTitleAlign: 'center',
+          title: 'SABO',
+          headerTitleAlign: 'left',
           headerStyle: {
             backgroundColor: 'white',
           },
           headerTitleStyle: {
-            fontSize: 17,
-            fontWeight: '400',
-            color: '#161722'
+            fontSize: 24,
+            fontWeight: '900',
+            color: '#6503C8',
+            letterSpacing: 1.2
           },
-          headerLeft: () => (
-            <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
-              <View style={styles.backIcon} />
-            </TouchableOpacity>
-          ),
           headerRight: () => (
-            <TouchableOpacity style={styles.headerButton} onPress={handleMoreOptions}>
-              <MoreHorizontal size={18} color="#161722" />
-            </TouchableOpacity>
+            <View style={styles.headerRightContainer}>
+              <TouchableOpacity style={styles.headerIconButton}>
+                <View style={styles.notificationIcon} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.headerIconButton}>
+                <View style={styles.chatIcon} />
+              </TouchableOpacity>
+            </View>
           ),
         }}
       />
       
+      {/* Main Tab Navigation */}
+      <View style={styles.mainTabContainer}>
+        <TouchableOpacity 
+          style={[styles.mainTab, mainTab === 'clb' && styles.activeMainTab]}
+          onPress={() => setMainTab('clb')}
+        >
+          <Text style={[styles.mainTabText, mainTab === 'clb' && styles.activeMainTabText]}>CLB</Text>
+          {mainTab === 'clb' && <View style={styles.mainTabIndicator} />}
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.mainTab, mainTab === 'discover' && styles.activeMainTab]}
+          onPress={() => setMainTab('discover')}
+        >
+          <Text style={[styles.mainTabText, mainTab === 'discover' && styles.activeMainTabText]}>Khám phá</Text>
+          {mainTab === 'discover' && <View style={styles.mainTabIndicator} />}
+        </TouchableOpacity>
+      </View>
+      
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Club Avatar Section */}
-        <View style={styles.avatarSection}>
+        {mainTab === 'discover' ? (
+          // Discover Tab Content
+          <View style={styles.discoverContainer}>
+            {clubsQuery.isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#0A5C6D" />
+                <Text style={styles.loadingText}>Đang tải danh sách club...</Text>
+              </View>
+            ) : (
+              clubs.map((clubItem, index) => (
+                <View key={clubItem.id} style={styles.clubCard}>
+                  <Image source={{ uri: clubItem.cover_image }} style={styles.clubCardImage} />
+                  <View style={styles.clubCardContent}>
+                    <Text style={styles.clubCardName}>{clubItem.name}</Text>
+                    <View style={styles.clubCardLocation}>
+                      <MapPin size={12} color="#BA1900" />
+                      <Text style={styles.clubCardLocationText}>{clubItem.location}</Text>
+                    </View>
+                    <View style={styles.clubCardActions}>
+                      <TouchableOpacity style={styles.joinButton}>
+                        <Text style={styles.joinButtonText}>Tham gia</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.registerButton}>
+                        <Text style={styles.registerButtonText}>Đăng ký hạng</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        ) : (
+          // CLB Tab Content
+          <View>
+            {/* Club Avatar Section */}
+            <View style={styles.avatarSection}>
           <View style={styles.avatarContainer}>
             <LinearGradient
               colors={['rgba(119, 132, 248, 0.40)', 'rgba(27, 26, 38, 0.20)', 'rgba(198, 149, 248, 0.40)']}
@@ -235,6 +290,8 @@ export default function ClubsScreen() {
             </View>
           )}
         </View>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -244,6 +301,127 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  headerIconButton: {
+    padding: 4,
+  },
+  notificationIcon: {
+    width: 20,
+    height: 20,
+    backgroundColor: 'black',
+  },
+  chatIcon: {
+    width: 20,
+    height: 20,
+    backgroundColor: 'black',
+  },
+  mainTabContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  mainTab: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    position: 'relative',
+  },
+  activeMainTab: {
+    // Active styling handled by indicator
+  },
+  mainTabText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#CCCCCE',
+  },
+  activeMainTabText: {
+    color: 'black',
+    fontWeight: '700',
+  },
+  mainTabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 20,
+    right: 20,
+    height: 2,
+    backgroundColor: '#6503C8',
+  },
+  discoverContainer: {
+    padding: 16,
+  },
+  clubCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  clubCardImage: {
+    width: '100%',
+    height: 120,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  clubCardContent: {
+    padding: 16,
+  },
+  clubCardName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'black',
+    marginBottom: 8,
+  },
+  clubCardLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 16,
+  },
+  clubCardLocationText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  clubCardActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  joinButton: {
+    backgroundColor: '#0A5C6D',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 6,
+    flex: 1,
+  },
+  joinButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  registerButton: {
+    backgroundColor: '#BA1900',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 6,
+    flex: 1,
+  },
+  registerButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
