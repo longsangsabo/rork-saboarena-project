@@ -19,6 +19,9 @@ import {
   TrendingUp
 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import { TournamentDetail } from '@/components/tournaments/TournamentDetail';
+import { RankingScreen } from '@/components/tournaments/RankingScreen';
+import { TournamentListItem } from '@/components/tournaments/TournamentListItem';
 
 interface Tournament {
   id: string;
@@ -48,6 +51,8 @@ const formatCurrency = (amount: number) => {
 
 export default function TournamentsScreen() {
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'upcoming' | 'live' | 'completed'>('all');
+  const [currentView, setCurrentView] = useState<'list' | 'detail' | 'ranking'>('list');
+  const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   
   const tournamentsQuery = trpc.tournaments.list.useQuery({ 
     status: selectedFilter,
@@ -78,6 +83,20 @@ export default function TournamentsScreen() {
     );
   };
 
+  const handleTournamentPress = (tournament: Tournament) => {
+    setSelectedTournament(tournament);
+    setCurrentView('detail');
+  };
+
+  const handleBackToList = () => {
+    setCurrentView('list');
+    setSelectedTournament(null);
+  };
+
+  const handleShowRanking = () => {
+    setCurrentView('ranking');
+  };
+
   const tournaments = tournamentsQuery.data?.tournaments || [];
 
   const renderTournamentCard = (tournament: Tournament) => {
@@ -93,74 +112,22 @@ export default function TournamentsScreen() {
     });
     
     return (
-      <TouchableOpacity key={tournament.id} style={styles.tournamentCard}>
-        <Image 
-          source={{ uri: tournament.image_url || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop' }} 
-          style={styles.tournamentImage} 
-        />
-        
-        <View style={styles.tournamentContent}>
-          <View style={styles.tournamentHeader}>
-            <Text style={styles.tournamentTitle}>{tournament.title}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(tournament.status) }]}>
-              <Text style={styles.statusText}>{getStatusText(tournament.status)}</Text>
-            </View>
-          </View>
-          
-          {tournament.description && (
-            <Text style={styles.tournamentDescription}>{tournament.description}</Text>
-          )}
-          
-          <View style={styles.prizeContainer}>
-            <Trophy size={18} color="#0A5C6D" />
-            <Text style={styles.prizeText}>Giải thưởng: {formatCurrency(tournament.prize_pool)}</Text>
-          </View>
-          
-          <View style={styles.tournamentDetails}>
-            <View style={styles.detailRow}>
-              <Users size={16} color="#666" />
-              <Text style={styles.detailText}>
-                {tournament.current_players}/{tournament.max_players} người • còn {remainingSlots} chỗ
-              </Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <TrendingUp size={16} color="#666" />
-              <Text style={styles.detailText}>Yêu cầu: {tournament.min_rank} → {tournament.max_rank}+</Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <DollarSign size={16} color="#666" />
-              <Text style={styles.detailText}>Phí tham gia: {formatCurrency(tournament.entry_fee)}</Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <MapPin size={16} color="#666" />
-              <Text style={styles.detailText}>{tournament.location}</Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Clock size={16} color="#666" />
-              <Text style={styles.detailText}>{date} • {timeRange}</Text>
-            </View>
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.joinButton, (joinMutation.isLoading || tournament.status !== 'upcoming') && styles.joinButtonDisabled]}
-            onPress={() => handleJoinTournament(tournament.id)}
-            disabled={joinMutation.isLoading || tournament.status !== 'upcoming'}
-          >
-            {joinMutation.isLoading ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text style={styles.joinButtonText}>
-                {tournament.status === 'upcoming' ? 'Tham gia ngay' : 
-                 tournament.status === 'live' ? 'Đang diễn ra' : 'Đã kết thúc'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
+      <TournamentListItem
+        key={tournament.id}
+        tournament={{
+          id: tournament.id,
+          title: tournament.title,
+          participants: tournament.current_players,
+          maxParticipants: tournament.max_players,
+          date: date,
+          rank: `${tournament.min_rank} → ${tournament.max_rank}+`,
+          prizePool: tournament.prize_pool,
+          ballType: 8, // Default to 8-ball
+          status: tournament.status === 'upcoming' ? 'ready' : tournament.status === 'live' ? 'live' : 'done'
+        }}
+        onPress={() => handleTournamentPress(tournament)}
+        onJoin={() => handleJoinTournament(tournament.id)}
+      />
     );
   };
 
@@ -182,12 +149,43 @@ export default function TournamentsScreen() {
     }
   };
 
+  // Show tournament detail view
+  if (currentView === 'detail' && selectedTournament) {
+    return (
+      <TournamentDetail
+        tournament={{
+          id: selectedTournament.id,
+          title: selectedTournament.title,
+          participants: selectedTournament.current_players,
+          maxParticipants: selectedTournament.max_players,
+          date: new Date(selectedTournament.start_time).toLocaleDateString('vi-VN'),
+          rank: `${selectedTournament.min_rank} → ${selectedTournament.max_rank}+`,
+          prizePool: selectedTournament.prize_pool,
+          ballType: 8, // Default to 8-ball
+          status: selectedTournament.status === 'upcoming' ? 'ready' : selectedTournament.status === 'live' ? 'live' : 'done'
+        }}
+        onBack={handleBackToList}
+      />
+    );
+  }
+
+  // Show ranking view
+  if (currentView === 'ranking') {
+    return (
+      <RankingScreen onBack={handleBackToList} />
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.title}>Giải đấu</Text>
           <Text style={styles.subtitle}>Tham gia các giải đấu hấp dẫn</Text>
+          <TouchableOpacity style={styles.rankingButton} onPress={handleShowRanking}>
+            <Trophy size={20} color="#0A5C6D" />
+            <Text style={styles.rankingButtonText}>Bảng xếp hạng</Text>
+          </TouchableOpacity>
         </View>
         
         {/* Filter Tabs */}
@@ -255,6 +253,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+  },
+  rankingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#f0f9ff',
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  rankingButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0A5C6D',
   },
   title: {
     fontSize: 28,

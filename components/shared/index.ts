@@ -14,6 +14,9 @@ export { EmptyState } from './EmptyState';
 
 // Tournament components
 export { TournamentCard } from '../tournaments/TournamentCard';
+export { TournamentDetail } from '../tournaments/TournamentDetail';
+export { RankingScreen } from '../tournaments/RankingScreen';
+export { TournamentListItem } from '../tournaments/TournamentListItem';
 
 // Club components
 export { MemberItem } from '../clubs/MemberItem';
