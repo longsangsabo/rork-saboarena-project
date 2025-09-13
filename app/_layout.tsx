@@ -26,6 +26,12 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="splash" options={{ headerShown: false }} />
+      <Stack.Screen name="register" options={{ headerShown: false }} />
+      <Stack.Screen name="login-screen" options={{ headerShown: false }} />
+      <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+      <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+      <Stack.Screen name="audit" options={{ headerShown: false }} />
     </Stack>
   );
 }
