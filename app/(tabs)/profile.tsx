@@ -128,37 +128,37 @@ export default function ProfileScreen() {
           style={styles.profileCard}
         />
 
-          {/* Rank Badge */}
-          <View style={styles.rankBadge}>
-            <View style={styles.rankIcon}>
-              <Crown size={14} color="#19127B" />
-            </View>
-            <Text style={styles.rankText}>RANK : {user.rank}</Text>
+        {/* Rank Badge */}
+        <View style={styles.rankBadge}>
+          <View style={styles.rankIcon}>
+            <Crown size={14} color="#19127B" />
           </View>
+          <Text style={styles.rankText}>RANK : {user.rank}</Text>
+        </View>
 
-          {/* Stats Row */}
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Crown size={16} color="#081122" />
-              <Text style={styles.statLabel}>ELO</Text>
-              <Text style={styles.statValue}>{user.elo}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Star size={18} color="#081122" />
-              <Text style={styles.statLabel}>SPA</Text>
-              <Text style={styles.statValue}>{user.spa}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <TrendingUp size={18} color="#081122" />
-              <Text style={styles.statLabel}>XH</Text>
-              <Text style={styles.statValue}>#{user.ranking}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Gamepad2 size={16} color="#081122" />
-              <Text style={styles.statLabel}>TRẬN</Text>
-              <Text style={styles.statValue}>{user.matches}</Text>
-            </View>
+        {/* Stats Row */}
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Crown size={16} color="#081122" />
+            <Text style={styles.statLabel}>ELO</Text>
+            <Text style={styles.statValue}>{user.elo}</Text>
           </View>
+          <View style={styles.statItem}>
+            <Star size={18} color="#081122" />
+            <Text style={styles.statLabel}>SPA</Text>
+            <Text style={styles.statValue}>{user.spa}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <TrendingUp size={18} color="#081122" />
+            <Text style={styles.statLabel}>XH</Text>
+            <Text style={styles.statValue}>#{user.ranking}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Gamepad2 size={16} color="#081122" />
+            <Text style={styles.statLabel}>TRẬN</Text>
+            <Text style={styles.statValue}>{user.matches}</Text>
+          </View>
+        </View>
 
         {/* Tournament List */}
         <ProfileTournamentList 
