@@ -8,8 +8,10 @@ import {
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { ArrowLeft, MoreHorizontal } from 'lucide-react-native';
-import { RankingCard, RankingUser } from '@/components/shared/RankingCard';
+import { RankingUser } from '@/components/shared/RankingCard';
 import { UniversalTabs } from '@/components/shared/UniversalTabs';
+import { RankingHeaderButtons } from '@/components/ranking/RankingHeader';
+import { RankingList } from '@/components/ranking/RankingList';
 import { mockRankingData } from '@/demo-data/ranking_data';
 import { Users, Trophy, BarChart3 } from 'lucide-react-native';
 
@@ -56,16 +58,8 @@ export default function RankingScreen() {
           headerStyle: {
             backgroundColor: 'white',
           },
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
-              <ArrowLeft size={24} color="#333" />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity style={styles.headerButton}>
-              <MoreHorizontal size={24} color="#333" />
-            </TouchableOpacity>
-          ),
+          headerLeft: () => <RankingHeaderButtons onBack={() => router.back()} />,
+          headerRight: () => <RankingHeaderButtons onMore={() => console.log('More options')} />,
         }}
       />
       
@@ -76,27 +70,11 @@ export default function RankingScreen() {
         variant="pills" 
       />
       
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {topUser && (
-          <RankingCard 
-            user={topUser} 
-            type={activeTab} 
-            isTopRank={true}
-            onChallenge={handleChallenge}
-          />
-        )}
-        
-        <View style={styles.listContainer}>
-          {otherUsers.map((user) => (
-            <RankingCard 
-              key={user.id} 
-              user={user} 
-              type={activeTab}
-              onChallenge={handleChallenge}
-            />
-          ))}
-        </View>
-      </ScrollView>
+      <RankingList 
+        users={currentData}
+        type={activeTab}
+        onChallenge={handleChallenge}
+      />
     </SafeAreaView>
   );
 }

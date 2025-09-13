@@ -10,15 +10,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { NavigationHelper } from '@/utils/NavigationHelper';
 import { trpc } from '@/lib/trpc';
-import { CustomStatusBar } from '@/components/shared/StatusBar';
-import { HomeHeader } from '@/components/shared/HomeHeader';
-import { TabNavigation } from '@/components/shared/TabNavigation';
-import { ProfileCard } from '@/components/shared/ProfileCard';
-import { RankBadge } from '@/components/shared/RankBadge';
-import { ActionButtons } from '@/components/shared/ActionButtons';
-import { SocialActions } from '@/components/shared/SocialActions';
-import { ClubInfo } from '@/components/shared/ClubInfo';
-import { PostContent } from '@/components/shared/PostContent';
+import { 
+  CustomStatusBar,
+  HomeHeader,
+  TabNavigation
+} from '@/components/shared';
+import { 
+  ProfileCard,
+  RankBadge,
+  ActionButtons,
+  SocialActions,
+  ClubInfo,
+  PostContent
+} from '@/components/shared';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();

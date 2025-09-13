@@ -5,12 +5,17 @@ import { Stack } from 'expo-router';
 import { router } from 'expo-router';
 import { MapPin, MoreHorizontal, Camera, Trophy, Users, Target, BarChart3, X } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
-import { UniversalTabs } from '@/components/shared/UniversalTabs';
+import { 
+  UniversalTabs,
+  ClubCard, 
+  MemberList, 
+  LoadingContainer, 
+  ErrorContainer,
+  TournamentCard,
+  RankingCard
+} from '@/components/shared';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
 import { mockChallenges, getChallengesByStatus } from '@/demo-data/challenges-data';
-import { ClubCard, MemberList, LoadingContainer, ErrorContainer } from '@/components/shared';
-import { TournamentCard } from '@/components/tournaments/TournamentCard';
-import { RankingCard } from '@/components/shared/RankingCard';
 
 interface Member {
   id: string;
@@ -27,7 +32,7 @@ export default function ClubsScreen() {
   const [mainTab, setMainTab] = useState<'clb' | 'find_opponent'>('clb');
   const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'ranking' | 'challenges'>('members');
   const [tournamentTab, setTournamentTab] = useState<'ready' | 'live' | 'done'>('ready');
-  const [rankingTab, setRankingTab] = useState<'prize_pool' | 'elo' | 'spa'>('prize_pool');
+  const [rankingTab, setRankingTab] = useState<'prizepool' | 'elo' | 'spa'>('prizepool');
   const [challengeTab, setChallengeTab] = useState<'waiting' | 'live' | 'finished'>('waiting');
 
   // Define tabs for UniversalTabs
@@ -293,13 +298,20 @@ export default function ClubsScreen() {
                 {tournamentTab === 'ready' && (
                   <View style={styles.tournamentContent}>
                     <TournamentCard 
-                      title="SABO POOL 8 BALL Championship"
-                      participants="8/16 người"
-                      date="8/9/2024"
-                      prizePool="10.000.000 Million"
-                      rank="K → H+"
-                      status="ready"
-                      onPress={() => router.push('/tournament-detail')}
+                      tournament={{
+                        id: 'demo-1',
+                        title: 'SABO POOL 8 BALL Championship',
+                        prize_pool: 10000000,
+                        entry_fee: 100000,
+                        current_players: 8,
+                        max_players: 16,
+                        min_rank: 'K',
+                        max_rank: 'H+',
+                        location: 'Club SABO Arena',
+                        start_time: '2024-09-08T10:00:00Z',
+                        end_time: '2024-09-08T18:00:00Z',
+                        status: 'upcoming'
+                      }}
                     />
                   </View>
                 )}
@@ -322,11 +334,11 @@ export default function ClubsScreen() {
               {/* Ranking Sub-tabs */}
               <View style={styles.subTabContainer}>
                 <TouchableOpacity 
-                  style={[styles.subTab, rankingTab === 'prize_pool' && styles.activeSubTab]}
-                  onPress={() => setRankingTab('prize_pool')}
+                  style={[styles.subTab, rankingTab === 'prizepool' && styles.activeSubTab]}
+                  onPress={() => setRankingTab('prizepool')}
                 >
-                  <Text style={[styles.subTabText, rankingTab === 'prize_pool' && styles.activeSubTabText]}>Prize Pool</Text>
-                  {rankingTab === 'prize_pool' && <View style={styles.subTabIndicator} />}
+                  <Text style={[styles.subTabText, rankingTab === 'prizepool' && styles.activeSubTabText]}>Prize Pool</Text>
+                  {rankingTab === 'prizepool' && <View style={styles.subTabIndicator} />}
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.subTab, rankingTab === 'elo' && styles.activeSubTab]}
@@ -346,14 +358,18 @@ export default function ClubsScreen() {
               
               {/* Ranking Content */}
               <ScrollView style={styles.rankingList} showsVerticalScrollIndicator={false}>
-                <RankingCard 
-                  type={rankingTab}
-                  data={[
-                    { rank: 1, name: 'Player 1', value: rankingTab === 'prize_pool' ? '5.000.000' : rankingTab === 'elo' ? '1500' : '1000', avatar: 'https://placehold.co/40x40' },
-                    { rank: 2, name: 'Player 2', value: rankingTab === 'prize_pool' ? '3.000.000' : rankingTab === 'elo' ? '1400' : '800', avatar: 'https://placehold.co/40x40' },
-                    { rank: 3, name: 'Player 3', value: rankingTab === 'prize_pool' ? '2.000.000' : rankingTab === 'elo' ? '1300' : '600', avatar: 'https://placehold.co/40x40' },
-                  ]}
-                />
+                {[
+                  { id: '1', rank: 'A+', name: 'Player 1', value: rankingTab === 'prizepool' ? '5.000.000' : rankingTab === 'elo' ? '1500' : '1000', avatar: 'https://placehold.co/40x40', position: 1 },
+                  { id: '2', rank: 'A', name: 'Player 2', value: rankingTab === 'prizepool' ? '3.000.000' : rankingTab === 'elo' ? '1400' : '800', avatar: 'https://placehold.co/40x40', position: 2 },
+                  { id: '3', rank: 'B+', name: 'Player 3', value: rankingTab === 'prizepool' ? '2.000.000' : rankingTab === 'elo' ? '1300' : '600', avatar: 'https://placehold.co/40x40', position: 3 },
+                ].map((user) => (
+                  <RankingCard 
+                    key={user.id}
+                    user={user}
+                    type={rankingTab}
+                    isTopRank={user.position === 1}
+                  />
+                ))}
               </ScrollView>
             </View>
           )}

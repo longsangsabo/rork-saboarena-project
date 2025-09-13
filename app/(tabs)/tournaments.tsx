@@ -19,8 +19,14 @@ import {
   TrendingUp
 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
-import { TournamentDetail } from '@/components/tournaments/TournamentDetail';
-import { TournamentListItem } from '@/components/tournaments/TournamentListItem';
+import { 
+  TournamentDetail,
+  TournamentListItem,
+  TournamentHeader,
+  TournamentFilters,
+  TournamentEmptyState,
+  TournamentLoadingState
+} from '@/components/shared';
 import { router } from 'expo-router';
 
 interface Tournament {
@@ -64,7 +70,7 @@ export default function TournamentsScreen() {
       Alert.alert('Thành công', 'Đã tham gia giải đấu thành công!');
       tournamentsQuery.refetch();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       Alert.alert('Lỗi', error.message || 'Không thể tham gia giải đấu');
     }
   });
@@ -174,60 +180,27 @@ export default function TournamentsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Giải đấu</Text>
-          <Text style={styles.subtitle}>Tham gia các giải đấu hấp dẫn</Text>
-          <TouchableOpacity style={styles.rankingButton} onPress={handleShowRanking}>
-            <Trophy size={20} color="#0A5C6D" />
-            <Text style={styles.rankingButtonText}>Bảng xếp hạng</Text>
-          </TouchableOpacity>
-        </View>
+        <TournamentHeader onRankingPress={handleShowRanking} />
         
-        {/* Filter Tabs */}
-        <View style={styles.filterContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            {[
-              { key: 'all', label: 'Tất cả' },
-              { key: 'upcoming', label: 'Sắp diễn ra' },
-              { key: 'live', label: 'Đang live' },
-              { key: 'completed', label: 'Đã kết thúc' },
-            ].map((filter) => (
-              <TouchableOpacity
-                key={filter.key}
-                style={[
-                  styles.filterTab,
-                  selectedFilter === filter.key && styles.filterTabActive,
-                ]}
-                onPress={() => setSelectedFilter(filter.key)}
-              >
-                <Text
-                  style={[
-                    styles.filterTabText,
-                    selectedFilter === filter.key && styles.filterTabTextActive,
-                  ]}
-                >
-                  {filter.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+        <TournamentFilters 
+          filters={[
+            { key: 'all', label: 'Tất cả' },
+            { key: 'upcoming', label: 'Sắp diễn ra' },
+            { key: 'live', label: 'Đang live' },
+            { key: 'completed', label: 'Đã kết thúc' },
+          ]}
+          selectedFilter={selectedFilter}
+          onFilterChange={(filter) => setSelectedFilter(filter as typeof selectedFilter)}
+        />
         
         {/* Tournament List */}
         <View style={styles.content}>
           {tournamentsQuery.isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#0A5C6D" />
-              <Text style={styles.loadingText}>Đang tải giải đấu...</Text>
-            </View>
+            <TournamentLoadingState />
           ) : tournaments.length > 0 ? (
             tournaments.map(renderTournamentCard)
           ) : (
-            <View style={styles.emptyContainer}>
-              <Trophy size={48} color="#666" />
-              <Text style={styles.emptyText}>Không có giải đấu nào</Text>
-              <Text style={styles.emptySubtext}>Hãy thử lọc khác hoặc quay lại sau</Text>
-            </View>
+            <TournamentEmptyState />
           )}
         </View>
       </ScrollView>
@@ -243,98 +216,11 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
-    padding: 20,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  rankingButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#f0f9ff',
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  rankingButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0A5C6D',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  filterContainer: {
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  filterScroll: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  filterTab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 12,
-    borderRadius: 20,
-    backgroundColor: '#f5f5f5',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  filterTabActive: {
-    backgroundColor: '#0A5C6D',
-    borderColor: '#0A5C6D',
-  },
-  filterTabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  filterTabTextActive: {
-    color: 'white',
-  },
+
   content: {
     padding: 20,
   },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
+
   tournamentCard: {
     backgroundColor: 'white',
     borderRadius: 16,

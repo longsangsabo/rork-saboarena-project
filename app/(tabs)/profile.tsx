@@ -6,16 +6,30 @@ import {
   TouchableOpacity, 
   ImageBackground,
   Alert,
-  Text
+  Text,
+  ActivityIndicator,
+  StatusBar
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { 
   ArrowLeft, 
-  MoreHorizontal
+  MoreHorizontal,
+  Crown,
+  Star,
+  TrendingUp,
+  Gamepad2,
+  Calendar,
+  Users,
+  DollarSign
 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
-import { ProfileCard, StatsRow, TabNavigation } from '@/components/shared';
+import { 
+  ProfileCard, 
+  StatsRow, 
+  TabNavigation, 
+  ProfileTournamentList 
+} from '@/components/shared';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -29,7 +43,8 @@ export default function ProfileScreen() {
   const user = profileQuery.data;
   
   const handleEditProfile = () => {
-    router.push('/edit-profile');
+    // Temporary placeholder for edit profile navigation
+    console.log('Edit profile pressed');
   };
   
   const handleBack = () => {
@@ -41,8 +56,8 @@ export default function ProfileScreen() {
       'Tùy chọn',
       'Chọn hành động',
       [
-        { text: 'Tìm bạn', onPress: () => router.push('/find-friends') },
-        { text: 'Cài đặt', onPress: () => router.push('/settings') },
+        { text: 'Tìm bạn', onPress: () => console.log('Find friends') },
+        { text: 'Cài đặt', onPress: () => console.log('Settings') },
         { text: 'Đăng xuất', style: 'destructive', onPress: () => console.log('Logout') },
         { text: 'Hủy', style: 'cancel' }
       ]
@@ -144,79 +159,14 @@ export default function ProfileScreen() {
               <Text style={styles.statValue}>{user.matches}</Text>
             </View>
           </View>
-        </View>
 
-        {/* Tournament Tabs */}
-        <View style={styles.tabsContainer}>
-          <View style={styles.tabsHeader}>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'ready' && styles.activeTab]}
-              onPress={() => setActiveTab('ready')}
-            >
-              <Text style={[styles.tabText, activeTab === 'ready' && styles.activeTabText]}>Ready</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'live' && styles.activeTab]}
-              onPress={() => setActiveTab('live')}
-            >
-              <Text style={[styles.tabText, activeTab === 'live' && styles.activeTabText]}>Live</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'done' && styles.activeTab]}
-              onPress={() => setActiveTab('done')}
-            >
-              <Text style={[styles.tabText, activeTab === 'done' && styles.activeTabText]}>Done</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Tournament List */}
-          <View style={styles.tournamentList}>
-            {tournamentsQuery.isLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#0A5C6D" />
-                <Text style={styles.loadingText}>Đang tải...</Text>
-              </View>
-            ) : tournamentsQuery.data?.tournaments.length ? (
-              tournamentsQuery.data.tournaments.map((tournament) => (
-                <TouchableOpacity key={tournament.id} style={styles.tournamentCard}>
-                  <View style={styles.tournamentIcon}>
-                    <Text style={styles.tournamentNumber}>8</Text>
-                  </View>
-                  <View style={styles.tournamentInfo}>
-                    <Text style={styles.tournamentName}>{tournament.title}</Text>
-                    <View style={styles.tournamentDetails}>
-                      <Calendar size={11} color="#0A5C6D" />
-                      <Text style={styles.tournamentDate}>
-                        {new Date(tournament.start_time).toLocaleDateString('vi-VN')}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.tournamentMeta}>
-                    <Text style={styles.tournamentRank}>{tournament.min_rank} - {tournament.max_rank}</Text>
-                    <View style={styles.tournamentStats}>
-                      <Users size={14} color="#801515" />
-                      <Text style={styles.tournamentPlayers}>{tournament.current_players}/{tournament.max_players}</Text>
-                      <DollarSign size={14} color="#801515" />
-                      <Text style={styles.tournamentPrize}>
-                        {(tournament.prize_pool / 1000000).toFixed(0)}M
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.tournamentAction}>
-                    <Text style={styles.tournamentLives}>2 Mạng</Text>
-                    <TouchableOpacity style={styles.joinButton}>
-                      <View style={styles.joinIcon} />
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Không có giải đấu nào</Text>
-              </View>
-            )}
-          </View>
-        </View>
+        {/* Tournament List */}
+        <ProfileTournamentList 
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tournaments={tournamentsQuery.data?.tournaments || []}
+          isLoading={tournamentsQuery.isLoading}
+        />
       </ScrollView>
     </View>
   );
