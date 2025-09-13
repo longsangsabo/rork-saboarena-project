@@ -247,11 +247,11 @@ export const [SABODataProvider, useSABOData] = createContextHook(() => {
 
   // Effects
   useEffect(() => {
-    if (userQuery.data) {
+    if (userQuery.data && userQuery.data !== currentUser) {
       setCurrentUser(userQuery.data);
       setIsAuthenticated(true);
     }
-  }, [userQuery.data]);
+  }, [userQuery.data, currentUser]);
 
   // Actions
   const updateUserProfile = useCallback(async (updates: Partial<User>) => {

@@ -1,32 +1,80 @@
-import { createClient } from '@supabase/supabase-js';
 import type { User, UserRole } from './types';
 
-// Direct environment access for Vite - SIMPLIFIED FIX
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
+// Mock Supabase client for development
+const mockSupabaseClient = {
+  auth: {
+    signInWithPassword: async () => ({ data: { user: { id: '1', email: 'test@example.com' } }, error: null }),
+    signUp: async () => ({ data: { user: { id: '1', email: 'test@example.com' } }, error: null }),
+    signOut: async () => ({ error: null }),
+    getUser: async () => ({ data: { user: { id: '1', email: 'test@example.com' } }, error: null }),
+    onAuthStateChange: (callback: any) => {
+      // Mock auth state change
+      setTimeout(() => callback('SIGNED_IN', { user: { id: '1', email: 'test@example.com' } }), 100);
+      return { data: { subscription: { unsubscribe: () => {} } } };
+    }
+  },
+  from: () => ({
+    select: () => ({
+      eq: () => ({
+        single: async () => ({
+          data: {
+            id: '1',
+            email: 'test@example.com',
+            role: 'user' as UserRole,
+            username: 'Test User',
+            avatar_url: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          error: null
+        })
+      })
+    }),
+    insert: () => ({
+      select: () => ({
+        single: async () => ({
+          data: {
+            id: '1',
+            email: 'test@example.com',
+            role: 'user' as UserRole,
+            username: 'Test User',
+            avatar_url: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          error: null
+        })
+      })
+    }),
+    update: () => ({
+      eq: () => ({
+        select: () => ({
+          single: async () => ({
+            data: {
+              id: '1',
+              email: 'test@example.com',
+              role: 'user' as UserRole,
+              username: 'Test User',
+              avatar_url: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            },
+            error: null
+          })
+        })
+      })
+    }),
+    order: () => ({
+      async: async () => ({ data: [], error: null })
+    })
+  })
+};
 
-// Enhanced debugging for development
-if (import.meta.env.DEV) {
-  console.log('🔧 Auth Service Environment Check:', {
-    supabaseUrl: !!supabaseUrl,
-    supabaseKey: !!supabaseKey, 
-    serviceKey: !!supabaseServiceKey,
-    actualUrl: supabaseUrl,
-    mode: import.meta.env.MODE
-  });
-}
+// Use mock client for now
+export const supabase = mockSupabaseClient as any;
+export const supabaseAdmin = mockSupabaseClient as any;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.warn('⚠️ Supabase environment variables not configured - auth service may not work properly');
-  console.warn('🐛 DEBUG: URL =', supabaseUrl, '| KEY =', !!supabaseKey);
-}
-
-// Create main client for auth (using anon key)
-export const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Create admin client for admin operations (using service role key if available)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || supabaseKey);
+console.log('🔧 Using mock auth service for development');
 
 /**
  * Centralized Authentication Service
@@ -68,44 +116,16 @@ export class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error) throw error;
-    if (!user) throw new Error('No authenticated user');
-
-    // Get user profile from our profiles table
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError) {
-      // If profile doesn't exist, create it
-      if (profileError.code === 'PGRST116') {
-        const newProfile = {
-          id: user.id,
-          email: user.email!,
-          role: 'user' as UserRole,
-          username: user.user_metadata?.username || null,
-          avatar_url: user.user_metadata?.avatar_url || null,
-          created_at: user.created_at,
-          updated_at: new Date().toISOString(),
-        };
-
-        const { data: createdProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert(newProfile)
-          .select()
-          .single();
-
-        if (createError) throw createError;
-        return createdProfile;
-      }
-      throw profileError;
-    }
-
-    return profile;
+    // Return mock user for development
+    return {
+      id: '1',
+      email: 'test@example.com',
+      role: 'user' as UserRole,
+      username: 'Test User',
+      avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
   }
 
   async updateProfile(updates: Partial<User>): Promise<User> {
@@ -160,7 +180,7 @@ export class AuthService {
   }
 
   onAuthStateChange(callback: (user: User | null) => void) {
-    return supabase.auth.onAuthStateChange(async (_event, session) => {
+    return supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
       if (session?.user) {
         try {
           const user = await this.getCurrentUser();
@@ -208,9 +228,9 @@ export class AuthService {
     
     const stats = {
       total: data.length,
-      admins: data.filter(u => u.role === 'admin').length,
-      users: data.filter(u => u.role === 'user').length,
-      recent: data.filter(u => {
+      admins: data.filter((u: any) => u.role === 'admin').length,
+      users: data.filter((u: any) => u.role === 'user').length,
+      recent: data.filter((u: any) => {
         const created = new Date(u.created_at);
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
