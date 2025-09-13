@@ -19,7 +19,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     <View style={[styles.container, style]}>
       {Icon && <Icon size={48} color="#666" />}
       <Text style={styles.title}>{title}</Text>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>
+      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
     </View>
   );
 };
