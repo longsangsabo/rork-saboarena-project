@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -14,7 +15,6 @@ import {
   MapPin,
   Users,
   Trophy,
-  Star,
   Clock,
   DollarSign,
   TrendingUp,
@@ -23,177 +23,159 @@ import {
   Share,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useCurrentUser, useTournaments, useSocialFeed } from '@/providers/SABODataProvider';
+import { formatCurrency, formatNumber, getTimeAgo, getRankByElo } from '@/types/sabo';
+import type { Activity, Tournament } from '@/types/sabo';
 
-interface PlayerProfile {
-  id: string;
-  name: string;
-  avatar: string;
-  rank: string;
-  elo: number;
-  activity: string;
-  stats: {
-    matches: number;
-    scheduled: number;
-  };
-}
 
-interface Tournament {
-  id: string;
-  title: string;
-  prize: string;
-  totalPrize: string;
-  players: string;
-  maxPlayers: number;
-  rankRequirement: string;
-  entryFee: string;
-  location: string;
-  time: string;
-  image: string;
-}
-
-const mockPlayers: PlayerProfile[] = [
-  {
-    id: '1',
-    name: 'Anh Long Magic',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-    rank: 'Master',
-    elo: 1485,
-    activity: '328.7K chơi luôn',
-    stats: { matches: 37, scheduled: 578 },
-  },
-  {
-    id: '2',
-    name: 'Minh Tuấn Pro',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    rank: 'Expert',
-    elo: 1320,
-    activity: '156.2K thách đấu',
-    stats: { matches: 42, scheduled: 234 },
-  },
-];
-
-const mockTournaments: Tournament[] = [
-  {
-    id: '1',
-    title: 'SABO Championship 2024',
-    prize: '2 Mạng',
-    totalPrize: '10.000.000đ',
-    players: '0/16 người',
-    maxPlayers: 16,
-    rankRequirement: 'K → G+',
-    entryFee: '300.000đ',
-    location: 'CLB Sao Mai, Q1',
-    time: '15:00 - 18:00',
-    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
-  },
-  {
-    id: '2',
-    title: 'Weekly Masters Cup',
-    prize: '1 Mạng',
-    totalPrize: '5.000.000đ',
-    players: '8/12 người',
-    maxPlayers: 12,
-    rankRequirement: 'E → M+',
-    entryFee: '200.000đ',
-    location: 'CLB Hoàng Gia, Q3',
-    time: '19:00 - 22:00',
-    image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=300&h=200&fit=crop',
-  },
-];
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const renderPlayerCard = (player: PlayerProfile) => (
-    <TouchableOpacity key={player.id} style={styles.playerCard}>
-      <View style={styles.playerHeader}>
-        <Image source={{ uri: player.avatar }} style={styles.avatar} />
-        <View style={styles.playerInfo}>
-          <Text style={styles.playerName}>{player.name}</Text>
-          <View style={styles.rankContainer}>
-            <Star size={14} color={Colors.sabo.secondary[500]} fill={Colors.sabo.secondary[500]} />
-            <Text style={styles.rank}>{player.rank}</Text>
-            <Text style={styles.elo}>ELO: {player.elo}</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.followButton}>
-          <Text style={styles.followText}>Theo dõi</Text>
-        </TouchableOpacity>
-      </View>
-      
-      <Text style={styles.activity}>{player.activity}</Text>
-      
-      <View style={styles.statsContainer}>
-        <View style={styles.stat}>
-          <Text style={styles.statNumber}>{player.stats.matches}</Text>
-          <Text style={styles.statLabel}>TRẬN</Text>
-        </View>
-        <View style={styles.stat}>
-          <Text style={styles.statNumber}>{player.stats.scheduled}</Text>
-          <Text style={styles.statLabel}>lên lịch</Text>
-        </View>
-      </View>
-      
-      <View style={styles.socialActions}>
-        <TouchableOpacity style={styles.socialButton}>
-          <Heart size={20} color={Colors.light.placeholder} />
-          <Text style={styles.socialText}>Thích</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.socialButton}>
-          <MessageCircle size={20} color={Colors.light.placeholder} />
-          <Text style={styles.socialText}>Bình luận</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.socialButton}>
-          <Share size={20} color={Colors.light.placeholder} />
-          <Text style={styles.socialText}>Chia sẻ</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
+  const { currentUser } = useCurrentUser();
+  const { tournaments, isLoading: isLoadingTournaments, joinTournament, isJoining } = useTournaments();
+  const { activities, isLoading: isLoadingActivities, likeActivity, isLiking } = useSocialFeed();
 
-  const renderTournamentCard = (tournament: Tournament) => (
-    <TouchableOpacity key={tournament.id} style={styles.tournamentCard}>
-      <Image source={{ uri: tournament.image }} style={styles.tournamentImage} />
-      <View style={styles.tournamentContent}>
-        <Text style={styles.tournamentTitle}>{tournament.title}</Text>
-        
-        <View style={styles.prizeContainer}>
-          <Trophy size={16} color={Colors.sabo.secondary[500]} />
-          <Text style={styles.prizeText}>{tournament.prize} • {tournament.totalPrize}</Text>
-        </View>
-        
-        <View style={styles.tournamentDetails}>
-          <View style={styles.detailRow}>
-            <Users size={14} color={Colors.light.placeholder} />
-            <Text style={styles.detailText}>{tournament.players} • còn {tournament.maxPlayers - parseInt(tournament.players.split('/')[0])} chỗ</Text>
+
+  const handleJoinTournament = (tournamentId: string) => {
+    console.log('Joining tournament:', tournamentId);
+    joinTournament(tournamentId);
+  };
+
+  const handleLikeActivity = (activityId: string, isLiked: boolean) => {
+    console.log('Toggling like for activity:', activityId);
+    likeActivity({ activityId, isLiked });
+  };
+
+  const renderActivityCard = (activity: Activity) => {
+    const rank = getRankByElo(activity.user.elo);
+    
+    return (
+      <TouchableOpacity key={activity.id} style={styles.playerCard}>
+        <View style={styles.playerHeader}>
+          <Image source={{ uri: activity.user.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' }} style={styles.avatar} />
+          <View style={styles.playerInfo}>
+            <Text style={styles.playerName}>{activity.user.name}</Text>
+            <View style={styles.rankContainer}>
+              <Text style={[styles.rankIcon, { color: rank.color }]}>{rank.icon}</Text>
+              <Text style={[styles.rank, { color: rank.color }]}>{rank.name}</Text>
+              <Text style={styles.elo}>ELO: {activity.user.elo}</Text>
+            </View>
           </View>
-          
-          <View style={styles.detailRow}>
-            <TrendingUp size={14} color={Colors.light.placeholder} />
-            <Text style={styles.detailText}>{tournament.rankRequirement}</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <DollarSign size={14} color={Colors.light.placeholder} />
-            <Text style={styles.detailText}>{tournament.entryFee}</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <MapPin size={14} color={Colors.light.placeholder} />
-            <Text style={styles.detailText}>{tournament.location}</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <Clock size={14} color={Colors.light.placeholder} />
-            <Text style={styles.detailText}>{tournament.time}</Text>
+          <View style={styles.timeContainer}>
+            <Text style={styles.timeText}>{getTimeAgo(activity.created_at)}</Text>
           </View>
         </View>
         
-        <TouchableOpacity style={styles.joinButton}>
-          <Text style={styles.joinButtonText}>Tham gia ngay</Text>
-        </TouchableOpacity>
+        <Text style={styles.activity}>{activity.title}</Text>
+        <Text style={styles.activityDescription}>{activity.description}</Text>
+        
+        <View style={styles.statsContainer}>
+          <View style={styles.stat}>
+            <Text style={styles.statNumber}>{activity.user.total_matches}</Text>
+            <Text style={styles.statLabel}>TRẬN</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statNumber}>{formatNumber(activity.user.spa_points)}</Text>
+            <Text style={styles.statLabel}>SPA</Text>
+          </View>
+        </View>
+        
+        <View style={styles.socialActions}>
+          <TouchableOpacity 
+            style={styles.socialButton}
+            onPress={() => handleLikeActivity(activity.id, activity.is_liked)}
+            disabled={isLiking}
+          >
+            <Heart 
+              size={20} 
+              color={activity.is_liked ? Colors.light.tint : Colors.light.placeholder}
+              fill={activity.is_liked ? Colors.light.tint : 'transparent'}
+            />
+            <Text style={[styles.socialText, activity.is_liked && { color: Colors.light.tint }]}>
+              {activity.likes_count} Thích
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButton}>
+            <MessageCircle size={20} color={Colors.light.placeholder} />
+            <Text style={styles.socialText}>{activity.comments_count} Bình luận</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButton}>
+            <Share size={20} color={Colors.light.placeholder} />
+            <Text style={styles.socialText}>Chia sẻ</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderTournamentCard = (tournament: Tournament) => {
+    const startTime = new Date(tournament.start_time);
+    const endTime = new Date(tournament.end_time);
+    const timeRange = `${startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${endTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+    const remainingSlots = tournament.max_players - tournament.current_players;
+    
+    return (
+      <TouchableOpacity key={tournament.id} style={styles.tournamentCard}>
+        <Image source={{ uri: tournament.image_url || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop' }} style={styles.tournamentImage} />
+        <View style={styles.tournamentContent}>
+          <Text style={styles.tournamentTitle}>{tournament.title}</Text>
+          
+          <View style={styles.prizeContainer}>
+            <Trophy size={16} color={Colors.sabo.secondary[500]} />
+            <Text style={styles.prizeText}>{formatCurrency(tournament.prize_pool)}</Text>
+          </View>
+          
+          <View style={styles.tournamentDetails}>
+            <View style={styles.detailRow}>
+              <Users size={14} color={Colors.light.placeholder} />
+              <Text style={styles.detailText}>{tournament.current_players}/{tournament.max_players} người • còn {remainingSlots} chỗ</Text>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <TrendingUp size={14} color={Colors.light.placeholder} />
+              <Text style={styles.detailText}>{tournament.min_rank} → {tournament.max_rank}+</Text>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <DollarSign size={14} color={Colors.light.placeholder} />
+              <Text style={styles.detailText}>{formatCurrency(tournament.entry_fee)}</Text>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <MapPin size={14} color={Colors.light.placeholder} />
+              <Text style={styles.detailText}>{tournament.location}</Text>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <Clock size={14} color={Colors.light.placeholder} />
+              <Text style={styles.detailText}>{timeRange}</Text>
+            </View>
+          </View>
+          
+          <TouchableOpacity 
+            style={[styles.joinButton, isJoining && styles.joinButtonDisabled]}
+            onPress={() => handleJoinTournament(tournament.id)}
+            disabled={isJoining}
+          >
+            {isJoining ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={styles.joinButtonText}>Tham gia ngay</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  if (!currentUser) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={Colors.light.tint} />
+        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
       </View>
-    </TouchableOpacity>
-  );
+    );
+  }
 
   return (
     <ScrollView 
@@ -203,7 +185,7 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.greeting}>Chào mừng trở lại!</Text>
+          <Text style={styles.greeting}>Chào mừng trở lại, {currentUser.name}!</Text>
           <Text style={styles.appName}>SABO Arena</Text>
         </View>
         <View style={styles.headerRight}>
@@ -219,15 +201,15 @@ export default function HomeScreen() {
       {/* Quick Stats */}
       <View style={styles.quickStats}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>1,485</Text>
+          <Text style={styles.statValue}>{currentUser.elo.toLocaleString()}</Text>
           <Text style={styles.statLabel}>ELO Rating</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>320</Text>
+          <Text style={styles.statValue}>{formatNumber(currentUser.spa_points)}</Text>
           <Text style={styles.statLabel}>SPA Points</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>#89</Text>
+          <Text style={styles.statValue}>#{currentUser.ranking_position}</Text>
           <Text style={styles.statLabel}>Xếp hạng</Text>
         </View>
       </View>
@@ -235,7 +217,14 @@ export default function HomeScreen() {
       {/* Social Feed */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Hoạt động gần đây</Text>
-        {mockPlayers.map(renderPlayerCard)}
+        {isLoadingActivities ? (
+          <View style={styles.loadingSection}>
+            <ActivityIndicator size="small" color={Colors.light.tint} />
+            <Text style={styles.loadingText}>Đang tải hoạt động...</Text>
+          </View>
+        ) : (
+          activities.map(renderActivityCard)
+        )}
       </View>
 
       {/* Tournaments */}
@@ -246,7 +235,14 @@ export default function HomeScreen() {
             <Text style={styles.seeAll}>Xem tất cả</Text>
           </TouchableOpacity>
         </View>
-        {mockTournaments.map(renderTournamentCard)}
+        {isLoadingTournaments ? (
+          <View style={styles.loadingSection}>
+            <ActivityIndicator size="small" color={Colors.light.tint} />
+            <Text style={styles.loadingText}>Đang tải giải đấu...</Text>
+          </View>
+        ) : (
+          tournaments.map(renderTournamentCard)
+        )}
       </View>
 
       {/* Club Discovery */}
@@ -496,5 +492,40 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     marginTop: 8,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  loadingSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: Colors.light.placeholder,
+  },
+  rankIcon: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+  timeContainer: {
+    alignItems: 'flex-end',
+  },
+  timeText: {
+    fontSize: 12,
+    color: Colors.light.placeholder,
+  },
+  activityDescription: {
+    fontSize: 12,
+    color: Colors.light.placeholder,
+    marginBottom: 12,
+  },
+  joinButtonDisabled: {
+    opacity: 0.6,
   },
 });
