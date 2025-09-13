@@ -39,7 +39,7 @@ export default function ProfileScreen() {
   const user = profileQuery.data;
   
   const handleEditProfile = () => {
-    Alert.alert('Chỉnh sửa hồ sơ', 'Tính năng chỉnh sửa hồ sơ sẽ có sớm!');
+    router.push('/edit-profile');
   };
   
   const handleBack = () => {
@@ -51,7 +51,8 @@ export default function ProfileScreen() {
       'Tùy chọn',
       'Chọn hành động',
       [
-        { text: 'Cài đặt', onPress: () => console.log('Settings') },
+        { text: 'Tìm bạn', onPress: () => router.push('/find-friends') },
+        { text: 'Cài đặt', onPress: () => router.push('/settings') },
         { text: 'Đăng xuất', style: 'destructive', onPress: () => console.log('Logout') },
         { text: 'Hủy', style: 'cancel' }
       ]
