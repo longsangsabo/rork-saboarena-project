@@ -5,357 +5,453 @@ import {
   View, 
   ScrollView, 
   TouchableOpacity, 
-  Image, 
-  ActivityIndicator 
+  ImageBackground,
+  StatusBar
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
-  Trophy, 
-  Target, 
-  TrendingUp, 
-  Calendar, 
-  Award, 
-  Settings, 
+  ArrowLeft, 
+  MoreHorizontal, 
   Edit3, 
-  Star 
+  Crown,
+  Star,
+  TrendingUp,
+  Gamepad2,
+  Calendar,
+  Users,
+  DollarSign
 } from 'lucide-react-native';
-import Colors from '@/constants/colors';
-import { useCurrentUser } from '@/providers/SABODataProvider';
-import { formatNumber, getRankByElo } from '@/types/sabo';
 
 export default function ProfileScreen() {
-  const { currentUser, userStats, isAuthenticated } = useCurrentUser();
+  const insets = useSafeAreaInsets();
+  
+  const mockUser = {
+    username: '@longsang',
+    displayName: 'Anh Long Magic',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
+    rank: 'G',
+    elo: 1485,
+    spa: 320,
+    ranking: 89,
+    matches: 37
+  };
 
-  if (!isAuthenticated || !currentUser) {
-    return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={Colors.light.tint} />
-        <Text style={styles.loadingText}>Đang tải thông tin...</Text>
-      </View>
-    );
-  }
-
-  const rank = getRankByElo(currentUser.elo);
-  const winRate = currentUser.total_matches > 0 ? (currentUser.wins / currentUser.total_matches) * 100 : 0;
+  const tournaments = [
+    {
+      id: 1,
+      name: 'SABO POOL 8 BALL',
+      date: '07/09 - Thứ 7',
+      rankRange: 'K - I+',
+      players: '0/16',
+      prize: '10 Million',
+      lives: '2 Mạng'
+    },
+    {
+      id: 2,
+      name: 'SABO POOL 8 BALL',
+      date: '07/09 - Thứ 7',
+      rankRange: 'K - I+',
+      players: '0/16',
+      prize: '10 Million',
+      lives: '2 Mạng'
+    }
+  ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="white" />
+      
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+        <TouchableOpacity style={styles.headerButton}>
+          <ArrowLeft size={24} color="#161722" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{mockUser.username}</Text>
+        <TouchableOpacity style={styles.headerButton}>
+          <MoreHorizontal size={24} color="#161722" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.profileSection}>
-              <Image 
-                source={{ uri: currentUser.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' }} 
-                style={styles.avatar} 
-              />
-              <View style={styles.profileInfo}>
-                <Text style={styles.userName}>{currentUser.name}</Text>
-                <View style={styles.rankContainer}>
-                  <Text style={[styles.rankIcon, { color: rank.color }]}>{rank.icon}</Text>
-                  <Text style={[styles.rankName, { color: rank.color }]}>{rank.name}</Text>
-                  <Text style={styles.eloText}>ELO: {currentUser.elo}</Text>
-                </View>
-                <Text style={styles.email}>{currentUser.email}</Text>
+        {/* Profile Card */}
+        <View style={styles.profileCard}>
+          <View style={styles.profileImageContainer}>
+            <View style={styles.gradientBorder}>
+              <View style={styles.profileImageWrapper}>
+                <ImageBackground
+                  source={{ uri: mockUser.avatar }}
+                  style={styles.profileImage}
+                  imageStyle={styles.profileImageStyle}
+                >
+                  <View style={styles.profileOverlay}>
+                    <Text style={styles.profileName}>{mockUser.displayName}</Text>
+                  </View>
+                </ImageBackground>
               </View>
             </View>
-            
-            <TouchableOpacity style={styles.editButton}>
-              <Edit3 size={20} color={Colors.light.tint} />
+            <TouchableOpacity style={styles.editProfileButton}>
+              <Edit3 size={14} color="black" />
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Quick Stats */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <Trophy size={24} color={Colors.sabo.secondary[500]} />
+          {/* Rank Badge */}
+          <View style={styles.rankBadge}>
+            <View style={styles.rankIcon}>
+              <Crown size={14} color="#19127B" />
             </View>
-            <Text style={styles.statValue}>{currentUser.ranking_position}</Text>
-            <Text style={styles.statLabel}>Xếp hạng</Text>
+            <Text style={styles.rankText}>RANK : {mockUser.rank}</Text>
           </View>
-          
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <Target size={24} color={Colors.light.tint} />
-            </View>
-            <Text style={styles.statValue}>{formatNumber(currentUser.spa_points)}</Text>
-            <Text style={styles.statLabel}>SPA Points</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <TrendingUp size={24} color={Colors.sabo.primary[500]} />
-            </View>
-            <Text style={styles.statValue}>{winRate.toFixed(1)}%</Text>
-            <Text style={styles.statLabel}>Tỉ lệ thắng</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <Calendar size={24} color={Colors.sabo.secondary[600]} />
-            </View>
-            <Text style={styles.statValue}>{currentUser.total_matches}</Text>
-            <Text style={styles.statLabel}>Tổng trận</Text>
-          </View>
-        </View>
 
-        {/* Detailed Stats */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thống kê chi tiết</Text>
-          
-          <View style={styles.detailStatsContainer}>
-            <View style={styles.detailStatRow}>
-              <Text style={styles.detailStatLabel}>Trận thắng</Text>
-              <Text style={[styles.detailStatValue, { color: Colors.sabo.primary[600] }]}>{currentUser.wins}</Text>
+          {/* Stats Row */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Crown size={16} color="#081122" />
+              <Text style={styles.statLabel}>ELO</Text>
+              <Text style={styles.statValue}>{mockUser.elo}</Text>
             </View>
-            
-            <View style={styles.detailStatRow}>
-              <Text style={styles.detailStatLabel}>Trận thua</Text>
-              <Text style={[styles.detailStatValue, { color: '#EF4444' }]}>{currentUser.losses}</Text>
+            <View style={styles.statItem}>
+              <Star size={18} color="#081122" />
+              <Text style={styles.statLabel}>SPA</Text>
+              <Text style={styles.statValue}>{mockUser.spa}</Text>
             </View>
-            
-            {userStats && (
-              <>
-                <View style={styles.detailStatRow}>
-                  <Text style={styles.detailStatLabel}>Chuỗi thắng hiện tại</Text>
-                  <Text style={styles.detailStatValue}>{userStats.current_streak}</Text>
-                </View>
-                
-                <View style={styles.detailStatRow}>
-                  <Text style={styles.detailStatLabel}>Chuỗi thắng tốt nhất</Text>
-                  <Text style={styles.detailStatValue}>{userStats.best_streak}</Text>
-                </View>
-                
-                <View style={styles.detailStatRow}>
-                  <Text style={styles.detailStatLabel}>Giải đấu thắng</Text>
-                  <Text style={styles.detailStatValue}>{userStats.tournaments_won}</Text>
-                </View>
-                
-                <View style={styles.detailStatRow}>
-                  <Text style={styles.detailStatLabel}>Giải đấu tham gia</Text>
-                  <Text style={styles.detailStatValue}>{userStats.tournaments_played}</Text>
-                </View>
-              </>
-            )}
-          </View>
-        </View>
-
-        {/* Achievements */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thành tựu</Text>
-          
-          <View style={styles.achievementsContainer}>
-            <View style={styles.achievementCard}>
-              <Award size={32} color={Colors.sabo.secondary[500]} />
-              <Text style={styles.achievementTitle}>Thạc sĩ bi-a</Text>
-              <Text style={styles.achievementDesc}>Đạt ELO trên 1400</Text>
+            <View style={styles.statItem}>
+              <TrendingUp size={18} color="#081122" />
+              <Text style={styles.statLabel}>XH</Text>
+              <Text style={styles.statValue}>#{mockUser.ranking}</Text>
             </View>
-            
-            <View style={styles.achievementCard}>
-              <Star size={32} color={Colors.sabo.primary[500]} />
-              <Text style={styles.achievementTitle}>Người mới</Text>
-              <Text style={styles.achievementDesc}>Hoàn thành 10 trận đầu</Text>
-            </View>
-            
-            <View style={styles.achievementCard}>
-              <Trophy size={32} color={Colors.sabo.secondary[600]} />
-              <Text style={styles.achievementTitle}>Nhà vô địch</Text>
-              <Text style={styles.achievementDesc}>Thắng 3 giải đấu</Text>
+            <View style={styles.statItem}>
+              <Gamepad2 size={16} color="#081122" />
+              <Text style={styles.statLabel}>TRẬN</Text>
+              <Text style={styles.statValue}>{mockUser.matches}</Text>
             </View>
           </View>
         </View>
 
-        {/* Settings */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.settingsButton}>
-            <Settings size={24} color={Colors.light.text} />
-            <Text style={styles.settingsText}>Cài đặt</Text>
-          </TouchableOpacity>
+        {/* Tournament Tabs */}
+        <View style={styles.tabsContainer}>
+          <View style={styles.tabsHeader}>
+            <TouchableOpacity style={[styles.tab, styles.activeTab]}>
+              <Text style={[styles.tabText, styles.activeTabText]}>Ready</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.tab}>
+              <Text style={styles.tabText}>Live</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.tab}>
+              <Text style={styles.tabText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Tournament List */}
+          <View style={styles.tournamentList}>
+            {tournaments.map((tournament) => (
+              <View key={tournament.id} style={styles.tournamentCard}>
+                <View style={styles.tournamentIcon}>
+                  <Text style={styles.tournamentNumber}>8</Text>
+                </View>
+                <View style={styles.tournamentInfo}>
+                  <Text style={styles.tournamentName}>{tournament.name}</Text>
+                  <View style={styles.tournamentDetails}>
+                    <Calendar size={11} color="#0A5C6D" />
+                    <Text style={styles.tournamentDate}>{tournament.date}</Text>
+                  </View>
+                </View>
+                <View style={styles.tournamentMeta}>
+                  <Text style={styles.tournamentRank}>{tournament.rankRange}</Text>
+                  <View style={styles.tournamentStats}>
+                    <Users size={14} color="#801515" />
+                    <Text style={styles.tournamentPlayers}>{tournament.players}</Text>
+                    <DollarSign size={14} color="#801515" />
+                    <Text style={styles.tournamentPrize}>{tournament.prize}</Text>
+                  </View>
+                </View>
+                <View style={styles.tournamentAction}>
+                  <Text style={styles.tournamentLives}>{tournament.lives}</Text>
+                  <TouchableOpacity style={styles.joinButton}>
+                    <View style={styles.joinIcon} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: 'white',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'white',
+    borderBottomWidth: 0.33,
+    borderBottomColor: '#D0D1D3',
+  },
+  headerButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '400',
+    color: '#161722',
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
   },
-  loadingContainer: {
+  profileCard: {
+    backgroundColor: 'white',
+    marginHorizontal: -4,
+    marginTop: 0,
+    paddingBottom: 20,
+    borderBottomWidth: 0.33,
+    borderBottomColor: '#D0D1D3',
+  },
+  profileImageContainer: {
+    alignItems: 'center',
+    marginTop: 18,
+    marginBottom: 20,
+  },
+  gradientBorder: {
+    width: 350,
+    height: 350,
+    borderRadius: 18,
+    padding: 2,
+    backgroundColor: '#7784F8',
+    shadowColor: '#C695F8',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  profileImageWrapper: {
+    width: 346,
+    height: 346,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: 'white',
+  },
+  profileImage: {
+    width: 346,
+    height: 346,
+    borderRadius: 16,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+  },
+  profileImageStyle: {
+    borderRadius: 16,
+  },
+  profileOverlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  profileName: {
+    fontSize: 50,
+    fontWeight: '900',
+    color: '#A0B2F8',
+    letterSpacing: 3,
+    textAlign: 'center',
+  },
+  editProfileButton: {
+    position: 'absolute',
+    right: 30,
+    bottom: -10,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 5,
+    borderColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
   },
-  loadingText: {
-    fontSize: 16,
-    color: Colors.light.placeholder,
-  },
-  header: {
-    backgroundColor: Colors.light.card,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    padding: 20,
-  },
-  profileSection: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 16,
-  },
-  profileInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-    marginBottom: 4,
-  },
-  rankContainer: {
+  rankBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    backgroundColor: 'rgba(35.89, 25.99, 91.95, 0.15)',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#1B1B50',
+    paddingHorizontal: 25,
+    paddingVertical: 7,
+    alignSelf: 'center',
+    marginBottom: 20,
+    gap: 8,
   },
   rankIcon: {
-    fontSize: 16,
-    marginRight: 6,
+    width: 14,
+    height: 14,
   },
-  rankName: {
+  rankText: {
     fontSize: 16,
     fontWeight: '600',
-    marginRight: 8,
+    color: '#19127B',
   },
-  eloText: {
-    fontSize: 14,
-    color: Colors.light.placeholder,
-  },
-  email: {
-    fontSize: 14,
-    color: Colors.light.placeholder,
-  },
-  editButton: {
-    padding: 8,
-  },
-  statsGrid: {
+  statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 20,
-    gap: 16,
+    justifyContent: 'space-around',
+    paddingHorizontal: 28,
+    gap: 57,
   },
-  statCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: Colors.light.card,
-    padding: 20,
-    borderRadius: 16,
+  statItem: {
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  statIcon: {
-    marginBottom: 12,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-    marginBottom: 4,
+    flex: 1,
   },
   statLabel: {
     fontSize: 12,
-    color: Colors.light.placeholder,
-    textAlign: 'center',
+    color: '#081122',
+    marginTop: 4,
+    marginBottom: 2,
   },
-  section: {
-    padding: 20,
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#455154',
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-    marginBottom: 16,
-  },
-  detailStatsContainer: {
-    backgroundColor: Colors.light.card,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  detailStatRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-  },
-  detailStatLabel: {
-    fontSize: 16,
-    color: Colors.light.text,
-  },
-  detailStatValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-  },
-  achievementsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  achievementCard: {
-    flex: 1,
-    minWidth: '30%',
-    backgroundColor: Colors.light.card,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  achievementTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: Colors.light.text,
+  tabsContainer: {
+    backgroundColor: 'white',
     marginTop: 8,
-    marginBottom: 4,
-    textAlign: 'center',
   },
-  achievementDesc: {
+  tabsHeader: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderBottomWidth: 0.33,
+    borderBottomColor: '#D0D1D3',
+    paddingHorizontal: 26,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#0A5C6D',
+  },
+  tabText: {
+    fontSize: 17,
+    color: '#D7D7D9',
+  },
+  activeTabText: {
+    color: '#0A5C6D',
+  },
+  tournamentList: {
+    padding: 20,
+    gap: 16,
+  },
+  tournamentCard: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+    borderWidth: 0.5,
+    borderColor: 'rgba(0, 0, 0, 0.07)',
+  },
+  tournamentIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  tournamentNumber: {
     fontSize: 12,
-    color: Colors.light.placeholder,
-    textAlign: 'center',
+    fontWeight: '400',
+    color: 'black',
   },
-  settingsButton: {
+  tournamentInfo: {
+    flex: 1,
+  },
+  tournamentName: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#0A5C6D',
+    marginBottom: 4,
+  },
+  tournamentDetails: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.card,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    gap: 12,
+    gap: 6,
   },
-  settingsText: {
-    fontSize: 16,
-    color: Colors.light.text,
-    fontWeight: '600',
+  tournamentDate: {
+    fontSize: 10,
+    color: '#0A5C6D',
+  },
+  tournamentMeta: {
+    alignItems: 'flex-end',
+    marginRight: 12,
+  },
+  tournamentRank: {
+    fontSize: 12,
+    color: '#0A5C6D',
+    marginBottom: 8,
+  },
+  tournamentStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  tournamentPlayers: {
+    fontSize: 10,
+    color: '#801515',
+    marginRight: 8,
+  },
+  tournamentPrize: {
+    fontSize: 10,
+    color: '#801515',
+  },
+  tournamentAction: {
+    alignItems: 'center',
+  },
+  tournamentLives: {
+    fontSize: 10,
+    color: '#0A5C6D',
+    marginBottom: 8,
+  },
+  joinButton: {
+    width: 45,
+    height: 22,
+    backgroundColor: '#7F1516',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 4,
+      height: 4,
+    },
+    shadowOpacity: 0.11,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  joinIcon: {
+    width: 11,
+    height: 8,
+    backgroundColor: 'white',
+    borderRadius: 1,
   },
 });
