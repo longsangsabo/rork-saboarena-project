@@ -1,30 +1,57 @@
 import { Tabs } from "expo-router";
 import { 
   Home, 
-  Trophy, 
   Users, 
   User, 
   Target 
 } from "lucide-react-native";
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-import Colors from "@/constants/colors";
+const styles = StyleSheet.create({
+  tournamentIcon: {
+    width: 36,
+    height: 28,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tournamentIconActive: {
+    backgroundColor: '#FF004F',
+  },
+  tournamentIconInactive: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#A1A2A5',
+  },
+  tournamentText: {
+    fontSize: 8,
+    fontWeight: '400',
+  },
+  tournamentTextActive: {
+    color: 'white',
+  },
+  tournamentTextInactive: {
+    color: 'black',
+  },
+});
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tint,
-        tabBarInactiveTintColor: Colors.light.tabIconDefault,
+        tabBarActiveTintColor: '#FF004F',
+        tabBarInactiveTintColor: '#8A8B8F',
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.light.card,
-          borderTopColor: Colors.light.border,
+          backgroundColor: 'white',
+          borderTopColor: '#D0D1D3',
+          borderTopWidth: 0.33,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          marginTop: 4,
+          fontSize: 10,
+          fontWeight: '400',
+          letterSpacing: 0.15,
         },
       }}
     >
@@ -32,35 +59,65 @@ export default function TabLayout() {
         name="home"
         options={{
           title: "Trang chủ",
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarIcon: ({ focused }) => (
+            <Home 
+              color={focused ? '#FF004F' : '#8A8B8F'} 
+              size={21} 
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="challenges"
+        options={{
+          title: "Tìm đối",
+          tabBarIcon: ({ focused }) => (
+            <Target 
+              color={focused ? '#FF004F' : '#8A8B8F'} 
+              size={21} 
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="tournaments"
         options={{
           title: "Giải đấu",
-          tabBarIcon: ({ color, size }) => <Trophy color={color} size={size} />,
+          tabBarIcon: ({ focused }) => (
+            <View style={[
+              styles.tournamentIcon,
+              focused ? styles.tournamentIconActive : styles.tournamentIconInactive
+            ]}>
+              <Text style={[
+                styles.tournamentText,
+                focused ? styles.tournamentTextActive : styles.tournamentTextInactive
+              ]}>8</Text>
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
         name="clubs"
         options={{
-          title: "CLB",
-          tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="challenges"
-        options={{
-          title: "Thách đấu",
-          tabBarIcon: ({ color, size }) => <Target color={color} size={size} />,
+          title: "Club",
+          tabBarIcon: ({ focused }) => (
+            <Users 
+              color={focused ? '#060606' : '#8A8B8F'} 
+              size={21} 
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Cá nhân",
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          title: "Hồ sơ",
+          tabBarIcon: ({ focused }) => (
+            <User 
+              color={focused ? '#161722' : '#8A8B8F'} 
+              size={21} 
+            />
+          ),
         }}
       />
     </Tabs>

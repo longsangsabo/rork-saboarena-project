@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -15,24 +15,79 @@ import {
   Clock, 
   MapPin, 
   DollarSign, 
-  TrendingUp, 
-  Filter 
+  TrendingUp
 } from 'lucide-react-native';
-import Colors from '@/constants/colors';
-import { useTournaments } from '@/providers/SABODataProvider';
-import { formatCurrency, getTimeAgo } from '@/types/sabo';
-import type { Tournament } from '@/types/sabo';
+
+interface Tournament {
+  id: string;
+  title: string;
+  description?: string;
+  image_url?: string;
+  prize_pool: number;
+  entry_fee: number;
+  current_players: number;
+  max_players: number;
+  min_rank: string;
+  max_rank: string;
+  location: string;
+  start_time: string;
+  end_time: string;
+  status: 'upcoming' | 'live' | 'completed';
+}
+
+const mockTournaments: Tournament[] = [
+  {
+    id: '1',
+    title: 'SABO POOL 8 BALL Championship',
+    description: 'Giải đấu bi-a 8 bi hàng tuần với giải thưởng hấp dẫn',
+    image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
+    prize_pool: 10000000,
+    entry_fee: 300000,
+    current_players: 8,
+    max_players: 16,
+    min_rank: 'K',
+    max_rank: 'I+',
+    location: '601A Nguyễn An Ninh - TP Vũng Tàu',
+    start_time: '2024-09-07T19:00:00Z',
+    end_time: '2024-09-07T23:00:00Z',
+    status: 'upcoming'
+  },
+  {
+    id: '2',
+    title: 'SABO Weekly Tournament',
+    description: 'Giải đấu hàng tuần cho các tay cơ chuyên nghiệp',
+    image_url: 'https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=300&h=200&fit=crop',
+    prize_pool: 5000000,
+    entry_fee: 200000,
+    current_players: 12,
+    max_players: 16,
+    min_rank: 'G',
+    max_rank: 'A+',
+    location: 'SABO Billiards Club',
+    start_time: '2024-09-08T18:00:00Z',
+    end_time: '2024-09-08T22:00:00Z',
+    status: 'live'
+  }
+];
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(amount);
+};
 
 export default function TournamentsScreen() {
-  const { tournaments, isLoading, joinTournament, isJoining } = useTournaments();
-  const [selectedFilter, setSelectedFilter] = React.useState<string>('all');
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [isJoining, setIsJoining] = useState(false);
 
   const handleJoinTournament = (tournamentId: string) => {
     console.log('Joining tournament:', tournamentId);
-    joinTournament(tournamentId);
+    setIsJoining(true);
+    setTimeout(() => setIsJoining(false), 2000);
   };
 
-  const filteredTournaments = tournaments.filter(tournament => {
+  const filteredTournaments = mockTournaments.filter(tournament => {
     if (selectedFilter === 'all') return true;
     if (selectedFilter === 'upcoming') return tournament.status === 'upcoming';
     if (selectedFilter === 'live') return tournament.status === 'live';
@@ -72,35 +127,35 @@ export default function TournamentsScreen() {
           )}
           
           <View style={styles.prizeContainer}>
-            <Trophy size={18} color={Colors.sabo.secondary[500]} />
+            <Trophy size={18} color="#0A5C6D" />
             <Text style={styles.prizeText}>Giải thưởng: {formatCurrency(tournament.prize_pool)}</Text>
           </View>
           
           <View style={styles.tournamentDetails}>
             <View style={styles.detailRow}>
-              <Users size={16} color={Colors.light.placeholder} />
+              <Users size={16} color="#666" />
               <Text style={styles.detailText}>
                 {tournament.current_players}/{tournament.max_players} người • còn {remainingSlots} chỗ
               </Text>
             </View>
             
             <View style={styles.detailRow}>
-              <TrendingUp size={16} color={Colors.light.placeholder} />
+              <TrendingUp size={16} color="#666" />
               <Text style={styles.detailText}>Yêu cầu: {tournament.min_rank} → {tournament.max_rank}+</Text>
             </View>
             
             <View style={styles.detailRow}>
-              <DollarSign size={16} color={Colors.light.placeholder} />
+              <DollarSign size={16} color="#666" />
               <Text style={styles.detailText}>Phí tham gia: {formatCurrency(tournament.entry_fee)}</Text>
             </View>
             
             <View style={styles.detailRow}>
-              <MapPin size={16} color={Colors.light.placeholder} />
+              <MapPin size={16} color="#666" />
               <Text style={styles.detailText}>{tournament.location}</Text>
             </View>
             
             <View style={styles.detailRow}>
-              <Clock size={16} color={Colors.light.placeholder} />
+              <Clock size={16} color="#666" />
               <Text style={styles.detailText}>{date} • {timeRange}</Text>
             </View>
           </View>
@@ -126,10 +181,10 @@ export default function TournamentsScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'upcoming': return Colors.light.tint;
+      case 'upcoming': return '#0A5C6D';
       case 'live': return '#10B981';
-      case 'completed': return Colors.light.placeholder;
-      default: return Colors.light.placeholder;
+      case 'completed': return '#666';
+      default: return '#666';
     }
   };
 
@@ -182,16 +237,11 @@ export default function TournamentsScreen() {
         
         {/* Tournament List */}
         <View style={styles.content}>
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.light.tint} />
-              <Text style={styles.loadingText}>Đang tải giải đấu...</Text>
-            </View>
-          ) : filteredTournaments.length > 0 ? (
+          {filteredTournaments.length > 0 ? (
             filteredTournaments.map(renderTournamentCard)
           ) : (
             <View style={styles.emptyContainer}>
-              <Trophy size={48} color={Colors.light.placeholder} />
+              <Trophy size={48} color="#666" />
               <Text style={styles.emptyText}>Không có giải đấu nào</Text>
               <Text style={styles.emptySubtext}>Hãy thử lọc khác hoặc quay lại sau</Text>
             </View>
@@ -205,31 +255,31 @@ export default function TournamentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#f5f5f5',
   },
   scrollView: {
     flex: 1,
   },
   header: {
     padding: 20,
-    backgroundColor: Colors.light.card,
+    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: '#e0e0e0',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.light.text,
+    color: '#333',
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.light.placeholder,
+    color: '#666',
   },
   filterContainer: {
-    backgroundColor: Colors.light.card,
+    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: '#e0e0e0',
   },
   filterScroll: {
     paddingHorizontal: 20,
@@ -240,34 +290,24 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginRight: 12,
     borderRadius: 20,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#f5f5f5',
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: '#e0e0e0',
   },
   filterTabActive: {
-    backgroundColor: Colors.light.tint,
-    borderColor: Colors.light.tint,
+    backgroundColor: '#0A5C6D',
+    borderColor: '#0A5C6D',
   },
   filterTabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.light.text,
+    color: '#333',
   },
   filterTabTextActive: {
     color: 'white',
   },
   content: {
     padding: 20,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: Colors.light.placeholder,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -278,20 +318,20 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.light.text,
+    color: '#333',
   },
   emptySubtext: {
     fontSize: 14,
-    color: Colors.light.placeholder,
+    color: '#666',
     textAlign: 'center',
   },
   tournamentCard: {
-    backgroundColor: Colors.light.card,
+    backgroundColor: 'white',
     borderRadius: 16,
     marginBottom: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: '#e0e0e0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -314,7 +354,7 @@ const styles = StyleSheet.create({
   tournamentTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.light.text,
+    color: '#333',
     flex: 1,
     marginRight: 12,
   },
@@ -330,7 +370,7 @@ const styles = StyleSheet.create({
   },
   tournamentDescription: {
     fontSize: 14,
-    color: Colors.light.placeholder,
+    color: '#666',
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -340,13 +380,13 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 16,
     padding: 12,
-    backgroundColor: Colors.sabo.secondary[50],
+    backgroundColor: '#f0f9ff',
     borderRadius: 8,
   },
   prizeText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.sabo.secondary[700],
+    color: '#0A5C6D',
   },
   tournamentDetails: {
     gap: 12,
@@ -359,11 +399,11 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: Colors.light.text,
+    color: '#333',
     flex: 1,
   },
   joinButton: {
-    backgroundColor: Colors.light.tint,
+    backgroundColor: '#0A5C6D',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
