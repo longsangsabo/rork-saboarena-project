@@ -5,6 +5,9 @@ import { Stack } from 'expo-router';
 import { router } from 'expo-router';
 import { MapPin, MoreHorizontal, Camera } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import ChallengeTabs from '@/components/challenges/ChallengeTabs';
+import ChallengeCard from '@/components/challenges/ChallengeCard';
+import { challengesData } from '@/demo-data/challenges-data';
 
 interface Member {
   id: string;
@@ -18,8 +21,9 @@ interface Member {
 
 
 export default function ClubsScreen() {
-  const [mainTab, setMainTab] = useState<'clb' | 'discover'>('clb');
+  const [mainTab, setMainTab] = useState<'clb' | 'find_opponent'>('clb');
   const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'challenges' | 'profile'>('members');
+  const [challengeTab, setChallengeTab] = useState<'waiting' | 'live' | 'finished'>('waiting');
   
   const clubsQuery = trpc.clubs.list.useQuery({ limit: 10 });
   const membersQuery = trpc.clubs.getMembers.useQuery({ clubId: '1' });
@@ -104,18 +108,18 @@ export default function ClubsScreen() {
           {mainTab === 'clb' && <View style={styles.mainTabIndicator} />}
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.mainTab, mainTab === 'discover' && styles.activeMainTab]}
-          onPress={() => setMainTab('discover')}
+          style={[styles.mainTab, mainTab === 'find_opponent' && styles.activeMainTab]}
+          onPress={() => setMainTab('find_opponent')}
         >
-          <Text style={[styles.mainTabText, mainTab === 'discover' && styles.activeMainTabText]}>Khám phá</Text>
-          {mainTab === 'discover' && <View style={styles.mainTabIndicator} />}
+          <Text style={[styles.mainTabText, mainTab === 'find_opponent' && styles.activeMainTabText]}>Tìm đối</Text>
+          {mainTab === 'find_opponent' && <View style={styles.mainTabIndicator} />}
         </TouchableOpacity>
       </View>
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {mainTab === 'discover' ? (
-          // Discover Tab Content
-          <View style={styles.discoverContainer}>
+        {mainTab === 'find_opponent' ? (
+          // Find Opponent Tab Content
+          <View style={styles.findOpponentContainer}>
             {clubsQuery.isLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#0A5C6D" />
@@ -279,8 +283,37 @@ export default function ClubsScreen() {
           )}
           
           {activeTab === 'challenges' && (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Danh sách thách đấu sẽ có sớm</Text>
+            <View style={styles.challengesContainer}>
+              <ChallengeTabs 
+                activeTab={challengeTab}
+                onTabChange={setChallengeTab}
+              />
+              <ScrollView 
+                style={styles.challengesList}
+                showsVerticalScrollIndicator={false}
+              >
+                {challengesData
+                  .filter(challenge => challenge.status === challengeTab)
+                  .map((challenge) => (
+                    <ChallengeCard
+                      key={challenge.id}
+                      {...challenge}
+                      onJoin={() => console.log('Join challenge:', challenge.id)}
+                      onCancel={() => console.log('Cancel challenge:', challenge.id)}
+                      onViewLive={() => console.log('View live:', challenge.id)}
+                    />
+                  ))
+                }
+                {challengesData.filter(challenge => challenge.status === challengeTab).length === 0 && (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                      {challengeTab === 'waiting' && 'Chưa có thách đấu nào đang chờ'}
+                      {challengeTab === 'live' && 'Không có trận đấu nào đang diễn ra'}
+                      {challengeTab === 'finished' && 'Chưa có trận đấu nào kết thúc'}
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
             </View>
           )}
           
@@ -352,7 +385,7 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: '#6503C8',
   },
-  discoverContainer: {
+  findOpponentContainer: {
     padding: 16,
   },
   clubCard: {
@@ -651,5 +684,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
     textAlign: 'right',
+  },
+  challengesContainer: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  challengesList: {
+    flex: 1,
+    paddingTop: 8,
   },
 });
