@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import {
-  View,
   StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   SafeAreaView,
 } from 'react-native';
 import { Stack, router } from 'expo-router';
-import { ArrowLeft, MoreHorizontal } from 'lucide-react-native';
-import { RankingUser } from '@/components/shared/RankingCard';
 import { UniversalTabs } from '@/components/shared/UniversalTabs';
-import { RankingHeaderButtons } from '@/components/ranking/RankingHeader';
-import { RankingList } from '@/components/ranking/RankingList';
+import { RankingHeaderButtons, RankingList } from '@/components/ranking';
 import { mockRankingData } from '@/lib/demo-data/ranking_data';
 import { Users, Trophy, BarChart3 } from 'lucide-react-native';
 
@@ -25,8 +19,6 @@ export default function RankingScreen() {
   const [activeTab, setActiveTab] = useState<RankingType>('elo');
   
   const currentData = mockRankingData[activeTab];
-  const topUser = currentData[0];
-  const otherUsers = currentData.slice(1);
 
   const handleChallenge = (userId: string) => {
     console.log('Challenge user:', userId);
@@ -84,22 +76,5 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
-  headerButton: {
-    padding: 8,
-  },
-  content: {
-    flex: 1,
-  },
-  listContainer: {
-    backgroundColor: 'white',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
+
 });
