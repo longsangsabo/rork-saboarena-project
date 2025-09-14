@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StorageProvider } from "@/providers/StorageProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SABODataProvider } from "@/providers/SABODataProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 import { trpc, trpcClient } from "@/lib/trpc";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -44,15 +45,17 @@ export default function RootLayout() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <StorageProvider>
-          <AuthProvider>
-            <SABODataProvider>
-              <GestureHandlerRootView style={styles.container}>
-                <RootLayoutNav />
-              </GestureHandlerRootView>
-            </SABODataProvider>
-          </AuthProvider>
-        </StorageProvider>
+        <ThemeProvider>
+          <StorageProvider>
+            <AuthProvider>
+              <SABODataProvider>
+                <GestureHandlerRootView style={styles.container}>
+                  <RootLayoutNav />
+                </GestureHandlerRootView>
+              </SABODataProvider>
+            </AuthProvider>
+          </StorageProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

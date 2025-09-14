@@ -28,6 +28,7 @@ import {
   TournamentLoadingState
 } from '@/components/shared';
 import { router } from 'expo-router';
+import { useTheme } from '@/providers/ThemeProvider';
 
 interface Tournament {
   id: string;
@@ -56,6 +57,7 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function TournamentsScreen() {
+  const theme = useTheme();
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'upcoming' | 'live' | 'completed'>('all');
   const [currentView, setCurrentView] = useState<'list' | 'detail' | 'ranking'>('list');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
@@ -178,7 +180,7 @@ export default function TournamentsScreen() {
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colorStyle('light.background') }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <TournamentHeader onRankingPress={handleShowRanking} />
         
@@ -194,7 +196,7 @@ export default function TournamentsScreen() {
         />
         
         {/* Tournament List */}
-        <View style={styles.content}>
+        <View style={[styles.content, { padding: theme.spacingStyle(5) }]}>
           {tournamentsQuery.isLoading ? (
             <TournamentLoadingState />
           ) : tournaments.length > 0 ? (
@@ -211,23 +213,21 @@ export default function TournamentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    // backgroundColor dynamically set in component
   },
   scrollView: {
     flex: 1,
   },
 
   content: {
-    padding: 20,
+    // padding dynamically set in component
   },
 
   tournamentCard: {
-    backgroundColor: 'white',
+    // Dynamic styling: backgroundColor, borderColor, marginBottom set in component
     borderRadius: 16,
-    marginBottom: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -236,80 +236,59 @@ const styles = StyleSheet.create({
   },
   tournamentImage: {
     width: '100%',
-    height: 160,
+    // Dynamic height: 160px equivalent is spacing[40] = 160px
   },
   tournamentContent: {
-    padding: 20,
+    // Dynamic padding: 20px equivalent is spacing[5] = 20px
   },
   tournamentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    // Dynamic marginBottom: 8px=spacing[2] set in component
   },
   tournamentTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    // Dynamic typography and color set in component
     flex: 1,
-    marginRight: 12,
+    // Dynamic marginRight: 12px equivalent is spacing[3] = 12px
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    // Dynamic padding: 8px=spacing[2], 4px=spacing[1], borderRadius: 12px=spacing[3]
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'white',
+    // Dynamic fontSize: 12, fontWeight: '600', color: 'white' set in component
   },
   tournamentDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-    lineHeight: 20,
+    // Dynamic fontSize: 14, color: '#666', marginBottom: 16, lineHeight: 20 set in component
   },
   prizeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: '#f0f9ff',
-    borderRadius: 8,
+    // Dynamic gap: 8px=spacing[2], marginBottom: 16px=spacing[4], padding: 12px=spacing[3], backgroundColor, borderRadius: 8px=spacing[2]
   },
   prizeText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#0A5C6D',
+    // Dynamic fontSize: 16, fontWeight: 'bold', color set in component
   },
   tournamentDetails: {
-    gap: 12,
-    marginBottom: 20,
+    // Dynamic gap: 12px=spacing[3], marginBottom: 20px=spacing[5] set in component
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    // Dynamic gap: 8px=spacing[2] set in component
   },
   detailText: {
-    fontSize: 14,
-    color: '#333',
+    // Dynamic fontSize: 14, color: '#333' set in component
     flex: 1,
   },
   joinButton: {
-    backgroundColor: '#0A5C6D',
-    paddingVertical: 14,
-    borderRadius: 12,
+    // Dynamic backgroundColor, paddingVertical: 14px=spacing[3.5], borderRadius: 12px=spacing[3] set in component
     alignItems: 'center',
   },
   joinButtonDisabled: {
     opacity: 0.6,
   },
   joinButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    // Dynamic color: 'white', fontSize: 16, fontWeight: 'bold' set in component
   },
 });

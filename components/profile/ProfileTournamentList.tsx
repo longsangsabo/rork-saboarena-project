@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { Calendar, Users, DollarSign } from 'lucide-react-native';
+import { useTheme } from '@/providers/ThemeProvider';
 
 interface Tournament {
   id: string;
@@ -25,6 +26,7 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
   activeTab,
   onTabChange
 }) => {
+  const theme = useTheme();
   const tabs = [
     { key: 'ready' as const, label: 'Sẵn sàng' },
     { key: 'live' as const, label: 'Đang live' },
@@ -36,18 +38,56 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
   };
 
   return (
-    <View style={styles.tournamentSection}>
-      <Text style={styles.sectionTitle}>Giải đấu</Text>
+    <View style={[
+      styles.tournamentSection,
+      {
+        backgroundColor: theme.colorStyle('sabo.background.50'),
+        marginTop: theme.spacingStyle(5), // 20px
+        padding: theme.spacingStyle(5),
+      }
+    ]}>
+      <Text style={[
+        theme.fontStyle('h3'),
+        {
+          color: theme.colorStyle('sabo.text.800'),
+          marginBottom: theme.spacingStyle(4), // 16px
+        }
+      ]}>
+        Giải đấu
+      </Text>
       
       {/* Tournament Tabs */}
-      <View style={styles.tabContainer}>
+      <View style={[
+        styles.tabContainer,
+        {
+          backgroundColor: theme.colorStyle('sabo.background.100'),
+          padding: theme.spacingStyle(1), // 4px
+          marginBottom: theme.spacingStyle(4), // 16px
+        }
+      ]}>
         {tabs.map((tab) => (
           <TouchableOpacity
             key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.activeTab]}
+            style={[
+              styles.tab,
+              {
+                paddingVertical: theme.spacingStyle(2), // 8px
+                paddingHorizontal: theme.spacingStyle(3), // 12px
+              },
+              activeTab === tab.key && {
+                backgroundColor: theme.colorStyle('sabo.background.50'),
+              }
+            ]}
             onPress={() => onTabChange(tab.key)}
           >
-            <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
+            <Text style={[
+              theme.fontStyle('label'),
+              {
+                color: activeTab === tab.key 
+                  ? theme.colorStyle('sabo.primary.600') 
+                  : theme.colorStyle('sabo.text.500')
+              }
+            ]}>
               {tab.label}
             </Text>
           </TouchableOpacity>
@@ -57,33 +97,82 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
       {/* Tournament List */}
       <ScrollView style={styles.tournamentList} showsVerticalScrollIndicator={false}>
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#0A5C6D" />
-            <Text style={styles.loadingText}>Đang tải giải đấu...</Text>
+          <View style={[
+            styles.loadingContainer,
+            { paddingVertical: theme.spacingStyle(5) } // 20px
+          ]}>
+            <ActivityIndicator size="small" color={theme.colorStyle('sabo.primary.500')} />
+            <Text style={[
+              theme.fontStyle('bodySmall'),
+              { color: theme.colorStyle('sabo.text.500') }
+            ]}>
+              Đang tải giải đấu...
+            </Text>
           </View>
         ) : tournaments.length > 0 ? (
           tournaments.map((tournament) => (
-            <TouchableOpacity key={tournament.id} style={styles.tournamentItem}>
-              <Text style={styles.tournamentTitle}>{tournament.title}</Text>
+            <TouchableOpacity key={tournament.id} style={[
+              styles.tournamentItem,
+              {
+                paddingVertical: theme.spacingStyle(3), // 12px
+                borderBottomColor: theme.colorStyle('sabo.border.light'),
+              }
+            ]}>
+              <Text style={[
+                theme.fontStyle('body'),
+                {
+                  color: theme.colorStyle('sabo.text.800'),
+                  fontWeight: '600',
+                  marginBottom: theme.spacingStyle(2), // 8px
+                }
+              ]}>
+                {tournament.title}
+              </Text>
               <View style={styles.tournamentDetails}>
                 <View style={styles.tournamentDetailItem}>
-                  <Calendar size={11} color="#0A5C6D" />
-                  <Text style={styles.tournamentDetailText}>{tournament.date}</Text>
+                  <Calendar size={11} color={theme.colorStyle('sabo.primary.600')} />
+                  <Text style={[
+                    theme.fontStyle('caption'),
+                    { color: theme.colorStyle('sabo.primary.600') }
+                  ]}>
+                    {tournament.date}
+                  </Text>
                 </View>
                 <View style={styles.tournamentActions}>
                   <View style={styles.tournamentStats}>
-                    <Users size={14} color="#801515" />
-                    <Text style={styles.tournamentStatsText}>{tournament.participants}/{tournament.max_participants}</Text>
-                    <DollarSign size={14} color="#801515" />
-                    <Text style={styles.tournamentStatsText}>{formatCurrency(tournament.prize_pool)}</Text>
+                    <Users size={14} color={theme.colorStyle('sabo.error.600')} />
+                    <Text style={[
+                      theme.fontStyle('caption'),
+                      { 
+                        color: theme.colorStyle('sabo.error.600'),
+                        marginRight: theme.spacingStyle(2), // 8px
+                      }
+                    ]}>
+                      {tournament.participants}/{tournament.max_participants}
+                    </Text>
+                    <DollarSign size={14} color={theme.colorStyle('sabo.error.600')} />
+                    <Text style={[
+                      theme.fontStyle('caption'),
+                      { color: theme.colorStyle('sabo.error.600') }
+                    ]}>
+                      {formatCurrency(tournament.prize_pool)}
+                    </Text>
                   </View>
                 </View>
               </View>
             </TouchableOpacity>
           ))
         ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Không có giải đấu nào</Text>
+          <View style={[
+            styles.emptyContainer,
+            { paddingVertical: theme.spacingStyle(10) } // 40px
+          ]}>
+            <Text style={[
+              theme.fontStyle('body'),
+              { color: theme.colorStyle('sabo.text.500') }
+            ]}>
+              Không có giải đấu nào
+            </Text>
           </View>
         )}
       </ScrollView>
@@ -93,51 +182,21 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
 
 const styles = StyleSheet.create({
   tournamentSection: {
-    backgroundColor: 'white',
-    marginTop: 20,
     borderRadius: 16,
-    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-  },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f5f5f5',
     borderRadius: 8,
-    padding: 4,
-    marginBottom: 16,
   },
   tab: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
     borderRadius: 6,
     alignItems: 'center',
-  },
-  activeTab: {
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-  },
-  activeTabText: {
-    color: '#0A5C6D',
   },
   tournamentList: {
     maxHeight: 300,
@@ -146,23 +205,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
     gap: 8,
   },
-  loadingText: {
-    color: '#666',
-    fontSize: 14,
-  },
   tournamentItem: {
-    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  tournamentTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
   },
   tournamentDetails: {
     flexDirection: 'row',
@@ -174,10 +220,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  tournamentDetailText: {
-    fontSize: 12,
-    color: '#0A5C6D',
-  },
   tournamentActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -188,17 +230,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  tournamentStatsText: {
-    fontSize: 12,
-    color: '#801515',
-    marginRight: 8,
-  },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
   },
 });

@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { router } from 'expo-router';
 import { MapPin, MoreHorizontal, Camera, Trophy, Users, Target, BarChart3, X } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import { useTheme } from '@/providers/ThemeProvider';
 import { 
   UniversalTabs,
   ClubCard, 
@@ -29,6 +30,7 @@ interface Member {
 
 
 export default function ClubsScreen() {
+  const theme = useTheme();
   const [mainTab, setMainTab] = useState<'clb' | 'find_opponent'>('clb');
   const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'ranking' | 'challenges'>('members');
   const [tournamentTab, setTournamentTab] = useState<'ready' | 'live' | 'done'>('ready');
@@ -75,36 +77,65 @@ export default function ClubsScreen() {
   
   if (clubsQuery.isLoading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#0A5C6D" />
-        <Text style={{ marginTop: 16, color: '#666' }}>Đang tải thông tin club...</Text>
+      <View style={[
+        styles.container, 
+        { 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          backgroundColor: theme.colorStyle('sabo.background.50')
+        }
+      ]}>
+        <ActivityIndicator size="large" color={theme.colorStyle('sabo.primary.500')} />
+        <Text style={[
+          theme.fontStyle('body'),
+          { 
+            marginTop: theme.spacingStyle(4), // 16px
+            color: theme.colorStyle('sabo.text.500') 
+          }
+        ]}>
+          Đang tải thông tin club...
+        </Text>
       </View>
     );
   }
   
   if (!club) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: '#666' }}>Không thể tải thông tin club</Text>
+      <View style={[
+        styles.container, 
+        { 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          backgroundColor: theme.colorStyle('sabo.background.50')
+        }
+      ]}>
+        <Text style={[
+          theme.fontStyle('body'),
+          { color: theme.colorStyle('sabo.text.500') }
+        ]}>
+          Không thể tải thông tin club
+        </Text>
       </View>
     );
   }
   
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container,
+      { backgroundColor: theme.colorStyle('sabo.background.50') }
+    ]}>
       <Stack.Screen 
         options={{
           headerShown: true,
           title: 'SABO',
           headerTitleAlign: 'left',
           headerStyle: {
-            backgroundColor: 'white',
+            backgroundColor: theme.colorStyle('sabo.background.50'),
           },
           headerTitleStyle: {
             fontSize: 24,
             fontWeight: '900',
-            color: '#6503C8',
-
+            color: theme.colorStyle('sabo.primary.600'),
           },
           headerRight: () => (
             <View style={styles.headerRightContainer}>
@@ -120,20 +151,69 @@ export default function ClubsScreen() {
       />
       
       {/* Main Tab Navigation */}
-      <View style={styles.mainTabContainer}>
+      <View style={[
+        styles.mainTabContainer,
+        {
+          backgroundColor: theme.colorStyle('sabo.background.50'),
+          paddingHorizontal: theme.spacingStyle(5), // 20px
+          borderBottomColor: theme.colorStyle('sabo.border.light'),
+        }
+      ]}>
         <TouchableOpacity 
-          style={[styles.mainTab, mainTab === 'clb' && styles.activeMainTab]}
+          style={[
+            styles.mainTab,
+            {
+              paddingVertical: theme.spacingStyle(4), // 16px
+              paddingHorizontal: theme.spacingStyle(5), // 20px
+            }
+          ]}
           onPress={() => setMainTab('clb')}
         >
-          <Text style={[styles.mainTabText, mainTab === 'clb' && styles.activeMainTabText]}>CLB</Text>
-          {mainTab === 'clb' && <View style={styles.mainTabIndicator} />}
+          <Text style={[
+            theme.fontStyle('body'),
+            {
+              color: mainTab === 'clb' 
+                ? theme.colorStyle('sabo.text.900') 
+                : theme.colorStyle('sabo.text.300'),
+              fontWeight: mainTab === 'clb' ? '700' : '400',
+            }
+          ]}>
+            CLB
+          </Text>
+          {mainTab === 'clb' && (
+            <View style={[
+              styles.mainTabIndicator,
+              { backgroundColor: theme.colorStyle('sabo.primary.600') }
+            ]} />
+          )}
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.mainTab, mainTab === 'find_opponent' && styles.activeMainTab]}
+          style={[
+            styles.mainTab,
+            {
+              paddingVertical: theme.spacingStyle(4), // 16px
+              paddingHorizontal: theme.spacingStyle(5), // 20px
+            }
+          ]}
           onPress={() => setMainTab('find_opponent')}
         >
-          <Text style={[styles.mainTabText, mainTab === 'find_opponent' && styles.activeMainTabText]}>Tìm đối</Text>
-          {mainTab === 'find_opponent' && <View style={styles.mainTabIndicator} />}
+          <Text style={[
+            theme.fontStyle('body'),
+            {
+              color: mainTab === 'find_opponent' 
+                ? theme.colorStyle('sabo.text.900') 
+                : theme.colorStyle('sabo.text.300'),
+              fontWeight: mainTab === 'find_opponent' ? '700' : '400',
+            }
+          ]}>
+            Tìm đối
+          </Text>
+          {mainTab === 'find_opponent' && (
+            <View style={[
+              styles.mainTabIndicator,
+              { backgroundColor: theme.colorStyle('sabo.primary.600') }
+            ]} />
+          )}
         </TouchableOpacity>
       </View>
       
@@ -142,9 +222,17 @@ export default function ClubsScreen() {
           // Find Opponent Tab Content
           <View style={styles.findOpponentContainer}>
             {clubsQuery.isLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0A5C6D" />
-                <Text style={styles.loadingText}>Đang tải danh sách club...</Text>
+              <View style={[
+                styles.loadingContainer,
+                { paddingVertical: theme.spacingStyle(10) } // 40px
+              ]}>
+                <ActivityIndicator size="large" color={theme.colorStyle('sabo.primary.500')} />
+                <Text style={[
+                  theme.fontStyle('bodySmall'),
+                  { color: theme.colorStyle('sabo.text.500') }
+                ]}>
+                  Đang tải danh sách club...
+                </Text>
               </View>
             ) : (
               clubs.map((clubItem: any) => (
@@ -181,7 +269,16 @@ export default function ClubsScreen() {
                 colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.80)']}
                 style={styles.imageOverlay}
               >
-                <Text style={styles.clubName}>{club.name}</Text>
+                <Text style={[
+                  styles.clubName,
+                  {
+                    color: theme.colorStyle('sabo.primary.200'),
+                    fontSize: 50, // Keep large size for club name impact
+                    letterSpacing: 3,
+                  }
+                ]}>
+                  {club.name}
+                </Text>
               </LinearGradient>
             </LinearGradient>
           </View>
@@ -192,66 +289,257 @@ export default function ClubsScreen() {
         </View>
 
         {/* Location */}
-        <View style={styles.locationContainer}>
-          <View style={styles.locationBadge}>
-            <MapPin size={12} color="#BA1900" />
-            <Text style={styles.locationText}>{club.location}</Text>
+        <View style={[
+          styles.locationContainer,
+          {
+            paddingHorizontal: theme.spacingStyle(5), // 20px
+            marginBottom: theme.spacingStyle(5), // 20px
+          }
+        ]}>
+          <View style={[
+            styles.locationBadge,
+            {
+              backgroundColor: theme.colorStyle('sabo.primary.50'),
+              paddingHorizontal: theme.spacingStyle(4), // 16px
+              paddingVertical: theme.spacingStyle(2), // 8px
+            }
+          ]}>
+            <MapPin size={12} color={theme.colorStyle('sabo.error.600')} />
+            <Text style={[
+              theme.fontStyle('body'),
+              { color: theme.colorStyle('sabo.text.800') }
+            ]}>
+              {club.location}
+            </Text>
           </View>
         </View>
 
         {/* Stats */}
-        <View style={styles.statsContainer}>
+        <View style={[
+          styles.statsContainer,
+          {
+            paddingHorizontal: theme.spacingStyle(11), // ~46px
+            paddingVertical: theme.spacingStyle(5), // 20px
+          }
+        ]}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{club.member_count}</Text>
-            <Text style={styles.statLabel}>Thành viên</Text>
+            <Text style={[
+              theme.fontStyle('h4'),
+              {
+                color: theme.colorStyle('sabo.text.600'),
+                fontWeight: '700',
+              }
+            ]}>
+              {club.member_count}
+            </Text>
+            <Text style={[
+              theme.fontStyle('caption'),
+              {
+                color: theme.colorStyle('sabo.text.800'),
+                marginTop: theme.spacingStyle(1), // 4px
+              }
+            ]}>
+              Thành viên
+            </Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{club.tournament_count}</Text>
-            <Text style={styles.statLabel}>Giải đấu</Text>
+            <Text style={[
+              theme.fontStyle('h4'),
+              {
+                color: theme.colorStyle('sabo.text.600'),
+                fontWeight: '700',
+              }
+            ]}>
+              {club.tournament_count}
+            </Text>
+            <Text style={[
+              theme.fontStyle('caption'),
+              {
+                color: theme.colorStyle('sabo.text.800'),
+                marginTop: theme.spacingStyle(1),
+              }
+            ]}>
+              Giải đấu
+            </Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{(club.prize_pool / 1000000).toFixed(1)} Tr</Text>
-            <Text style={styles.statLabel}>Prize Pool</Text>
+            <Text style={[
+              theme.fontStyle('h4'),
+              {
+                color: theme.colorStyle('sabo.text.600'),
+                fontWeight: '700',
+              }
+            ]}>
+              {(club.prize_pool / 1000000).toFixed(1)} Tr
+            </Text>
+            <Text style={[
+              theme.fontStyle('caption'),
+              {
+                color: theme.colorStyle('sabo.text.800'),
+                marginTop: theme.spacingStyle(1),
+              }
+            ]}>
+              Prize Pool
+            </Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{club.challenge_count}</Text>
-            <Text style={styles.statLabel}>Thách đấu</Text>
+            <Text style={[
+              theme.fontStyle('h4'),
+              {
+                color: theme.colorStyle('sabo.text.600'),
+                fontWeight: '700',
+              }
+            ]}>
+              {club.challenge_count}
+            </Text>
+            <Text style={[
+              theme.fontStyle('caption'),
+              {
+                color: theme.colorStyle('sabo.text.800'),
+                marginTop: theme.spacingStyle(1),
+              }
+            ]}>
+              Thách đấu
+            </Text>
           </View>
         </View>
 
         {/* Tab Navigation */}
-        <View style={styles.tabContainer}>
+        <View style={[
+          styles.tabContainer,
+          {
+            backgroundColor: theme.colorStyle('sabo.background.50'),
+            borderTopColor: theme.colorStyle('sabo.border.subtle'),
+            paddingVertical: theme.spacingStyle(2), // 8px
+          }
+        ]}>
           <TouchableOpacity 
-            style={[styles.tab, activeTab === 'members' && styles.activeTab]}
+            style={[
+              styles.tab,
+              { paddingVertical: theme.spacingStyle(1.5) } // ~5px
+            ]}
             onPress={() => setActiveTab('members')}
           >
-            <Users size={20} color={activeTab === 'members' ? '#161722' : '#D7D7D9'} />
-            <Text style={[styles.tabText, activeTab === 'members' && styles.activeTabText]}>Thành viên</Text>
-            {activeTab === 'members' && <View style={styles.activeTabIndicator} />}
+            <Users 
+              size={20} 
+              color={activeTab === 'members' 
+                ? theme.colorStyle('sabo.text.800') 
+                : theme.colorStyle('sabo.text.300')
+              } 
+            />
+            <Text style={[
+              theme.fontStyle('caption'),
+              {
+                color: activeTab === 'members' 
+                  ? theme.colorStyle('sabo.text.700') 
+                  : theme.colorStyle('sabo.text.300'),
+                letterSpacing: 0.15,
+              }
+            ]}>
+              Thành viên
+            </Text>
+            {activeTab === 'members' && (
+              <View style={[
+                styles.activeTabIndicator,
+                { backgroundColor: theme.colorStyle('sabo.text.800') }
+              ]} />
+            )}
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.tab, activeTab === 'tournaments' && styles.activeTab]}
+            style={[
+              styles.tab,
+              { paddingVertical: theme.spacingStyle(1.5) }
+            ]}
             onPress={() => setActiveTab('tournaments')}
           >
-            <Trophy size={20} color={activeTab === 'tournaments' ? '#161722' : '#D7D7D9'} />
-            <Text style={[styles.tabText, activeTab === 'tournaments' && styles.activeTabText]}>Giải đấu</Text>
-            {activeTab === 'tournaments' && <View style={styles.activeTabIndicator} />}
+            <Trophy 
+              size={20} 
+              color={activeTab === 'tournaments' 
+                ? theme.colorStyle('sabo.text.800') 
+                : theme.colorStyle('sabo.text.300')
+              } 
+            />
+            <Text style={[
+              theme.fontStyle('caption'),
+              {
+                color: activeTab === 'tournaments' 
+                  ? theme.colorStyle('sabo.text.700') 
+                  : theme.colorStyle('sabo.text.300'),
+                letterSpacing: 0.15,
+              }
+            ]}>
+              Giải đấu
+            </Text>
+            {activeTab === 'tournaments' && (
+              <View style={[
+                styles.activeTabIndicator,
+                { backgroundColor: theme.colorStyle('sabo.text.800') }
+              ]} />
+            )}
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.tab, activeTab === 'ranking' && styles.activeTab]}
+            style={[
+              styles.tab,
+              { paddingVertical: theme.spacingStyle(1.5) }
+            ]}
             onPress={() => setActiveTab('ranking')}
           >
-            <BarChart3 size={20} color={activeTab === 'ranking' ? '#161722' : '#D7D7D9'} />
-            <Text style={[styles.tabText, activeTab === 'ranking' && styles.activeTabText]}>Bảng xếp hạng</Text>
-            {activeTab === 'ranking' && <View style={styles.activeTabIndicator} />}
+            <BarChart3 
+              size={20} 
+              color={activeTab === 'ranking' 
+                ? theme.colorStyle('sabo.text.800') 
+                : theme.colorStyle('sabo.text.300')
+              } 
+            />
+            <Text style={[
+              theme.fontStyle('caption'),
+              {
+                color: activeTab === 'ranking' 
+                  ? theme.colorStyle('sabo.text.700') 
+                  : theme.colorStyle('sabo.text.300'),
+                letterSpacing: 0.15,
+              }
+            ]}>
+              Bảng xếp hạng
+            </Text>
+            {activeTab === 'ranking' && (
+              <View style={[
+                styles.activeTabIndicator,
+                { backgroundColor: theme.colorStyle('sabo.text.800') }
+              ]} />
+            )}
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.tab, activeTab === 'challenges' && styles.activeTab]}
+            style={[
+              styles.tab,
+              { paddingVertical: theme.spacingStyle(1.5) }
+            ]}
             onPress={() => setActiveTab('challenges')}
           >
-            <Target size={20} color={activeTab === 'challenges' ? '#161722' : '#D7D7D9'} />
-            <Text style={[styles.tabText, activeTab === 'challenges' && styles.activeTabText]}>Thách đấu</Text>
-            {activeTab === 'challenges' && <View style={styles.activeTabIndicator} />}
+            <Target 
+              size={20} 
+              color={activeTab === 'challenges' 
+                ? theme.colorStyle('sabo.text.800') 
+                : theme.colorStyle('sabo.text.300')
+              } 
+            />
+            <Text style={[
+              theme.fontStyle('caption'),
+              {
+                color: activeTab === 'challenges' 
+                  ? theme.colorStyle('sabo.text.700') 
+                  : theme.colorStyle('sabo.text.300'),
+                letterSpacing: 0.15,
+              }
+            ]}>
+              Thách đấu
+            </Text>
+            {activeTab === 'challenges' && (
+              <View style={[
+                styles.activeTabIndicator,
+                { backgroundColor: theme.colorStyle('sabo.text.800') }
+              ]} />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -269,27 +557,97 @@ export default function ClubsScreen() {
           {activeTab === 'tournaments' && (
             <View style={styles.tournamentsContainer}>
               {/* Tournament Sub-tabs */}
-              <View style={styles.subTabContainer}>
+              <View style={[
+                styles.subTabContainer,
+                {
+                  backgroundColor: theme.colorStyle('sabo.background.50'),
+                  borderBottomColor: theme.colorStyle('sabo.border.light'),
+                  paddingHorizontal: theme.spacingStyle(5), // 20px
+                }
+              ]}>
                 <TouchableOpacity 
-                  style={[styles.subTab, tournamentTab === 'ready' && styles.activeSubTab]}
+                  style={[
+                    styles.subTab,
+                    {
+                      paddingVertical: theme.spacingStyle(3), // 12px
+                      paddingHorizontal: theme.spacingStyle(4), // 16px
+                    }
+                  ]}
                   onPress={() => setTournamentTab('ready')}
                 >
-                  <Text style={[styles.subTabText, tournamentTab === 'ready' && styles.activeSubTabText]}>Ready</Text>
-                  {tournamentTab === 'ready' && <View style={styles.subTabIndicator} />}
+                  <Text style={[
+                    theme.fontStyle('bodySmall'),
+                    {
+                      color: tournamentTab === 'ready' 
+                        ? theme.colorStyle('sabo.primary.600') 
+                        : theme.colorStyle('sabo.text.400'),
+                      fontWeight: tournamentTab === 'ready' ? '600' : '400',
+                    }
+                  ]}>
+                    Ready
+                  </Text>
+                  {tournamentTab === 'ready' && (
+                    <View style={[
+                      styles.subTabIndicator,
+                      { backgroundColor: theme.colorStyle('sabo.primary.600') }
+                    ]} />
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.subTab, tournamentTab === 'live' && styles.activeSubTab]}
+                  style={[
+                    styles.subTab,
+                    {
+                      paddingVertical: theme.spacingStyle(3),
+                      paddingHorizontal: theme.spacingStyle(4),
+                    }
+                  ]}
                   onPress={() => setTournamentTab('live')}
                 >
-                  <Text style={[styles.subTabText, tournamentTab === 'live' && styles.activeSubTabText]}>Live</Text>
-                  {tournamentTab === 'live' && <View style={styles.subTabIndicator} />}
+                  <Text style={[
+                    theme.fontStyle('bodySmall'),
+                    {
+                      color: tournamentTab === 'live' 
+                        ? theme.colorStyle('sabo.primary.600') 
+                        : theme.colorStyle('sabo.text.400'),
+                      fontWeight: tournamentTab === 'live' ? '600' : '400',
+                    }
+                  ]}>
+                    Live
+                  </Text>
+                  {tournamentTab === 'live' && (
+                    <View style={[
+                      styles.subTabIndicator,
+                      { backgroundColor: theme.colorStyle('sabo.primary.600') }
+                    ]} />
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.subTab, tournamentTab === 'done' && styles.activeSubTab]}
+                  style={[
+                    styles.subTab,
+                    {
+                      paddingVertical: theme.spacingStyle(3),
+                      paddingHorizontal: theme.spacingStyle(4),
+                    }
+                  ]}
                   onPress={() => setTournamentTab('done')}
                 >
-                  <Text style={[styles.subTabText, tournamentTab === 'done' && styles.activeSubTabText]}>Done</Text>
-                  {tournamentTab === 'done' && <View style={styles.subTabIndicator} />}
+                  <Text style={[
+                    theme.fontStyle('bodySmall'),
+                    {
+                      color: tournamentTab === 'done' 
+                        ? theme.colorStyle('sabo.primary.600') 
+                        : theme.colorStyle('sabo.text.400'),
+                      fontWeight: tournamentTab === 'done' ? '600' : '400',
+                    }
+                  ]}>
+                    Done
+                  </Text>
+                  {tournamentTab === 'done' && (
+                    <View style={[
+                      styles.subTabIndicator,
+                      { backgroundColor: theme.colorStyle('sabo.primary.600') }
+                    ]} />
+                  )}
                 </TouchableOpacity>
               </View>
               
@@ -316,13 +674,35 @@ export default function ClubsScreen() {
                   </View>
                 )}
                 {tournamentTab === 'live' && (
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>Không có giải đấu nào đang diễn ra</Text>
+                  <View style={[
+                    styles.emptyContainer,
+                    { paddingVertical: theme.spacingStyle(14) } // ~60px
+                  ]}>
+                    <Text style={[
+                      theme.fontStyle('body'),
+                      { 
+                        color: theme.colorStyle('sabo.text.500'),
+                        textAlign: 'center',
+                      }
+                    ]}>
+                      Không có giải đấu nào đang diễn ra
+                    </Text>
                   </View>
                 )}
                 {tournamentTab === 'done' && (
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>Chưa có giải đấu nào kết thúc</Text>
+                  <View style={[
+                    styles.emptyContainer,
+                    { paddingVertical: theme.spacingStyle(14) } // ~60px
+                  ]}>
+                    <Text style={[
+                      theme.fontStyle('body'),
+                      { 
+                        color: theme.colorStyle('sabo.text.500'),
+                        textAlign: 'center',
+                      }
+                    ]}>
+                      Chưa có giải đấu nào kết thúc
+                    </Text>
                   </View>
                 )}
               </ScrollView>
@@ -332,27 +712,97 @@ export default function ClubsScreen() {
           {activeTab === 'ranking' && (
             <View style={styles.rankingContainer}>
               {/* Ranking Sub-tabs */}
-              <View style={styles.subTabContainer}>
+              <View style={[
+                styles.subTabContainer,
+                {
+                  backgroundColor: theme.colorStyle('sabo.background.50'),
+                  borderBottomColor: theme.colorStyle('sabo.border.light'),
+                  paddingHorizontal: theme.spacingStyle(5), // 20px
+                }
+              ]}>
                 <TouchableOpacity 
-                  style={[styles.subTab, rankingTab === 'prizepool' && styles.activeSubTab]}
+                  style={[
+                    styles.subTab,
+                    {
+                      paddingVertical: theme.spacingStyle(3), // 12px
+                      paddingHorizontal: theme.spacingStyle(4), // 16px
+                    }
+                  ]}
                   onPress={() => setRankingTab('prizepool')}
                 >
-                  <Text style={[styles.subTabText, rankingTab === 'prizepool' && styles.activeSubTabText]}>Prize Pool</Text>
-                  {rankingTab === 'prizepool' && <View style={styles.subTabIndicator} />}
+                  <Text style={[
+                    theme.fontStyle('bodySmall'),
+                    {
+                      color: rankingTab === 'prizepool' 
+                        ? theme.colorStyle('sabo.primary.600') 
+                        : theme.colorStyle('sabo.text.400'),
+                      fontWeight: rankingTab === 'prizepool' ? '600' : '400',
+                    }
+                  ]}>
+                    Prize Pool
+                  </Text>
+                  {rankingTab === 'prizepool' && (
+                    <View style={[
+                      styles.subTabIndicator,
+                      { backgroundColor: theme.colorStyle('sabo.primary.600') }
+                    ]} />
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.subTab, rankingTab === 'elo' && styles.activeSubTab]}
+                  style={[
+                    styles.subTab,
+                    {
+                      paddingVertical: theme.spacingStyle(3),
+                      paddingHorizontal: theme.spacingStyle(4),
+                    }
+                  ]}
                   onPress={() => setRankingTab('elo')}
                 >
-                  <Text style={[styles.subTabText, rankingTab === 'elo' && styles.activeSubTabText]}>ELO</Text>
-                  {rankingTab === 'elo' && <View style={styles.subTabIndicator} />}
+                  <Text style={[
+                    theme.fontStyle('bodySmall'),
+                    {
+                      color: rankingTab === 'elo' 
+                        ? theme.colorStyle('sabo.primary.600') 
+                        : theme.colorStyle('sabo.text.400'),
+                      fontWeight: rankingTab === 'elo' ? '600' : '400',
+                    }
+                  ]}>
+                    ELO
+                  </Text>
+                  {rankingTab === 'elo' && (
+                    <View style={[
+                      styles.subTabIndicator,
+                      { backgroundColor: theme.colorStyle('sabo.primary.600') }
+                    ]} />
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.subTab, rankingTab === 'spa' && styles.activeSubTab]}
+                  style={[
+                    styles.subTab,
+                    {
+                      paddingVertical: theme.spacingStyle(3),
+                      paddingHorizontal: theme.spacingStyle(4),
+                    }
+                  ]}
                   onPress={() => setRankingTab('spa')}
                 >
-                  <Text style={[styles.subTabText, rankingTab === 'spa' && styles.activeSubTabText]}>SPA</Text>
-                  {rankingTab === 'spa' && <View style={styles.subTabIndicator} />}
+                  <Text style={[
+                    theme.fontStyle('bodySmall'),
+                    {
+                      color: rankingTab === 'spa' 
+                        ? theme.colorStyle('sabo.primary.600') 
+                        : theme.colorStyle('sabo.text.400'),
+                      fontWeight: rankingTab === 'spa' ? '600' : '400',
+                    }
+                  ]}>
+                    SPA
+                  </Text>
+                  {rankingTab === 'spa' && (
+                    <View style={[
+                      styles.subTabIndicator,
+                      { backgroundColor: theme.colorStyle('sabo.primary.600') }
+                    ]} />
+                  )}
                 </TouchableOpacity>
               </View>
               
@@ -398,8 +848,17 @@ export default function ClubsScreen() {
                   ))
                 }
                 {getChallengesByStatus(challengeTab).length === 0 && (
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>
+                  <View style={[
+                    styles.emptyContainer,
+                    { paddingVertical: theme.spacingStyle(14) } // ~60px
+                  ]}>
+                    <Text style={[
+                      theme.fontStyle('body'),
+                      { 
+                        color: theme.colorStyle('sabo.text.500'),
+                        textAlign: 'center',
+                      }
+                    ]}>
                       {challengeTab === 'waiting' && 'Chưa có thách đấu nào đang chờ'}
                       {challengeTab === 'live' && 'Không có trận đấu nào đang diễn ra'}
                       {challengeTab === 'finished' && 'Chưa có trận đấu nào kết thúc'}
@@ -422,7 +881,6 @@ export default function ClubsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
   },
   headerRightContainer: {
     flexDirection: 'row',
@@ -444,27 +902,10 @@ const styles = StyleSheet.create({
   },
   mainTabContainer: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
   },
   mainTab: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
     position: 'relative',
-  },
-  activeMainTab: {
-    // Active styling handled by indicator
-  },
-  mainTabText: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#CCCCCE',
-  },
-  activeMainTabText: {
-    color: 'black',
-    fontWeight: '700',
   },
   mainTabIndicator: {
     position: 'absolute',
@@ -472,7 +913,6 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     height: 2,
-    backgroundColor: '#6503C8',
   },
   findOpponentContainer: {
     padding: 16,

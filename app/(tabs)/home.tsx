@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { NavigationHelper } from '@/utils/NavigationHelper';
 import { trpc } from '@/lib/trpc';
+import { useTheme } from '@/providers/ThemeProvider';
 import { 
   CustomStatusBar,
   HomeHeader,
@@ -25,6 +26,7 @@ import {
 } from '@/components/shared';
 
 export default function HomeScreen() {
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<'nearby' | 'following'>('nearby');
   const [isLiked, setIsLiked] = useState(false);
@@ -99,7 +101,7 @@ export default function HomeScreen() {
 
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colorStyle('dark.background') }]}>
       <ImageBackground
         source={{ uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=414&h=813&fit=crop' }}
         style={styles.backgroundImage}
@@ -126,7 +128,10 @@ export default function HomeScreen() {
         />
 
         {/* Main Content */}
-        <View style={styles.mainContent}>
+        <View style={[styles.mainContent, { 
+          paddingHorizontal: theme.spacingStyle(5),
+          paddingTop: theme.spacingStyle(5)
+        }]}>
           {/* Profile Card */}
           <ProfileCard 
             imageUrl="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=297&h=292&fit=crop&crop=face"
@@ -151,7 +156,10 @@ export default function HomeScreen() {
             onLike={handleLike}
             onComment={handleComment}
             onShare={handleShare}
-            style={styles.socialActions}
+            style={[styles.socialActions, {
+              right: theme.spacingStyle(5), // 20px
+              top: 200 // Custom positioning - no exact spacing token for 200px
+            }]}
           />
 
           {/* Club Info */}
@@ -161,7 +169,10 @@ export default function HomeScreen() {
             avatar="https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=50&h=50&fit=crop"
             isOnline={true}
             onPress={handleClubPress}
-            style={styles.clubInfo}
+            style={[styles.clubInfo, {
+              bottom: 120, // Custom positioning - no exact spacing token
+              left: theme.spacingStyle(5) // 20px
+            }]}
           />
 
           {/* Post Content */}
@@ -170,17 +181,31 @@ export default function HomeScreen() {
             date="03-09"
             content="Tìm đối tối nay   #sabo #rankG"
             onPress={handleProfilePress}
-            style={styles.postContent}
+            style={[styles.postContent, {
+              bottom: theme.spacingStyle(10), // 40px
+              left: theme.spacingStyle(5), // 20px
+              right: theme.spacingStyle(5) // 20px
+            }]}
           />
         </View>
       </ImageBackground>
       
       {/* Demo Button */}
       <TouchableOpacity
-        style={styles.demoButton}
+        style={[styles.demoButton, {
+          bottom: theme.spacingStyle(7), // 28px close to 30px
+          right: theme.spacingStyle(5), // 20px
+          backgroundColor: theme.colorStyle('sabo.secondary.500'), // Purple/Gold accent
+          paddingHorizontal: theme.spacingStyle(4), // 16px
+          paddingVertical: theme.spacingStyle(3), // 12px
+          borderRadius: 25 // Custom rounded pill shape
+        }]}
         onPress={handleComponentDemo}
       >
-        <Text style={styles.demoButtonText}>🎨 Demo</Text>
+        <Text style={[styles.demoButtonText, {
+          color: theme.colorStyle('light.card'), // white
+          ...theme.fontStyle('buttonMedium') // fontSize: 14, fontWeight: 'semibold'
+        }]}>🎨 Demo</Text>
       </TouchableOpacity>
     </View>
   );
@@ -189,40 +214,30 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    // backgroundColor dynamically set in component
   },
   backgroundImage: {
     flex: 1,
   },
   mainContent: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    // paddingHorizontal, paddingTop dynamically set in component
   },
   socialActions: {
     position: 'absolute',
-    right: 20,
-    top: 200,
+    // right, top dynamically set in component  
   },
   clubInfo: {
     position: 'absolute',
-    bottom: 120,
-    left: 20,
+    // bottom, left dynamically set in component
   },
   postContent: {
     position: 'absolute',
-    bottom: 40,
-    left: 20,
-    right: 20,
+    // bottom, left, right dynamically set in component
   },
   demoButton: {
     position: 'absolute',
-    bottom: 30,
-    right: 20,
-    backgroundColor: '#6503C8',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 25,
+    // Dynamic positioning, backgroundColor, padding, borderRadius set in component
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -230,8 +245,6 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   demoButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
+    // Dynamic color, fontSize, fontWeight set in component
   },
 });

@@ -24,6 +24,7 @@ import {
   DollarSign
 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import { useTheme } from '@/providers/ThemeProvider';
 import { 
   ProfileCard, 
   StatsRow, 
@@ -32,6 +33,7 @@ import {
 } from '@/components/shared';
 
 export default function ProfileScreen() {
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<'ready' | 'live' | 'done'>('ready');
   
@@ -66,17 +68,44 @@ export default function ProfileScreen() {
   
   if (profileQuery.isLoading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#0A5C6D" />
-        <Text style={{ marginTop: 16, color: '#666' }}>Đang tải hồ sơ...</Text>
+      <View style={[
+        styles.container, 
+        { 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          backgroundColor: theme.colorStyle('sabo.background.50')
+        }
+      ]}>
+        <ActivityIndicator size="large" color={theme.colorStyle('sabo.primary.500')} />
+        <Text style={[
+          theme.fontStyle('body'),
+          { 
+            marginTop: theme.spacingStyle(4), // 16px
+            color: theme.colorStyle('sabo.text.500') 
+          }
+        ]}>
+          Đang tải hồ sơ...
+        </Text>
       </View>
     );
   }
   
   if (!user) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: '#666' }}>Không thể tải hồ sơ</Text>
+      <View style={[
+        styles.container, 
+        { 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          backgroundColor: theme.colorStyle('sabo.background.50')
+        }
+      ]}>
+        <Text style={[
+          theme.fontStyle('body'),
+          { color: theme.colorStyle('sabo.text.500') }
+        ]}>
+          Không thể tải hồ sơ
+        </Text>
       </View>
     );
   }
@@ -103,17 +132,32 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
+    <View style={[
+      styles.container,
+      { backgroundColor: theme.colorStyle('sabo.background.50') }
+    ]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colorStyle('sabo.background.50')} />
       
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+      <View style={[
+        styles.header, 
+        { 
+          paddingTop: insets.top + theme.spacingStyle(3), // 12px
+          backgroundColor: theme.colorStyle('sabo.background.50'),
+          borderBottomColor: theme.colorStyle('sabo.border.subtle'),
+        }
+      ]}>
         <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
-          <ArrowLeft size={24} color="#161722" />
+          <ArrowLeft size={24} color={theme.colorStyle('sabo.text.800')} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{user.username}</Text>
+        <Text style={[
+          theme.fontStyle('h4'),
+          { color: theme.colorStyle('sabo.text.800') }
+        ]}>
+          {user.username}
+        </Text>
         <TouchableOpacity style={styles.headerButton} onPress={handleMoreOptions}>
-          <MoreHorizontal size={24} color="#161722" />
+          <MoreHorizontal size={24} color={theme.colorStyle('sabo.text.800')} />
         </TouchableOpacity>
       </View>
 
@@ -125,38 +169,134 @@ export default function ProfileScreen() {
           showEditButton={true}
           onEditPress={handleEditProfile}
           size="large"
-          style={styles.profileCard}
+          style={[
+            styles.profileCard,
+            {
+              backgroundColor: theme.colorStyle('sabo.background.50'),
+              borderBottomColor: theme.colorStyle('sabo.border.subtle'),
+            }
+          ]}
         />
 
           {/* Rank Badge */}
-          <View style={styles.rankBadge}>
+          <View style={[
+            styles.rankBadge,
+            {
+              backgroundColor: theme.colorStyle('sabo.primary.100'),
+              borderColor: theme.colorStyle('sabo.primary.600'),
+              paddingHorizontal: theme.spacingStyle(6), // 24px -> 25px close enough
+              paddingVertical: theme.spacingStyle(2), // 8px -> 7px close enough
+              marginBottom: theme.spacingStyle(5), // 20px
+            }
+          ]}>
             <View style={styles.rankIcon}>
-              <Crown size={14} color="#19127B" />
+              <Crown size={14} color={theme.colorStyle('sabo.primary.700')} />
             </View>
-            <Text style={styles.rankText}>RANK : {user.rank}</Text>
+            <Text style={[
+              theme.fontStyle('label'),
+              {
+                color: theme.colorStyle('sabo.primary.700'),
+                fontWeight: '600',
+              }
+            ]}>
+              RANK : {user.rank}
+            </Text>
           </View>
 
           {/* Stats Row */}
-          <View style={styles.statsRow}>
+          <View style={[
+            styles.statsRow,
+            {
+              paddingHorizontal: theme.spacingStyle(7), // 28px
+            }
+          ]}>
             <View style={styles.statItem}>
-              <Crown size={16} color="#081122" />
-              <Text style={styles.statLabel}>ELO</Text>
-              <Text style={styles.statValue}>{user.elo}</Text>
+              <Crown size={16} color={theme.colorStyle('sabo.text.800')} />
+              <Text style={[
+                theme.fontStyle('caption'),
+                {
+                  color: theme.colorStyle('sabo.text.800'),
+                  marginTop: theme.spacingStyle(1), // 4px
+                  marginBottom: theme.spacingStyle(0.5), // 2px
+                }
+              ]}>
+                ELO
+              </Text>
+              <Text style={[
+                theme.fontStyle('h4'),
+                {
+                  color: theme.colorStyle('sabo.text.600'),
+                  fontWeight: '700',
+                }
+              ]}>
+                {user.elo}
+              </Text>
             </View>
             <View style={styles.statItem}>
-              <Star size={18} color="#081122" />
-              <Text style={styles.statLabel}>SPA</Text>
-              <Text style={styles.statValue}>{user.spa}</Text>
+              <Star size={18} color={theme.colorStyle('sabo.text.800')} />
+              <Text style={[
+                theme.fontStyle('caption'),
+                {
+                  color: theme.colorStyle('sabo.text.800'),
+                  marginTop: theme.spacingStyle(1),
+                  marginBottom: theme.spacingStyle(0.5),
+                }
+              ]}>
+                SPA
+              </Text>
+              <Text style={[
+                theme.fontStyle('h4'),
+                {
+                  color: theme.colorStyle('sabo.text.600'),
+                  fontWeight: '700',
+                }
+              ]}>
+                {user.spa}
+              </Text>
             </View>
             <View style={styles.statItem}>
-              <TrendingUp size={18} color="#081122" />
-              <Text style={styles.statLabel}>XH</Text>
-              <Text style={styles.statValue}>#{user.ranking}</Text>
+              <TrendingUp size={18} color={theme.colorStyle('sabo.text.800')} />
+              <Text style={[
+                theme.fontStyle('caption'),
+                {
+                  color: theme.colorStyle('sabo.text.800'),
+                  marginTop: theme.spacingStyle(1),
+                  marginBottom: theme.spacingStyle(0.5),
+                }
+              ]}>
+                XH
+              </Text>
+              <Text style={[
+                theme.fontStyle('h4'),
+                {
+                  color: theme.colorStyle('sabo.text.600'),
+                  fontWeight: '700',
+                }
+              ]}>
+                #{user.ranking}
+              </Text>
             </View>
             <View style={styles.statItem}>
-              <Gamepad2 size={16} color="#081122" />
-              <Text style={styles.statLabel}>TRẬN</Text>
-              <Text style={styles.statValue}>{user.matches}</Text>
+              <Gamepad2 size={16} color={theme.colorStyle('sabo.text.800')} />
+              <Text style={[
+                theme.fontStyle('caption'),
+                {
+                  color: theme.colorStyle('sabo.text.800'),
+                  marginTop: theme.spacingStyle(1),
+                  marginBottom: theme.spacingStyle(0.5),
+                }
+              ]}>
+                TRẬN
+              </Text>
+              <Text style={[
+                theme.fontStyle('h4'),
+                {
+                  color: theme.colorStyle('sabo.text.600'),
+                  fontWeight: '700',
+                }
+              ]}>
+                {user.matches}
+              </Text>
             </View>
           </View>
 
@@ -175,7 +315,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
@@ -183,29 +322,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'white',
     borderBottomWidth: 0.33,
-    borderBottomColor: '#D0D1D3',
   },
   headerButton: {
     padding: 8,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '400',
-    color: '#161722',
-    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
   },
   profileCard: {
-    backgroundColor: 'white',
     marginHorizontal: -4,
     marginTop: 0,
     paddingBottom: 20,
     borderBottomWidth: 0.33,
-    borderBottomColor: '#D0D1D3',
   },
   profileImageContainer: {
     alignItems: 'center',
@@ -275,199 +404,22 @@ const styles = StyleSheet.create({
   rankBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(35.89, 25.99, 91.95, 0.15)',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#1B1B50',
-    paddingHorizontal: 25,
-    paddingVertical: 7,
     alignSelf: 'center',
-    marginBottom: 20,
     gap: 8,
   },
   rankIcon: {
     width: 14,
     height: 14,
   },
-  rankText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#19127B',
-  },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingHorizontal: 28,
     gap: 57,
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#081122',
-    marginTop: 4,
-    marginBottom: 2,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#455154',
-  },
-  tabsContainer: {
-    backgroundColor: 'white',
-    marginTop: 8,
-  },
-  tabsHeader: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    borderBottomWidth: 0.33,
-    borderBottomColor: '#D0D1D3',
-    paddingHorizontal: 26,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#0A5C6D',
-  },
-  tabText: {
-    fontSize: 17,
-    color: '#D7D7D9',
-  },
-  activeTabText: {
-    color: '#0A5C6D',
-  },
-  tournamentList: {
-    padding: 20,
-    gap: 16,
-  },
-  tournamentCard: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
-    borderWidth: 0.5,
-    borderColor: 'rgba(0, 0, 0, 0.07)',
-  },
-  tournamentIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    borderWidth: 2,
-    borderColor: '#000',
-  },
-  tournamentNumber: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: 'black',
-  },
-  tournamentInfo: {
-    flex: 1,
-  },
-  tournamentName: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#0A5C6D',
-    marginBottom: 4,
-  },
-  tournamentDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  tournamentDate: {
-    fontSize: 10,
-    color: '#0A5C6D',
-  },
-  tournamentMeta: {
-    alignItems: 'flex-end',
-    marginRight: 12,
-  },
-  tournamentRank: {
-    fontSize: 12,
-    color: '#0A5C6D',
-    marginBottom: 8,
-  },
-  tournamentStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  tournamentPlayers: {
-    fontSize: 10,
-    color: '#801515',
-    marginRight: 8,
-  },
-  tournamentPrize: {
-    fontSize: 10,
-    color: '#801515',
-  },
-  tournamentAction: {
-    alignItems: 'center',
-  },
-  tournamentLives: {
-    fontSize: 10,
-    color: '#0A5C6D',
-    marginBottom: 8,
-  },
-  joinButton: {
-    width: 45,
-    height: 22,
-    backgroundColor: '#7F1516',
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 4,
-      height: 4,
-    },
-    shadowOpacity: 0.11,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  joinIcon: {
-    width: 11,
-    height: 8,
-    backgroundColor: 'white',
-    borderRadius: 1,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    gap: 8,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
   },
 });
