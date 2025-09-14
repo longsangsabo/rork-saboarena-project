@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure } from "../../create-context";
-import { authService } from "../../../../packages/shared-auth/src";
+import { authService } from "../../../../lib/shared-auth/src";
 
 // Login endpoint
 export const login = publicProcedure

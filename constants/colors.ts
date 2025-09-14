@@ -70,6 +70,43 @@ const saboColors = {
     900: '#111827',
   },
   
+  // Background Colors (mapped to grays for light/dark themes)
+  background: {
+    50: '#ffffff',     // Pure white for light theme
+    100: '#f9fafb',    // Near white
+    200: '#f3f4f6',    // Very light gray
+    300: '#e5e7eb',    // Light gray
+    400: '#d1d5db',    // Medium light gray
+    500: '#9ca3af',    // Medium gray
+    600: '#6b7280',    // Medium dark gray
+    700: '#374151',    // Dark gray
+    800: '#1f2937',    // Very dark gray
+    900: '#111827',    // Near black for dark theme
+  },
+  
+  // Text Colors
+  text: {
+    50: '#f9fafb',     // Light text
+    100: '#f3f4f6',
+    200: '#e5e7eb',
+    300: '#d1d5db',
+    400: '#9ca3af',
+    500: '#6b7280',    // Medium text
+    600: '#4b5563',
+    700: '#374151',
+    800: '#1f2937',    // Dark text
+    900: '#111827',    // Primary text
+  },
+  
+  // Border Colors
+  border: {
+    subtle: '#f3f4f6',  // Very subtle border
+    light: '#e5e7eb',   // Light border
+    default: '#d1d5db', // Default border
+    medium: '#9ca3af',  // Medium border
+    strong: '#6b7280',  // Strong border
+  },
+  
   // Special Colors
   tournament: '#8b5cf6', // Purple for tournaments
   club: '#f59e0b', // Orange for clubs

@@ -1,5 +1,4 @@
 import { createTRPCRouter } from "./create-context";
-import hiRoute from "./routes/example/hi/route";
 import { getUserProfile, updateUserProfile } from "./routes/user/profile/route";
 import { getUserGameData, updateUserStats } from "./routes/user/game-data/route";
 import { getTournaments, joinTournament } from "./routes/tournaments/list/route";
@@ -12,9 +11,6 @@ import { getFeed, interactWithPost } from "./routes/social/feed/route";
 import { rankingRouter } from "./routes/ranking/route";
 
 export const appRouter = createTRPCRouter({
-  example: createTRPCRouter({
-    hi: hiRoute,
-  }),
   user: createTRPCRouter({
     getProfile: getUserProfile,
     updateProfile: updateUserProfile,

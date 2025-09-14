@@ -11,7 +11,7 @@ import { Stack, router } from 'expo-router';
 import { ArrowLeft, Users, Trophy, X, BarChart3, Swords } from 'lucide-react-native';
 import { UniversalTabs } from '@/components/shared/UniversalTabs';
 import { UniversalCard } from '@/components/shared/UniversalCard';
-import { AppHeader } from '@/components/shared/AppHeader';
+import { AppHeader } from '@/components/layout/AppHeader';
 
 export default function ComponentDemoScreen() {
   const [activeTab, setActiveTab] = useState('tabs');

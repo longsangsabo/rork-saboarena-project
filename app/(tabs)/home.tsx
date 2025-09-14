@@ -11,19 +11,17 @@ import { router } from 'expo-router';
 import { NavigationHelper } from '@/utils/NavigationHelper';
 import { trpc } from '@/lib/trpc';
 import { useTheme } from '@/providers/ThemeProvider';
-import { 
-  CustomStatusBar,
-  HomeHeader,
-  TabNavigation
-} from '@/components/shared';
+import { CustomStatusBar } from '@/components/ui';
+import { HomeHeader } from './home/components/HomeHeader';
+import { TabNavigation } from '@/components/shared';
 import { 
   ProfileCard,
   RankBadge,
   ActionButtons,
-  SocialActions,
-  ClubInfo,
-  PostContent
+  SocialActions
 } from '@/components/shared';
+import { ClubInfo } from './home/components/ClubInfo';
+import { PostContent } from './home/components/PostContent';
 
 export default function HomeScreen() {
   const theme = useTheme();

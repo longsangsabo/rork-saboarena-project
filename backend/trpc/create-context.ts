@@ -2,7 +2,7 @@ import { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { createClient } from '@supabase/supabase-js';
-import type { User } from "../../packages/shared-auth/src";
+import type { User } from "../../lib/shared-auth/src";
 
 // Supabase configuration
 const supabaseUrl = 'https://skzirkhzwhyqmnfyytcl.supabase.co';

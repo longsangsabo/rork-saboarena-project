@@ -1,7 +1,7 @@
 import React from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 import ChallengeCard from './ChallengeCard';
-import { Challenge } from '@/demo-data/challenges-data';
+import { Challenge } from '@/lib/demo-data/challenges-data';
 
 interface ChallengesListProps {
   challenges: Challenge[];

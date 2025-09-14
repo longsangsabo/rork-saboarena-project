@@ -6,8 +6,8 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { TextStyle } from 'react-native';
 import colors from '@/constants/colors';
-import { typography } from '@/packages/design-tokens/src/typography';
-import { spacing } from '@/packages/design-tokens/src/spacing';
+import { typography } from '@/lib/design-tokens/src/typography';
+import { spacing } from '@/lib/design-tokens/src/spacing';
 
 // Theme interface
 interface Theme {

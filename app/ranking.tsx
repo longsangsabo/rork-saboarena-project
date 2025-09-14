@@ -12,7 +12,7 @@ import { RankingUser } from '@/components/shared/RankingCard';
 import { UniversalTabs } from '@/components/shared/UniversalTabs';
 import { RankingHeaderButtons } from '@/components/ranking/RankingHeader';
 import { RankingList } from '@/components/ranking/RankingList';
-import { mockRankingData } from '@/demo-data/ranking_data';
+import { mockRankingData } from '@/lib/demo-data/ranking_data';
 import { Users, Trophy, BarChart3 } from 'lucide-react-native';
 
 type RankingType = 'prizepool' | 'elo' | 'spa';

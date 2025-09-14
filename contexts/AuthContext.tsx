@@ -1,5 +1,5 @@
 // Re-export the auth hooks from shared-auth package for easy access
-export { AuthProvider, useAuth, useAdminAuth } from '../packages/shared-auth/src';
+export { AuthProvider, useAuth, useAdminAuth } from '../lib/shared-auth/src';
 
 // Additional game-specific user data interface that extends the basic User
 export interface GameUserData {
