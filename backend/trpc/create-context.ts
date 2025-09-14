@@ -1,33 +1,27 @@
 import { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { supabase, authService } from "../../packages/shared-auth/src";
 import type { User } from "../../packages/shared-auth/src";
+
+// Mock user for development
+const mockUser: User = {
+  id: '1',
+  email: 'test@example.com',
+  role: 'user',
+  username: 'Test User',
+  avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+};
 
 // Context creation function
 export const createContext = async (opts: FetchCreateContextFnOptions) => {
-  const authorization = opts.req.headers.get('authorization');
-  let user: User | null = null;
-
-  if (authorization?.startsWith('Bearer ')) {
-    const token = authorization.substring(7);
-    try {
-      // Verify the JWT token with Supabase
-      const { data: { user: authUser }, error } = await supabase.auth.getUser(token);
-      if (!error && authUser) {
-        user = await authService.getCurrentUser();
-      }
-    } catch (error) {
-      // Token is invalid, but we don't throw error here
-      // Let individual procedures decide if auth is required
-      console.log('Invalid token provided:', error);
-    }
-  }
+  // For development, always return mock user
+  const user = mockUser;
 
   return {
     req: opts.req,
     user,
-    supabase,
   };
 };
 
