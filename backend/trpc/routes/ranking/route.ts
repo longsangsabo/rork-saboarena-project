@@ -1,4 +1,4 @@
-import { router, protectedProcedure } from "../../create-context";
+import { createTRPCRouter, protectedProcedure } from "../../create-context";
 import { z } from "zod";
 import { progressionRouter } from "./progression/route";
 import { leaderboardRouter } from "./leaderboard/route";
@@ -30,7 +30,7 @@ function getRankByElo(elo: number): string {
   return 'K';
 }
 
-export const rankingRouter = router({
+export const rankingRouter = createTRPCRouter({
   // Progression system
   progression: progressionRouter,
   

@@ -1,4 +1,4 @@
-import { router, protectedProcedure } from "../../create-context";
+import { createTRPCRouter, protectedProcedure } from "../../create-context";
 import { z } from "zod";
 
 // Rank progression system
@@ -26,7 +26,7 @@ const RANK_PROGRESSION = {
   'Pro': { nextRank: null, eloRequired: 3000, title: 'Professional', description: 'Professional level!' }
 } as const;
 
-export const progressionRouter = router({
+export const progressionRouter = createTRPCRouter({
   // Get current rank progression info
   getRankProgress: protectedProcedure
     .query(async ({ ctx }) => {

@@ -37,12 +37,43 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<'ready' | 'live' | 'done'>('ready');
   
-  const profileQuery = trpc.user.getProfile.useQuery({});
+  // TRPC queries for real data
+  const profileQuery = trpc.user.getProfile.useQuery({ userId: '1' });
   const tournamentsQuery = trpc.tournaments.list.useQuery({ 
-    status: activeTab === 'ready' ? 'upcoming' : activeTab === 'live' ? 'live' : 'completed'
+    status: activeTab === 'ready' ? 'registration_open' : activeTab === 'live' ? 'in_progress' : 'completed',
+    limit: 10
   });
   
-  const user = profileQuery.data;
+  // Use real data or fallback to mock data
+  const user = profileQuery.data || {
+    id: "1",
+    username: "@longsang", 
+    displayName: "Anh Long Magic",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
+    rank: "G",
+    elo: 1485,
+    spa: 320,
+    ranking: 89,
+    matches: 37,
+    wins: 25,
+    losses: 12,
+    winRate: 67.6
+  };
+
+  // Use real tournaments data or fallback to mock data
+  const tournaments = tournamentsQuery.data?.tournaments || [
+    {
+      id: '1',
+      title: 'SABO POOL 8 BALL',
+      description: '07/09 - Thứ 7',
+      prize_pool: 10000000,
+      current_players: 0,
+      max_players: 16,
+      location: 'K - I+'
+    }
+  ];
+  
+
   
   const handleEditProfile = () => {
     // Temporary placeholder for edit profile navigation
@@ -109,27 +140,6 @@ export default function ProfileScreen() {
       </View>
     );
   }
-
-  const tournaments = [
-    {
-      id: 1,
-      name: 'SABO POOL 8 BALL',
-      date: '07/09 - Thứ 7',
-      rankRange: 'K - I+',
-      players: '0/16',
-      prize: '10 Million',
-      lives: '2 Mạng'
-    },
-    {
-      id: 2,
-      name: 'SABO POOL 8 BALL',
-      date: '07/09 - Thứ 7',
-      rankRange: 'K - I+',
-      players: '0/16',
-      prize: '10 Million',
-      lives: '2 Mạng'
-    }
-  ];
 
   return (
     <View style={[

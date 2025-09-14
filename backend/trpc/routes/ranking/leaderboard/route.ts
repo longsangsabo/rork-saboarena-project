@@ -1,4 +1,4 @@
-import { router, protectedProcedure, publicProcedure } from "../../create-context";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../../create-context";
 import { z } from "zod";
 
 // Rank progression mapping for titles
@@ -10,7 +10,7 @@ const RANK_TITLES = {
   'B': 'Master', 'B+': 'Elite', 'A': 'Champion', 'A+': 'Legend', 'Pro': 'Professional'
 } as const;
 
-export const leaderboardRouter = router({
+export const leaderboardRouter = createTRPCRouter({
   // Global ELO Leaderboard
   getGlobalLeaderboard: publicProcedure
     .input(z.object({

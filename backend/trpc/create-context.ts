@@ -1,7 +1,15 @@
 import { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { createClient } from '@supabase/supabase-js';
 import type { User } from "../../packages/shared-auth/src";
+
+// Supabase configuration
+const supabaseUrl = 'https://skzirkhzwhyqmnfyytcl.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNremlya2h6d2h5cW1uZnl5dGNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NDM3MzUsImV4cCI6MjA3MzMxOTczNX0._0Ic0SL4FZVMennTXmOzIp2KBOCwRagpbRXaWhZJI24';
+
+// Create Supabase client
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Mock user for development
 const mockUser: User = {
@@ -22,6 +30,7 @@ export const createContext = async (opts: FetchCreateContextFnOptions) => {
   return {
     req: opts.req,
     user,
+    supabase,
   };
 };
 
