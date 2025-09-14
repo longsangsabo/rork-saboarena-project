@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import { 
   StyleSheet, 
   View, 
-  FlatList,
+
   Alert 
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { trpc } from '@/lib/trpc';
 import { 
-  AppHeader,
   UniversalTabs,
   ChallengesList,
   ChallengeActions
 } from '@/components/shared';
+import { AppHeader } from '@/components/layout';
 import { Users, Trophy, X } from 'lucide-react-native';
-import { getChallengesByStatus, type Challenge } from '@/demo-data/challenges-data';
+import { getChallengesByStatus, type Challenge } from '@/lib/demo-data/challenges-data';
 
 export default function ChallengesScreen() {
   const [activeTab, setActiveTab] = useState<'waiting' | 'live' | 'finished'>('waiting');

@@ -3,29 +3,18 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIn
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
 import { router } from 'expo-router';
-import { MapPin, MoreHorizontal, Camera, Trophy, Users, Target, BarChart3, X } from 'lucide-react-native';
+import { MapPin, Camera, Trophy, Users, Target, BarChart3, X } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
 import { useTheme } from '@/providers/ThemeProvider';
 import { 
   UniversalTabs,
   ClubCard, 
   MemberList, 
-  LoadingContainer, 
-  ErrorContainer,
   TournamentCard,
   RankingCard
 } from '@/components/shared';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
-import { mockChallenges, getChallengesByStatus } from '@/demo-data/challenges-data';
-
-interface Member {
-  id: string;
-  name: string;
-  rank: string;
-  avatar: string;
-  isOnline: boolean;
-  joinDate: string;
-}
+import { getChallengesByStatus } from '@/lib/demo-data/challenges-data';
 
 
 
