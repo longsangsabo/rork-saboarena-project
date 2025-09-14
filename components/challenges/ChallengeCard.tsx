@@ -1,26 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { X } from 'lucide-react-native';
+import { Challenge } from '@/lib/demo-data/challenges-data';
 
-interface Player {
-  id: string;
-  name: string;
-  avatar: string;
-  rank: string;
-  isOnline: boolean;
-}
-
-interface ChallengeCardProps {
-  id: string;
-  status: 'waiting' | 'ready' | 'live' | 'finished';
-  date: string;
-  time: string;
-  handicap: string;
-  spa: number;
-  raceToScore: number;
-  tableNumber: number;
-  player1: Player;
-  player2?: Player;
+interface ChallengeCardProps extends Challenge {
   onJoin?: () => void;
   onCancel?: () => void;
   onViewLive?: () => void;
@@ -71,7 +54,7 @@ export default function ChallengeCard({
     }
   };
 
-  const renderPlayer = (player: Player, isRight: boolean = false) => (
+  const renderPlayer = (player: { id: string; name: string; avatar: string; rank: string; isOnline: boolean }, isRight: boolean = false) => (
     <View style={[styles.playerContainer, isRight && styles.playerRight]}>
       <View style={styles.avatarContainer}>
         <Image source={{ uri: player.avatar }} style={styles.avatar} />
