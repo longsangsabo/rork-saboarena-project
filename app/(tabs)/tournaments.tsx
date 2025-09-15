@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   Image, 
   ActivityIndicator,
-  Alert 
+  Alert,
+  Dimensions 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -16,7 +17,13 @@ import {
   Clock, 
   MapPin, 
   DollarSign, 
-  TrendingUp
+  TrendingUp,
+  Calendar,
+  Star,
+  Target,
+  Award,
+  Search,
+  Filter
 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
 import { 
@@ -47,7 +54,57 @@ interface Tournament {
   status: 'upcoming' | 'live' | 'completed';
 }
 
-
+// Mock tournament data for better demo
+const mockTournaments: Tournament[] = [
+  {
+    id: '1',
+    title: 'SABO Championship 2025',
+    description: 'Giải đấu lớn nhất năm với giải thưởng hấp dẫn',
+    image_url: 'https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=400&h=200&fit=crop',
+    prize_pool: 50000000,
+    entry_fee: 200000,
+    current_players: 28,
+    max_players: 32,
+    min_rank: 'A',
+    max_rank: 'S',
+    location: 'SABO Center - TP.HCM',
+    start_time: '2025-09-20T09:00:00',
+    end_time: '2025-09-20T18:00:00',
+    status: 'upcoming'
+  },
+  {
+    id: '2',
+    title: 'Weekly Tournament',
+    description: 'Giải đấu hàng tuần cho mọi trình độ',
+    image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=200&fit=crop',
+    prize_pool: 5000000,
+    entry_fee: 50000,
+    current_players: 45,
+    max_players: 64,
+    min_rank: 'K',
+    max_rank: 'A',
+    location: 'Elite Billiards - Hà Nội',
+    start_time: '2025-09-16T19:00:00',
+    end_time: '2025-09-16T23:00:00',
+    status: 'live'
+  },
+  {
+    id: '3',
+    title: 'Beginner Friendly Cup',
+    description: 'Dành cho người mới chơi, không áp lực',
+    image_url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=200&fit=crop',
+    prize_pool: 1000000,
+    entry_fee: 30000,
+    current_players: 16,
+    max_players: 16,
+    min_rank: 'K',
+    max_rank: 'G',
+    location: 'Community Center - Đà Nẵng',
+    start_time: '2025-09-15T14:00:00',
+    end_time: '2025-09-15T17:00:00',
+    status: 'completed'
+  }
+];
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('vi-VN', {
@@ -56,21 +113,26 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
+const formatShortCurrency = (amount: number) => {
+  if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+  if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
+  return amount.toString();
+};
+
 export default function TournamentsScreen() {
   const theme = useTheme();
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'upcoming' | 'live' | 'completed'>('all');
   const [currentView, setCurrentView] = useState<'list' | 'detail' | 'ranking'>('list');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   
-  const tournamentsQuery = trpc.tournaments.list.useQuery({ 
-    status: selectedFilter,
-    limit: 20 
-  });
+  // Use mock data for now, can be replaced with real API
+  const tournaments = mockTournaments.filter(t => 
+    selectedFilter === 'all' || t.status === selectedFilter
+  );
   
   const joinMutation = trpc.tournaments.join.useMutation({
     onSuccess: () => {
       Alert.alert('Thành công', 'Đã tham gia giải đấu thành công!');
-      tournamentsQuery.refetch();
     },
     onError: (error: any) => {
       Alert.alert('Lỗi', error.message || 'Không thể tham gia giải đấu');
@@ -105,46 +167,12 @@ export default function TournamentsScreen() {
     router.push('/ranking');
   };
 
-  const tournaments = tournamentsQuery.data?.tournaments || [];
-
-  const renderTournamentCard = (tournament: Tournament) => {
-    const startTime = new Date(tournament.start_time);
-    const endTime = new Date(tournament.end_time);
-    const timeRange = `${startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${endTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
-    const remainingSlots = tournament.max_players - tournament.current_players;
-    const date = startTime.toLocaleDateString('vi-VN', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-    
-    return (
-      <TournamentListItem
-        key={tournament.id}
-        tournament={{
-          id: tournament.id,
-          title: tournament.title,
-          participants: tournament.current_players,
-          maxParticipants: tournament.max_players,
-          date: date,
-          rank: `${tournament.min_rank} → ${tournament.max_rank}+`,
-          prizePool: tournament.prize_pool,
-          ballType: 8, // Default to 8-ball
-          status: tournament.status === 'upcoming' ? 'ready' : tournament.status === 'live' ? 'live' : 'done'
-        }}
-        onPress={() => handleTournamentPress(tournament)}
-        onJoin={() => handleJoinTournament(tournament.id)}
-      />
-    );
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'upcoming': return '#0A5C6D';
+      case 'upcoming': return theme.colorStyle('sabo.primary.500');
       case 'live': return '#10B981';
-      case 'completed': return '#666';
-      default: return '#666';
+      case 'completed': return '#6B7280';
+      default: return '#6B7280';
     }
   };
 
@@ -155,6 +183,209 @@ export default function TournamentsScreen() {
       case 'completed': return 'Đã kết thúc';
       default: return status;
     }
+  };
+
+  const getTimeRemaining = (startTime: string) => {
+    const start = new Date(startTime);
+    const now = new Date();
+    const diff = start.getTime() - now.getTime();
+    
+    if (diff <= 0) return 'Đã bắt đầu';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days} ngày`;
+    if (hours > 0) return `${hours} giờ`;
+    return 'Sắp bắt đầu';
+  };
+
+  const renderTournamentCard = (tournament: Tournament, index: number) => {
+    const startTime = new Date(tournament.start_time);
+    const remainingSlots = tournament.max_players - tournament.current_players;
+    const fillPercentage = (tournament.current_players / tournament.max_players) * 100;
+    const isFullyBooked = remainingSlots === 0;
+    const canJoin = tournament.status === 'upcoming' && !isFullyBooked;
+
+    return (
+      <TouchableOpacity
+        key={tournament.id}
+        style={[
+          styles.tournamentCard,
+          { 
+            backgroundColor: theme.colorStyle('light.card'),
+            borderColor: theme.colorStyle('light.border'),
+            marginBottom: theme.spacingStyle('md')
+          }
+        ]}
+        onPress={() => handleTournamentPress(tournament)}
+        activeOpacity={0.7}
+      >
+        {/* Tournament Image with Overlay */}
+        <View style={styles.imageContainer}>
+          <Image 
+            source={{ uri: tournament.image_url }}
+            style={styles.tournamentImage}
+            resizeMode="cover"
+          />
+          <View style={styles.imageOverlay}>
+            {/* Status Badge */}
+            <View style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(tournament.status) }
+            ]}>
+              <Text style={styles.statusText}>
+                {getStatusText(tournament.status)}
+              </Text>
+            </View>
+
+            {/* Prize Pool Badge */}
+            <View style={styles.prizePoolBadge}>
+              <Trophy size={16} color="#FFD700" />
+              <Text style={styles.prizePoolText}>
+                {formatShortCurrency(tournament.prize_pool)}đ
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Tournament Content */}
+        <View style={[styles.tournamentContent, { padding: theme.spacingStyle('md') }]}>
+          {/* Header */}
+          <View style={styles.tournamentHeader}>
+            <View style={styles.titleContainer}>
+              <Text style={[
+                styles.tournamentTitle,
+                { 
+                  color: theme.colorStyle('light.text'),
+                  ...theme.fontStyle('headingSmall')
+                }
+              ]}>
+                {tournament.title}
+              </Text>
+              <Text style={[
+                styles.tournamentDescription,
+                { color: theme.colorStyle('light.textSecondary') }
+              ]}>
+                {tournament.description}
+              </Text>
+            </View>
+            <TouchableOpacity style={styles.favoriteButton}>
+              <Star size={20} color={theme.colorStyle('light.textSecondary')} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Tournament Stats */}
+          <View style={styles.statsContainer}>
+            {/* Participants */}
+            <View style={styles.statItem}>
+              <Users size={16} color={theme.colorStyle('sabo.primary.500')} />
+              <Text style={[styles.statText, { color: theme.colorStyle('light.text') }]}>
+                {tournament.current_players}/{tournament.max_players}
+              </Text>
+            </View>
+
+            {/* Time */}
+            <View style={styles.statItem}>
+              <Clock size={16} color={theme.colorStyle('sabo.secondary.500')} />
+              <Text style={[styles.statText, { color: theme.colorStyle('light.text') }]}>
+                {tournament.status === 'upcoming' ? getTimeRemaining(tournament.start_time) : getStatusText(tournament.status)}
+              </Text>
+            </View>
+
+            {/* Rank Range */}
+            <View style={styles.statItem}>
+              <Target size={16} color="#10B981" />
+              <Text style={[styles.statText, { color: theme.colorStyle('light.text') }]}>
+                {tournament.min_rank} → {tournament.max_rank}
+              </Text>
+            </View>
+
+            {/* Entry Fee */}
+            <View style={styles.statItem}>
+              <DollarSign size={16} color="#F59E0B" />
+              <Text style={[styles.statText, { color: theme.colorStyle('light.text') }]}>
+                {formatShortCurrency(tournament.entry_fee)}đ
+              </Text>
+            </View>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={[
+              styles.progressBar,
+              { backgroundColor: theme.colorStyle('light.border') }
+            ]}>
+              <View style={[
+                styles.progressFill,
+                { 
+                  width: `${fillPercentage}%`,
+                  backgroundColor: fillPercentage >= 90 ? '#EF4444' : theme.colorStyle('sabo.primary.500')
+                }
+              ]} />
+            </View>
+            <Text style={[
+              styles.progressText,
+              { color: theme.colorStyle('light.textSecondary') }
+            ]}>
+              {remainingSlots > 0 ? `Còn ${remainingSlots} slot` : 'Đã đầy'}
+            </Text>
+          </View>
+
+          {/* Location */}
+          <View style={styles.locationContainer}>
+            <MapPin size={16} color={theme.colorStyle('light.textSecondary')} />
+            <Text style={[
+              styles.locationText,
+              { color: theme.colorStyle('light.textSecondary') }
+            ]}>
+              {tournament.location}
+            </Text>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[
+                styles.viewButton,
+                { 
+                  backgroundColor: theme.colorStyle('light.background'),
+                  borderColor: theme.colorStyle('sabo.primary.500')
+                }
+              ]}
+              onPress={() => handleTournamentPress(tournament)}
+            >
+              <Text style={[
+                styles.viewButtonText,
+                { color: theme.colorStyle('sabo.primary.500') }
+              ]}>
+                Xem chi tiết
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.joinButton,
+                { 
+                  backgroundColor: canJoin 
+                    ? theme.colorStyle('sabo.primary.500')
+                    : theme.colorStyle('light.textSecondary'),
+                  opacity: canJoin ? 1 : 0.6
+                }
+              ]}
+              onPress={() => canJoin && handleJoinTournament(tournament.id)}
+              disabled={!canJoin}
+            >
+              <Text style={styles.joinButtonText}>
+                {tournament.status === 'completed' ? 'Đã kết thúc' :
+                 tournament.status === 'live' ? 'Đang diễn ra' :
+                 isFullyBooked ? 'Đã đầy' : 'Tham gia'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   // Show tournament detail view
@@ -169,7 +400,7 @@ export default function TournamentsScreen() {
           date: new Date(selectedTournament.start_time).toLocaleDateString('vi-VN'),
           rank: `${selectedTournament.min_rank} → ${selectedTournament.max_rank}+`,
           prizePool: selectedTournament.prize_pool,
-          ballType: 8, // Default to 8-ball
+          ballType: 8,
           status: selectedTournament.status === 'upcoming' ? 'ready' : selectedTournament.status === 'live' ? 'live' : 'done'
         }}
         onBack={handleBackToList}
@@ -177,34 +408,114 @@ export default function TournamentsScreen() {
     );
   }
 
-
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colorStyle('light.background') }]}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <TournamentHeader onRankingPress={handleShowRanking} />
-        
-        <TournamentFilters 
-          filters={[
-            { key: 'all', label: 'Tất cả' },
-            { key: 'upcoming', label: 'Sắp diễn ra' },
-            { key: 'live', label: 'Đang live' },
-            { key: 'completed', label: 'Đã kết thúc' },
-          ]}
-          selectedFilter={selectedFilter}
-          onFilterChange={(filter) => setSelectedFilter(filter as typeof selectedFilter)}
-        />
-        
-        {/* Tournament List */}
-        <View style={[styles.content, { padding: theme.spacingStyle(5) }]}>
-          {tournamentsQuery.isLoading ? (
-            <TournamentLoadingState />
-          ) : tournaments.length > 0 ? (
-            tournaments.map(renderTournamentCard)
-          ) : (
-            <TournamentEmptyState />
-          )}
+      {/* Header */}
+      <View style={[styles.header, { paddingHorizontal: theme.spacingStyle('md') }]}>
+        <View style={styles.headerTop}>
+          <Text style={[
+            styles.headerTitle,
+            { 
+              color: theme.colorStyle('light.text'),
+              ...theme.fontStyle('headingLarge')
+            }
+          ]}>
+            Giải đấu
+          </Text>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={handleShowRanking}
+          >
+            <Award size={24} color={theme.colorStyle('sabo.primary.500')} />
+          </TouchableOpacity>
         </View>
+
+        {/* Quick Stats */}
+        <View style={styles.quickStats}>
+          <View style={styles.quickStatItem}>
+            <Text style={[styles.quickStatNumber, { color: theme.colorStyle('sabo.primary.500') }]}>
+              {tournaments.filter(t => t.status === 'upcoming').length}
+            </Text>
+            <Text style={[styles.quickStatLabel, { color: theme.colorStyle('light.textSecondary') }]}>
+              Sắp diễn ra
+            </Text>
+          </View>
+          <View style={styles.quickStatItem}>
+            <Text style={[styles.quickStatNumber, { color: '#10B981' }]}>
+              {tournaments.filter(t => t.status === 'live').length}
+            </Text>
+            <Text style={[styles.quickStatLabel, { color: theme.colorStyle('light.textSecondary') }]}>
+              Đang live
+            </Text>
+          </View>
+          <View style={styles.quickStatItem}>
+            <Text style={[styles.quickStatNumber, { color: theme.colorStyle('light.text') }]}>
+              {tournaments.reduce((sum, t) => sum + t.current_players, 0)}
+            </Text>
+            <Text style={[styles.quickStatLabel, { color: theme.colorStyle('light.textSecondary') }]}>
+              Người chơi
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Filters */}
+      <View style={[styles.filtersContainer, { paddingHorizontal: theme.spacingStyle('md') }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll}>
+          {[
+            { key: 'all', label: 'Tất cả', icon: Trophy },
+            { key: 'upcoming', label: 'Sắp diễn ra', icon: Calendar },
+            { key: 'live', label: 'Đang live', icon: TrendingUp },
+            { key: 'completed', label: 'Đã kết thúc', icon: Award },
+          ].map((filter) => {
+            const Icon = filter.icon;
+            const isActive = selectedFilter === filter.key;
+            
+            return (
+              <TouchableOpacity
+                key={filter.key}
+                style={[
+                  styles.filterChip,
+                  { 
+                    backgroundColor: isActive 
+                      ? theme.colorStyle('sabo.primary.500')
+                      : theme.colorStyle('light.card'),
+                    borderColor: isActive 
+                      ? theme.colorStyle('sabo.primary.500')
+                      : theme.colorStyle('light.border')
+                  }
+                ]}
+                onPress={() => setSelectedFilter(filter.key as typeof selectedFilter)}
+              >
+                <Icon 
+                  size={16} 
+                  color={isActive ? 'white' : theme.colorStyle('light.textSecondary')} 
+                />
+                <Text style={[
+                  styles.filterChipText,
+                  { 
+                    color: isActive ? 'white' : theme.colorStyle('light.textSecondary')
+                  }
+                ]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Tournament List */}
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: theme.spacingStyle('md') }}
+      >
+        {tournaments.length > 0 ? (
+          tournaments.map(renderTournamentCard)
+        ) : (
+          <TournamentEmptyState />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -213,82 +524,201 @@ export default function TournamentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor dynamically set in component
+  },
+  header: {
+    paddingVertical: 20,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  headerButton: {
+    padding: 8,
+  },
+  quickStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  quickStatItem: {
+    alignItems: 'center',
+  },
+  quickStatNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  quickStatLabel: {
+    fontSize: 12,
+  },
+  filtersContainer: {
+    marginBottom: 16,
+  },
+  filtersScroll: {
+    flexGrow: 0,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: 8,
+    gap: 6,
+  },
+  filterChipText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   scrollView: {
     flex: 1,
   },
-
-  content: {
-    // padding dynamically set in component
-  },
-
   tournamentCard: {
-    // Dynamic styling: backgroundColor, borderColor, marginBottom set in component
     borderRadius: 16,
-    overflow: 'hidden',
     borderWidth: 1,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  imageContainer: {
+    position: 'relative',
   },
   tournamentImage: {
     width: '100%',
-    // Dynamic height: 160px equivalent is spacing[40] = 160px
+    height: 160,
+  },
+  imageOverlay: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    right: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'white',
+  },
+  prizePoolBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  prizePoolText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'white',
   },
   tournamentContent: {
-    // Dynamic padding: 20px equivalent is spacing[5] = 20px
+    flex: 1,
   },
   tournamentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    // Dynamic marginBottom: 8px=spacing[2] set in component
+    marginBottom: 12,
+  },
+  titleContainer: {
+    flex: 1,
+    marginRight: 12,
   },
   tournamentTitle: {
-    // Dynamic typography and color set in component
-    flex: 1,
-    // Dynamic marginRight: 12px equivalent is spacing[3] = 12px
-  },
-  statusBadge: {
-    // Dynamic padding: 8px=spacing[2], 4px=spacing[1], borderRadius: 12px=spacing[3]
-  },
-  statusText: {
-    // Dynamic fontSize: 12, fontWeight: '600', color: 'white' set in component
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
   tournamentDescription: {
-    // Dynamic fontSize: 14, color: '#666', marginBottom: 16, lineHeight: 20 set in component
+    fontSize: 14,
+    lineHeight: 20,
   },
-  prizeContainer: {
+  favoriteButton: {
+    padding: 4,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 12,
+  },
+  statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    // Dynamic gap: 8px=spacing[2], marginBottom: 16px=spacing[4], padding: 12px=spacing[3], backgroundColor, borderRadius: 8px=spacing[2]
+    gap: 4,
   },
-  prizeText: {
-    // Dynamic fontSize: 16, fontWeight: 'bold', color set in component
+  statText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
-  tournamentDetails: {
-    // Dynamic gap: 12px=spacing[3], marginBottom: 20px=spacing[5] set in component
+  progressContainer: {
+    marginBottom: 12,
   },
-  detailRow: {
+  progressBar: {
+    height: 4,
+    borderRadius: 2,
+    marginBottom: 4,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  progressText: {
+    fontSize: 11,
+    textAlign: 'right',
+  },
+  locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    // Dynamic gap: 8px=spacing[2] set in component
+    gap: 4,
+    marginBottom: 16,
   },
-  detailText: {
-    // Dynamic fontSize: 14, color: '#333' set in component
+  locationText: {
+    fontSize: 12,
     flex: 1,
   },
-  joinButton: {
-    // Dynamic backgroundColor, paddingVertical: 14px=spacing[3.5], borderRadius: 12px=spacing[3] set in component
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  viewButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
     alignItems: 'center',
   },
-  joinButtonDisabled: {
-    opacity: 0.6,
+  viewButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  joinButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   joinButtonText: {
-    // Dynamic color: 'white', fontSize: 16, fontWeight: 'bold' set in component
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
   },
 });

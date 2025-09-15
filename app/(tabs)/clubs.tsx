@@ -18,7 +18,7 @@ import { getChallengesByStatus } from '@/lib/demo-data/challenges-data';
 
 export default function ClubsScreen() {
   const theme = useTheme();
-  const [mainTab, setMainTab] = useState<'clb' | 'find_opponent'>('clb');
+  const [mainTab, setMainTab] = useState<'clb' | 'discover'>('clb');
   const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'ranking' | 'challenges'>('members');
   const [tournamentTab, setTournamentTab] = useState<'ready' | 'live' | 'done'>('ready');
   const [rankingTab, setRankingTab] = useState<'prizepool' | 'elo' | 'spa'>('prizepool');
@@ -54,8 +54,62 @@ export default function ClubsScreen() {
     cover_image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=200&fit=crop"
   };
   
-  const clubs = [mockClub];
-  const club = clubsQuery.data?.clubs?.[0] || mockClub;
+  // Mock data for find opponent
+  const mockClubs = [
+    {
+      id: "1",
+      name: "SABO Billiards",
+      location: "Vũng Tàu",
+      member_count: 24,
+      tournament_count: 12,
+      prize_pool: 5500000,
+      challenge_count: 8,
+      cover_image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=200&fit=crop"
+    },
+    {
+      id: "2", 
+      name: "Billiards Champion",
+      location: "TP.HCM",
+      member_count: 45,
+      tournament_count: 18,
+      prize_pool: 8200000,
+      challenge_count: 15,
+      cover_image: "https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=400&h=200&fit=crop"
+    },
+    {
+      id: "3",
+      name: "Golden Cue Club", 
+      location: "Hà Nội",
+      member_count: 32,
+      tournament_count: 8,
+      prize_pool: 4100000,
+      challenge_count: 12,
+      cover_image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=200&fit=crop"
+    },
+    {
+      id: "4",
+      name: "Elite Billiards",
+      location: "Đà Nẵng", 
+      member_count: 28,
+      tournament_count: 15,
+      prize_pool: 6300000,
+      challenge_count: 6,
+      cover_image: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=200&fit=crop"
+    },
+    {
+      id: "5",
+      name: "Pro Cue Arena",
+      location: "Cần Thơ",
+      member_count: 19,
+      tournament_count: 7,
+      prize_pool: 3800000,
+      challenge_count: 9,
+      cover_image: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400&h=200&fit=crop"
+    }
+  ];
+  
+  const clubs = clubsQuery.data?.clubs || mockClubs;
+  const club = clubs[0] || mockClub;
   const members = membersQuery.data?.members || [];
   
   const handleBack = () => {
@@ -154,41 +208,140 @@ export default function ClubsScreen() {
           {mainTab === 'clb' && <View style={styles.mainTabIndicator} />}
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.mainTab, mainTab === 'find_opponent' && styles.activeMainTab]}
-          onPress={() => setMainTab('find_opponent')}
+          style={[styles.mainTab, mainTab === 'discover' && styles.activeMainTab]}
+          onPress={() => setMainTab('discover')}
         >
           <Text style={[
             styles.mainTabText, 
-            mainTab === 'find_opponent' && styles.activeMainTabText
+            mainTab === 'discover' && styles.activeMainTabText
           ]}>
-            Tìm đối
+            Khám phá
           </Text>
-          {mainTab === 'find_opponent' && <View style={styles.mainTabIndicator} />}
+          {mainTab === 'discover' && <View style={styles.mainTabIndicator} />}
         </TouchableOpacity>
       </View>
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {mainTab === 'find_opponent' ? (
-          // Find Opponent Tab Content
-          <View style={styles.findOpponentContainer}>
-            {clubsQuery.isLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0A5C6D" />
-                <Text style={styles.loadingText}>Đang tải danh sách club...</Text>
+        {mainTab === 'discover' ? (
+          // Enhanced Discover Clubs Tab Content
+          <View style={styles.discoverContent}>
+            {/* Search and Filter Section */}
+            <View style={styles.discoverHeader}>
+              <View style={styles.searchFilterContainer}>
+                <View style={styles.searchInputContainer}>
+                  <Search size={16} color="#94A3B8" />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Tìm club, vị trí..."
+                    placeholderTextColor="#94A3B8"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+                </View>
+                <TouchableOpacity 
+                  style={styles.filterButton}
+                  onPress={() => Alert.alert('Filter', 'Tính năng lọc sẽ có sớm!')}
+                >
+                  <BarChart3 size={16} color="#0A5C6D" />
+                </TouchableOpacity>
               </View>
-            ) : (
-              clubs.map((clubItem: any) => (
-                <ClubCard
-                  key={clubItem.id}
-                  id={clubItem.id}
-                  name={clubItem.name}
-                  location={clubItem.location}
-                  memberCount={clubItem.member_count || 0}
-                  imageUrl={clubItem.cover_image}
-                  onPress={() => console.log('Club pressed:', clubItem.name)}
-                />
-              ))
-            )}
+              
+              {/* Quick Filter Chips */}
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.filterChipsContainer}
+              >
+                <TouchableOpacity style={[styles.filterChip, styles.activeFilterChip]}>
+                  <Text style={[styles.filterChipText, styles.activeFilterChipText]}>
+                    Tất cả
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.filterChip}>
+                  <MapPin size={12} color="#64748B" />
+                  <Text style={styles.filterChipText}>Gần tôi</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.filterChip}>
+                  <Users size={12} color="#64748B" />
+                  <Text style={styles.filterChipText}>Đông người</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.filterChip}>
+                  <Trophy size={12} color="#64748B" />
+                  <Text style={styles.filterChipText}>Có giải đấu</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.filterChip}>
+                  <Target size={12} color="#64748B" />
+                  <Text style={styles.filterChipText}>Thách đấu</Text>
+                </TouchableOpacity>
+              </ScrollView>
+              
+              {/* Results Count */}
+              <Text style={styles.resultsCount}>
+                Tìm thấy {clubs.length} club
+              </Text>
+            </View>
+
+            {/* Clubs List */}
+            <View style={styles.clubsListContainer}>
+              {clubsQuery.isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#0A5C6D" />
+                  <Text style={styles.loadingText}>Đang tải danh sách club...</Text>
+                </View>
+              ) : clubs.length > 0 ? (
+                clubs.map((clubItem: any) => (
+                  <View key={clubItem.id} style={styles.enhancedClubCard}>
+                    <Image 
+                      source={{ uri: clubItem.cover_image }}
+                      style={styles.clubCardImage}
+                    />
+                    <View style={styles.clubCardContent}>
+                      <View style={styles.clubCardHeader}>
+                        <Text style={styles.clubCardName}>{clubItem.name}</Text>
+                        <View style={styles.clubCardLocation}>
+                          <MapPin size={12} color="#64748B" />
+                          <Text style={styles.clubCardLocationText}>{clubItem.location}</Text>
+                        </View>
+                      </View>
+                      
+                      <View style={styles.clubCardStats}>
+                        <View style={styles.clubCardStat}>
+                          <Users size={14} color="#0A5C6D" />
+                          <Text style={styles.clubCardStatText}>{clubItem.member_count}</Text>
+                        </View>
+                        <View style={styles.clubCardStat}>
+                          <Trophy size={14} color="#F59E0B" />
+                          <Text style={styles.clubCardStatText}>{clubItem.tournament_count}</Text>
+                        </View>
+                        <View style={styles.clubCardStat}>
+                          <Target size={14} color="#EF4444" />
+                          <Text style={styles.clubCardStatText}>{clubItem.challenge_count}</Text>
+                        </View>
+                      </View>
+                      
+                      <View style={styles.clubCardActions}>
+                        <TouchableOpacity 
+                          style={styles.clubCardActionSecondary}
+                          onPress={() => Alert.alert('Xem chi tiết', `Xem thông tin club ${clubItem.name}`)}
+                        >
+                          <Text style={styles.clubCardActionSecondaryText}>Xem chi tiết</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={styles.clubCardActionPrimary}
+                          onPress={() => Alert.alert('Tham gia', `Gửi yêu cầu tham gia ${clubItem.name}`)}
+                        >
+                          <Text style={styles.clubCardActionPrimaryText}>Tham gia</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>Không tìm thấy club nào</Text>
+                </View>
+              )}
+            </View>
           </View>
         ) : (
           // CLB Tab Content
@@ -620,8 +773,155 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  findOpponentContainer: {
+  
+  // Enhanced Discover Clubs Styles
+  discoverContent: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  discoverHeader: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  searchFilterContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  filterButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  filterChipsContainer: {
+    marginBottom: 12,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  activeFilterChip: {
+    backgroundColor: '#0A5C6D',
+    borderColor: '#0A5C6D',
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#64748B',
+  },
+  activeFilterChipText: {
+    color: 'white',
+  },
+  resultsCount: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748B',
+  },
+  clubsListContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  enhancedClubCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  clubCardImage: {
+    width: '100%',
+    height: 120,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  clubCardContent: {
     padding: 16,
+  },
+  clubCardHeader: {
+    marginBottom: 12,
+  },
+  clubCardName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1A1D29',
+    marginBottom: 4,
+  },
+  clubCardLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  clubCardLocationText: {
+    fontSize: 14,
+    color: '#64748B',
+  },
+  clubCardStats: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 16,
+  },
+  clubCardStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  clubCardStatText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A1D29',
+  },
+  clubCardActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  clubCardActionSecondary: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+    backgroundColor: '#F8F9FA',
+    alignItems: 'center',
+  },
+  clubCardActionSecondaryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  clubCardActionPrimary: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: '#0A5C6D',
+    alignItems: 'center',
+  },
+  clubCardActionPrimaryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
   },
   clubContent: {
     flex: 1,
