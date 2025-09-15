@@ -28,19 +28,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initializeAuth = async () => {
       try {
         console.log('🔐 AuthProvider initializing...');
-        // For mock auth, don't auto-login on init
-        // const currentUser = await authService.getCurrentUser();
+        // For development, start with no user to avoid infinite loading
         if (mounted) {
-          setUser(null); // Start with no user
+          setUser(null);
+          setLoading(false); // Set loading to false immediately
           console.log('🔐 AuthProvider initialized with no user');
         }
       } catch (error) {
-        console.log('No authenticated user found');
+        console.log('No authenticated user found:', error);
         if (mounted) {
           setUser(null);
-        }
-      } finally {
-        if (mounted) {
           setLoading(false);
         }
       }
@@ -48,18 +45,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     initializeAuth();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = authService.onAuthStateChange((user) => {
+    // Listen for auth state changes (simplified for development)
+    try {
+      const { data: { subscription } } = authService.onAuthStateChange((user) => {
+        if (mounted) {
+          setUser(user);
+          setLoading(false);
+        }
+      });
+
+      return () => {
+        mounted = false;
+        subscription?.unsubscribe();
+      };
+    } catch (error) {
+      console.error('Auth state change listener error:', error);
       if (mounted) {
-        setUser(user);
         setLoading(false);
       }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    }
   }, []);
 
   const signIn = async (email: string, password: string) => {

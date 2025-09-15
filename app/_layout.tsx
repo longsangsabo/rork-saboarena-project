@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { SABODataProvider } from "@/providers/SABODataProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { trpc, trpcClient } from "@/lib/trpc";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -42,25 +43,32 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
-    SplashScreen.hideAsync();
+    // Hide splash screen after a short delay to ensure providers are ready
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <StorageProvider>
-            <AuthProvider>
-              <SABODataProvider>
-                <GestureHandlerRootView style={styles.container}>
-                  <RootLayoutNav />
-                </GestureHandlerRootView>
-              </SABODataProvider>
-            </AuthProvider>
-          </StorageProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={styles.container}>
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <StorageProvider>
+                <AuthProvider>
+                  <SABODataProvider>
+                    <RootLayoutNav />
+                  </SABODataProvider>
+                </AuthProvider>
+              </StorageProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </trpc.Provider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

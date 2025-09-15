@@ -20,6 +20,8 @@ const getBaseUrl = () => {
   return 'https://api.rork.com';
 };
 
+console.log('🔗 tRPC Base URL:', getBaseUrl());
+
 export const trpcClient = trpc.createClient({
   links: [
     httpLink({

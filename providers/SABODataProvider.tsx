@@ -145,11 +145,40 @@ export const [SABODataProvider, useSABOData] = createContextHook(() => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Use tRPC hooks for data fetching
-  const userProfileQuery = trpc.user.getProfile.useQuery({ userId: currentUser?.id });
-  const tournamentsQuery = trpc.tournaments.list.useQuery({ status: 'all', limit: 20 });
-  const clubsQuery = trpc.clubs.list.useQuery({ status: 'active', limit: 20 });
-  const socialFeedQuery = trpc.social.getFeed.useQuery({ type: 'nearby', limit: 20 });
+  // Use tRPC hooks for data fetching with error handling and fallbacks
+  const userProfileQuery = trpc.user.getProfile.useQuery(
+    { userId: currentUser?.id || '' },
+    { 
+      enabled: !!currentUser?.id, 
+      retry: 0, // Don't retry to avoid hanging
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  );
+  const tournamentsQuery = trpc.tournaments.list.useQuery(
+    { status: 'all', limit: 20 },
+    { 
+      retry: 0,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  );
+  const clubsQuery = trpc.clubs.list.useQuery(
+    { status: 'active', limit: 20 },
+    { 
+      retry: 0,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  );
+  const socialFeedQuery = trpc.social.getFeed.useQuery(
+    { type: 'nearby', limit: 20 },
+    { 
+      retry: 0,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  );
   
   // Load user from storage and sync with database
   const userQuery = useQuery({

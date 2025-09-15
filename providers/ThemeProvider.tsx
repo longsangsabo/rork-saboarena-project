@@ -28,34 +28,43 @@ const createTheme = (): Theme => ({
   
   // Convert typography preset to React Native style
   fontStyle: (preset) => {
-    const style = typography[preset];
-    
-    // Handle case where style is undefined
-    if (!style) {
-      console.warn(`Typography preset '${preset}' not found, using body as fallback`);
-      const fallbackStyle = typography.body;
+    try {
+      const style = typography[preset];
+      
+      // Handle case where style is undefined
+      if (!style) {
+        console.warn(`Typography preset '${preset}' not found, using body as fallback`);
+        const fallbackStyle = typography.body;
+        return {
+          fontSize: parseInt(fallbackStyle.fontSize.replace('px', '')),
+          fontWeight: 'normal' as TextStyle['fontWeight'],
+          lineHeight: parseInt(fallbackStyle.lineHeight.replace('px', '')),
+        };
+      }
+      
+      // Map font weight strings to React Native acceptable values
+      const fontWeightMap: Record<string, TextStyle['fontWeight']> = {
+        '300': '300',
+        '400': 'normal',
+        '500': '500',
+        '600': '600',
+        '700': 'bold',
+        '800': '800',
+      };
+      
       return {
-        fontSize: parseInt(fallbackStyle.fontSize),
-        fontWeight: 'normal',
-        lineHeight: parseInt(fallbackStyle.lineHeight),
-      } as TextStyle;
+        fontSize: style.fontSize ? parseInt(style.fontSize.replace('px', '')) : 16,
+        fontWeight: fontWeightMap[style.fontWeight] || 'normal',
+        lineHeight: style.lineHeight ? parseInt(style.lineHeight.replace('px', '')) : 24,
+      };
+    } catch (error) {
+      console.error('Error in fontStyle:', error);
+      return {
+        fontSize: 16,
+        fontWeight: 'normal' as TextStyle['fontWeight'],
+        lineHeight: 24,
+      };
     }
-    
-    // Map font weight strings to React Native acceptable values
-    const fontWeightMap: Record<string, TextStyle['fontWeight']> = {
-      '300': '300',
-      '400': 'normal',
-      '500': '500',
-      '600': '600',
-      '700': 'bold',
-      '800': '800',
-    };
-    
-    return {
-      fontSize: style.fontSize ? parseInt(style.fontSize) : 16,
-      fontWeight: fontWeightMap[style.fontWeight] || 'normal',
-      lineHeight: style.lineHeight ? parseInt(style.lineHeight) : 24,
-    } as TextStyle;
   },
   
   // Get color from path (e.g., 'sabo.primary.500')
