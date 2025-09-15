@@ -54,16 +54,25 @@ export default function ChallengeCard({
     }
   };
 
-  const renderPlayer = (player: { id: string; name: string; avatar: string; rank: string; isOnline: boolean }, isRight: boolean = false) => (
-    <View style={[styles.playerContainer, isRight && styles.playerRight]}>
-      <View style={styles.avatarContainer}>
-        <Image source={{ uri: player.avatar }} style={styles.avatar} />
-        <View style={[styles.onlineIndicator, { backgroundColor: player.isOnline ? '#4ECDC4' : '#FF6B6B' }]} />
+  const renderPlayer = (player: { id: string; name: string; avatar: string; rank: string; isOnline: boolean } | null | undefined, isRight: boolean = false) => {
+    if (!player) {
+      return renderWaitingPlayer();
+    }
+    
+    return (
+      <View style={[styles.playerContainer, isRight && styles.playerRight]}>
+        <View style={styles.avatarContainer}>
+          <Image 
+            source={{ uri: player.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face' }} 
+            style={styles.avatar} 
+          />
+          <View style={[styles.onlineIndicator, { backgroundColor: player.isOnline ? '#4ECDC4' : '#FF6B6B' }]} />
+        </View>
+        <Text style={styles.playerName}>{player.name || 'Unknown Player'}</Text>
+        <Text style={styles.playerRank}>Rank {player.rank || 'N/A'}</Text>
       </View>
-      <Text style={styles.playerName}>{player.name}</Text>
-      <Text style={styles.playerRank}>Rank {player.rank}</Text>
-    </View>
-  );
+    );
+  };
 
   const renderWaitingPlayer = () => (
     <View style={[styles.playerContainer, styles.playerRight]}>
