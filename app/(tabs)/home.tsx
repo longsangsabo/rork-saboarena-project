@@ -99,7 +99,7 @@ export default function HomeScreen() {
 
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colorStyle('dark.background') }]}>
+    <View style={[styles.container, { backgroundColor: theme.colorStyle('light.background') }]}>
       <ImageBackground
         source={{ uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=414&h=813&fit=crop' }}
         style={styles.backgroundImage}
@@ -127,8 +127,8 @@ export default function HomeScreen() {
 
         {/* Main Content */}
         <View style={[styles.mainContent, { 
-          paddingHorizontal: theme.spacingStyle(5),
-          paddingTop: theme.spacingStyle(5)
+          paddingHorizontal: theme.spacingStyle('xl'),
+          paddingTop: theme.spacingStyle('xl')
         }]}>
           {/* Profile Card */}
           <ProfileCard 
@@ -155,7 +155,7 @@ export default function HomeScreen() {
             onComment={handleComment}
             onShare={handleShare}
             style={[styles.socialActions, {
-              right: theme.spacingStyle(5), // 20px
+              right: theme.spacingStyle('xl'), // 20px
               top: 200 // Custom positioning - no exact spacing token for 200px
             }]}
           />
@@ -164,26 +164,16 @@ export default function HomeScreen() {
           <ClubInfo 
             name="SABO Billiards"
             location="Vũng Tàu"
-            avatar="https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=50&h=50&fit=crop"
-            isOnline={true}
+            avatarUrl="https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=50&h=50&fit=crop"
             onPress={handleClubPress}
-            style={[styles.clubInfo, {
-              bottom: 120, // Custom positioning - no exact spacing token
-              left: theme.spacingStyle(5) // 20px
-            }]}
           />
 
           {/* Post Content */}
           <PostContent 
-            username="longsang"
+            user="longsang"
             date="03-09"
-            content="Tìm đối tối nay   #sabo #rankG"
+            text="Tìm đối tối nay   #sabo #rankG"
             onPress={handleProfilePress}
-            style={[styles.postContent, {
-              bottom: theme.spacingStyle(10), // 40px
-              left: theme.spacingStyle(5), // 20px
-              right: theme.spacingStyle(5) // 20px
-            }]}
           />
         </View>
       </ImageBackground>
@@ -191,18 +181,18 @@ export default function HomeScreen() {
       {/* Demo Button */}
       <TouchableOpacity
         style={[styles.demoButton, {
-          bottom: theme.spacingStyle(7), // 28px close to 30px
-          right: theme.spacingStyle(5), // 20px
+          bottom: theme.spacingStyle('3xl'), // 32px close to 30px
+          right: theme.spacingStyle('xl'), // 20px
           backgroundColor: theme.colorStyle('sabo.secondary.500'), // Purple/Gold accent
-          paddingHorizontal: theme.spacingStyle(4), // 16px
-          paddingVertical: theme.spacingStyle(3), // 12px
+          paddingHorizontal: theme.spacingStyle('lg'), // 16px
+          paddingVertical: theme.spacingStyle('md'), // 12px
           borderRadius: 25 // Custom rounded pill shape
         }]}
         onPress={handleComponentDemo}
       >
         <Text style={[styles.demoButtonText, {
           color: theme.colorStyle('light.card'), // white
-          ...theme.fontStyle('buttonMedium') // fontSize: 14, fontWeight: 'semibold'
+          ...theme.fontStyle('buttonSmall') // fontSize: 14, fontWeight: 'semibold'
         }]}>🎨 Demo</Text>
       </TouchableOpacity>
     </View>
