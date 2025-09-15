@@ -11,10 +11,9 @@ const getBaseUrl = () => {
     return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
   }
 
-  // Fallback for development - use a mock API endpoint
+  // Use localhost for development
   if (__DEV__) {
-    console.warn('Using mock API endpoint. Set EXPO_PUBLIC_RORK_API_BASE_URL for real API.');
-    return 'https://jsonplaceholder.typicode.com'; // Mock API for development
+    return 'http://localhost:3000';
   }
 
   // Production fallback

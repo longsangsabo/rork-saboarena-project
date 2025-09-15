@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useStorage } from '@/providers/StorageProvider';
 import { useState, useEffect, useCallback } from 'react';
 import { User, Tournament, Club, Activity, UserStats, getRankByElo } from '@/types/sabo';
+import { trpc } from '@/lib/trpc';
 
 // Mock data for development
 const mockUser: User = {
@@ -144,7 +145,13 @@ export const [SABODataProvider, useSABOData] = createContextHook(() => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Load user from storage
+  // Use tRPC hooks for data fetching
+  const userProfileQuery = trpc.user.getProfile.useQuery({ userId: currentUser?.id });
+  const tournamentsQuery = trpc.tournaments.list.useQuery({ status: 'all', limit: 20 });
+  const clubsQuery = trpc.clubs.list.useQuery({ status: 'active', limit: 20 });
+  const socialFeedQuery = trpc.social.getFeed.useQuery({ type: 'nearby', limit: 20 });
+  
+  // Load user from storage and sync with database
   const userQuery = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
@@ -153,93 +160,50 @@ export const [SABODataProvider, useSABOData] = createContextHook(() => {
     },
   });
 
-  // Tournaments query
-  const tournamentsQuery = useQuery({
-    queryKey: ['tournaments'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
-      return mockTournaments;
-    },
-  });
-
-  // Clubs query
-  const clubsQuery = useQuery({
-    queryKey: ['clubs'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return mockClubs;
-    },
-  });
-
-  // Activities query (Social Feed)
-  const activitiesQuery = useQuery({
-    queryKey: ['activities'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 400));
-      return mockActivities;
-    },
-  });
-
-  // User stats query
+  // User stats query - derived from user profile
   const userStatsQuery = useQuery({
-    queryKey: ['userStats', currentUser?.id, currentUser?.elo, currentUser?.spa_points, currentUser?.ranking_position, currentUser?.total_matches, currentUser?.wins, currentUser?.losses],
+    queryKey: ['userStats', currentUser?.id],
     queryFn: async () => {
-      if (!currentUser) return null;
-      await new Promise(resolve => setTimeout(resolve, 200));
+      if (!currentUser || !userProfileQuery.data) return null;
       
-      getRankByElo(currentUser.elo);
-      const winRate = currentUser.total_matches > 0 ? (currentUser.wins / currentUser.total_matches) * 100 : 0;
+      const profile = userProfileQuery.data;
+      const winRate = profile.matches > 0 ? (profile.wins / profile.matches) * 100 : 0;
       
       return {
         user_id: currentUser.id,
-        elo: currentUser.elo,
-        spa_points: currentUser.spa_points,
-        ranking_position: currentUser.ranking_position,
-        total_matches: currentUser.total_matches,
-        wins: currentUser.wins,
-        losses: currentUser.losses,
+        elo: profile.elo,
+        spa_points: profile.spa,
+        ranking_position: profile.ranking,
+        total_matches: profile.matches,
+        wins: profile.wins,
+        losses: profile.losses,
         win_rate: winRate,
-        current_streak: 5,
-        best_streak: 12,
-        tournaments_won: 3,
-        tournaments_played: 8,
-        challenges_won: 15,
-        challenges_played: 22,
+        current_streak: 5, // TODO: Get from database
+        best_streak: 12, // TODO: Get from database
+        tournaments_won: 3, // TODO: Get from database
+        tournaments_played: 8, // TODO: Get from database
+        challenges_won: 15, // TODO: Get from database
+        challenges_played: 22, // TODO: Get from database
         updated_at: new Date().toISOString(),
       } as UserStats;
     },
-    enabled: !!currentUser,
+    enabled: !!currentUser && !!userProfileQuery.data,
   });
 
-  // Mutations
-  const joinTournamentMutation = useMutation({
-    mutationFn: async (tournamentId: string) => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Joining tournament:', tournamentId);
-      return { success: true };
-    },
+  // Mutations using tRPC
+  const joinTournamentMutation = trpc.tournaments.join.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tournaments'] });
     },
   });
 
-  const likeActivityMutation = useMutation({
-    mutationFn: async ({ activityId, isLiked }: { activityId: string; isLiked: boolean }) => {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      console.log('Toggling like for activity:', activityId, 'to:', !isLiked);
-      return { success: true };
-    },
+  const likeActivityMutation = trpc.social.interact.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activities'] });
     },
   });
 
-  const joinClubMutation = useMutation({
-    mutationFn: async (clubId: string) => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      console.log('Joining club:', clubId);
-      return { success: true };
-    },
+  const joinClubMutation = trpc.clubs.join.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clubs'] });
     },
@@ -277,14 +241,14 @@ export const [SABODataProvider, useSABOData] = createContextHook(() => {
     userStats: userStatsQuery.data,
     
     // Queries
-    tournaments: tournamentsQuery.data || [],
-    clubs: clubsQuery.data || [],
-    activities: activitiesQuery.data || [],
+    tournaments: tournamentsQuery.data?.tournaments || [],
+    clubs: clubsQuery.data?.clubs || [],
+    activities: socialFeedQuery.data?.feed || [],
     
     // Loading states
     isLoadingTournaments: tournamentsQuery.isLoading,
     isLoadingClubs: clubsQuery.isLoading,
-    isLoadingActivities: activitiesQuery.isLoading,
+    isLoadingActivities: socialFeedQuery.isLoading,
     isLoadingUserStats: userStatsQuery.isLoading,
     
     // Actions

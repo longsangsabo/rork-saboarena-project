@@ -9,9 +9,9 @@ import type { User } from "@/lib/shared-auth/src";
 // const RATE_LIMIT_MAX_REQUESTS = 100; // Max requests per window
 // const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-// Supabase configuration - using environment variables for security
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+// Supabase configuration - using provided credentials
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://skzirkhzwhyqmnfyytcl.supabase.co';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNremlya2h6d2h5cW1uZnl5dGNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NDM3MzUsImV4cCI6MjA3MzMxOTczNX0._0Ic0SL4FZVMennTXmOzIp2KBOCwRagpbRXaWhZJI24';
 
 // Validate required environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
