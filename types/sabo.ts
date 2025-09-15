@@ -69,6 +69,59 @@ export interface Challenge {
   updated_at: string;
 }
 
+// API Challenge interface for tRPC responses
+export interface ApiChallenge {
+  id: string;
+  type: 'giaoluu' | 'thachdau';
+  user: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatar: string;
+    rank: string;
+    elo: number;
+    isOnline: boolean;
+  };
+  club: {
+    id: string;
+    name: string;
+    location: string;
+    avatar: string;
+  };
+  message: string;
+  created_at: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  is_liked: boolean;
+}
+
+// Legacy Challenge interface for backward compatibility
+export interface LegacyChallenge {
+  id: string;
+  status: 'waiting' | 'ready' | 'live' | 'finished';
+  date: string;
+  time: string;
+  handicap: string;
+  spa: number;
+  raceToScore: number;
+  tableNumber: number;
+  player1?: {
+    id: string;
+    name: string;
+    avatar: string;
+    rank: string;
+    isOnline: boolean;
+  } | null;
+  player2?: {
+    id: string;
+    name: string;
+    avatar: string;
+    rank: string;
+    isOnline: boolean;
+  } | null;
+}
+
 export interface Activity {
   id: string;
   user_id: string;

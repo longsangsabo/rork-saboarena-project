@@ -1,29 +1,57 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { X } from 'lucide-react-native';
-import { Challenge } from '@/lib/demo-data/challenges-data';
+import { ApiChallenge, LegacyChallenge } from '@/types/sabo';
 
-interface ChallengeCardProps extends Challenge {
+interface ChallengeCardProps {
+  challenge: ApiChallenge | LegacyChallenge;
   onJoin?: () => void;
   onCancel?: () => void;
   onViewLive?: () => void;
 }
 
+// Type guard to check if challenge is ApiChallenge
+function isApiChallenge(challenge: ApiChallenge | LegacyChallenge): challenge is ApiChallenge {
+  return 'type' in challenge && 'user' in challenge;
+}
+
 export default function ChallengeCard({
-  id,
-  status,
-  date,
-  time,
-  handicap,
-  spa,
-  raceToScore,
-  tableNumber,
-  player1,
-  player2,
+  challenge,
   onJoin,
   onCancel,
   onViewLive
 }: ChallengeCardProps) {
+  // Transform API challenge to legacy format for rendering
+  const transformedChallenge: LegacyChallenge = isApiChallenge(challenge) ? {
+    id: challenge.id,
+    status: 'waiting', // Default status for API challenges
+    date: new Date(challenge.created_at).toLocaleDateString('vi-VN'),
+    time: new Date(challenge.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    handicap: 'Thách đấu ' + challenge.type,
+    spa: Math.floor(Math.random() * 100) + 50, // Mock SPA points
+    raceToScore: 7, // Default race to score
+    tableNumber: Math.floor(Math.random() * 10) + 1, // Mock table number
+    player1: {
+      id: challenge.user.id,
+      name: challenge.user.displayName,
+      avatar: challenge.user.avatar,
+      rank: challenge.user.rank,
+      isOnline: challenge.user.isOnline
+    },
+    player2: null // API challenges are waiting for opponents
+  } : challenge as LegacyChallenge;
+
+  const {
+    status,
+    date,
+    time,
+    handicap,
+    spa,
+    raceToScore,
+    tableNumber,
+    player1,
+    player2
+  } = transformedChallenge;
   const getStatusColor = () => {
     switch (status) {
       case 'waiting':

@@ -14,7 +14,7 @@ import {
 } from '@/components/shared';
 import { Users, Trophy, X, Plus, Wifi, WifiOff } from 'lucide-react-native';
 import { useRealTimeChallenge } from '@/hooks/useWebSocket';
-import { getChallengesByStatus, type Challenge } from '@/lib/demo-data/challenges-data';
+
 
 export default function ChallengesScreen() {
   const [mainTab, setMainTab] = useState<'giaoluu' | 'thachdau'>('thachdau');
@@ -24,14 +24,20 @@ export default function ChallengesScreen() {
   const realTimeData = useRealTimeChallenge();
   const isConnected = (realTimeData as any)?.isConnected || false;
 
-  // TRPC queries with correct mapping (commented out for now)
-  // const challengesQuery = trpc.challenges.list.useQuery({ 
-  //   type: mainTab,
-  //   limit: 10 
-  // });
+  // Real tRPC query for challenges
+  const challengesQuery = trpc.challenges.list.useQuery({ 
+    type: mainTab,
+    limit: 50 
+  });
 
-  // Use mock data for now since API might not be ready
-  const mockChallenges = getChallengesByStatus(activeTab);
+  // Filter challenges by status from the real data
+  const filteredChallenges = challengesQuery.data?.challenges?.filter(challenge => {
+    // Map challenge status to our tab system
+    if (activeTab === 'waiting') return challenge.type === mainTab;
+    if (activeTab === 'live') return challenge.type === mainTab; // Add live status logic
+    if (activeTab === 'finished') return challenge.type === mainTab; // Add finished status logic
+    return false;
+  }) || [];
 
   const handleJoinChallenge = (challengeId: string) => {
     console.log('Joining challenge:', challengeId);
@@ -137,11 +143,27 @@ export default function ChallengesScreen() {
       
       {/* Challenge List */}
       <ScrollView style={styles.challengeContent}>
-        <ChallengesList 
-          challenges={mockChallenges as Challenge[]}
-          onJoinChallenge={handleJoinChallenge}
-          onViewLive={handleViewLive}
-        />
+        {challengesQuery.isLoading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading challenges...</Text>
+          </View>
+        ) : challengesQuery.error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Error loading challenges</Text>
+            <TouchableOpacity 
+              style={styles.retryButton}
+              onPress={() => challengesQuery.refetch()}
+            >
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <ChallengesList 
+            challenges={filteredChallenges}
+            onJoinChallenge={handleJoinChallenge}
+            onViewLive={handleViewLive}
+          />
+        )}
       </ScrollView>
     </View>
   );
@@ -225,5 +247,39 @@ const styles = StyleSheet.create({
   challengeContent: {
     flex: 1,
     paddingTop: 8,
+  },
+  
+  // Loading and error states
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#64748B',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#EF4444',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#7B5CF6',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

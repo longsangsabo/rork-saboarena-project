@@ -1,10 +1,10 @@
 import React from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 import ChallengeCard from './ChallengeCard';
-import { Challenge } from '@/lib/demo-data/challenges-data';
+import { ApiChallenge, LegacyChallenge } from '@/types/sabo';
 
 interface ChallengesListProps {
-  challenges: Challenge[];
+  challenges: (ApiChallenge | LegacyChallenge)[];
   onJoinChallenge: (challengeId: string) => void;
   onViewLive: (challengeId: string) => void;
   onCancelChallenge?: (challengeId: string) => void;
@@ -16,9 +16,9 @@ export const ChallengesList: React.FC<ChallengesListProps> = ({
   onViewLive,
   onCancelChallenge
 }) => {
-  const renderChallenge = ({ item }: { item: Challenge }) => (
+  const renderChallenge = ({ item }: { item: ApiChallenge | LegacyChallenge }) => (
     <ChallengeCard
-      {...item}
+      challenge={item}
       onJoin={() => onJoinChallenge(item.id)}
       onViewLive={() => onViewLive(item.id)}
       onCancel={onCancelChallenge ? () => onCancelChallenge(item.id) : undefined}
