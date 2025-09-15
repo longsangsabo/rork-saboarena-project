@@ -13,19 +13,18 @@ export const getTournaments = publicProcedure
       let query = ctx.supabase
         .from('tournaments')
         .select(`
-          id,
+          tournament_id,
           name,
           description,
           max_participants,
           entry_fee,
-          prize_pool,
+          total_prize,
           status,
           club_id,
-          created_at,
+          created_time,
           start_time,
-          end_time,
-          clubs!inner(name, location, image_url),
-          tournament_participants(count)
+          registration_deadline,
+          clubs(name)
         `);
 
       // Apply status filter
@@ -40,10 +39,16 @@ export const getTournaments = publicProcedure
 
       // Apply limit and ordering
       query = query
-        .order('created_at', { ascending: false })
+        .order('created_time', { ascending: false })
         .limit(input.limit);
 
       const { data: tournaments, error } = await query;
+
+      console.log('🔍 TRPC Debug - Raw tournaments data:', {
+        count: tournaments?.length || 0,
+        error: error,
+        firstTournament: tournaments?.[0] || null
+      });
 
       if (error) {
         console.error('Error fetching tournaments:', error);
@@ -52,22 +57,27 @@ export const getTournaments = publicProcedure
 
       // Transform data to match frontend expectations
       const transformedTournaments = tournaments?.map(tournament => ({
-        id: tournament.id,
+        id: tournament.tournament_id,
         title: tournament.name,
         description: tournament.description,
-        image_url: tournament.clubs?.image_url || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
-        prize_pool: tournament.prize_pool,
+        image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
+        prize_pool: tournament.total_prize,
         entry_fee: tournament.entry_fee,
-        current_players: tournament.tournament_participants?.[0]?.count || 0,
+        current_players: tournament.current_participants || 0,
         max_players: tournament.max_participants,
-        location: tournament.clubs?.location || 'Unknown location',
+        location: 'SABO Arena', // Default location since not in clubs table
         club_name: tournament.clubs?.name || 'Unknown club',
         start_time: tournament.start_time,
-        end_time: tournament.end_time,  
+        registration_deadline: tournament.registration_deadline,  
         status: tournament.status,
         club_id: tournament.club_id,
-        created_at: tournament.created_at
+        created_at: tournament.created_time
       })) || [];
+
+      console.log('🎯 TRPC Debug - Final response:', {
+        count: transformedTournaments.length,
+        sample: transformedTournaments[0] || null
+      });
 
       return {
         tournaments: transformedTournaments,

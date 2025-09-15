@@ -22,15 +22,34 @@ export default function TournamentBracketScreen() {
   const [semiFinalMatches, setSemiFinalMatches] = useState<TournamentMatch[]>([]);
   const [activeTab, setActiveTab] = useState('winner');
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTournamentId, setCurrentTournamentId] = useState<string | null>(tournamentId || null);
+
+  // TRPC query for available tournaments (when no tournamentId provided)
+  const tournamentsListQuery = trpc.tournaments?.list?.useQuery(
+    undefined,
+    {
+      enabled: !tournamentId,
+      retry: false
+    }
+  );
 
   // TRPC query for tournament bracket data
   const bracketQuery = trpc.tournaments?.getBracket?.useQuery(
-    { tournamentId: tournamentId || '' },
+    { tournamentId: currentTournamentId || '' },
     { 
-      enabled: !!tournamentId,
+      enabled: !!currentTournamentId,
       retry: false 
     }
   );
+
+  // Auto-select first tournament if no tournamentId provided
+  useEffect(() => {
+    if (!tournamentId && tournamentsListQuery.data?.tournaments?.length > 0) {
+      // Auto-select the first available tournament
+      const firstTournament = tournamentsListQuery.data.tournaments[0];
+      setCurrentTournamentId(firstTournament.id);
+    }
+  }, [tournamentId, tournamentsListQuery.data]);
 
   // Initialize bracket data
   useEffect(() => {
@@ -46,8 +65,8 @@ export default function TournamentBracketScreen() {
       const populatedSemiFinal = populateSemiFinalFromBrackets(bracketQuery.data.matches, populatedLosers, semiFinalData);
       setSemiFinalMatches(populatedSemiFinal);
       setIsLoading(false);
-    } else if (bracketQuery.error || !tournamentId) {
-      // Fallback to demo data if API fails or no tournamentId
+    } else if (bracketQuery.error || (!currentTournamentId && !tournamentsListQuery.isLoading)) {
+      // Fallback to demo data if API fails or no tournaments available
       const demoMatches = generateWinnersBracketData();
       setBracketMatches(demoMatches);
       // Generate losers bracket
@@ -60,7 +79,7 @@ export default function TournamentBracketScreen() {
       setSemiFinalMatches(populatedSemiFinal);
       setIsLoading(false);
     }
-  }, [bracketQuery.data, bracketQuery.error, tournamentId]);
+  }, [bracketQuery.data, bracketQuery.error, currentTournamentId, tournamentsListQuery.data, tournamentsListQuery.isLoading]);
 
   // Handle match updates (when user views/updates a match)
   const handleMatchUpdate = async (match: TournamentMatch) => {
@@ -115,7 +134,8 @@ export default function TournamentBracketScreen() {
     setSemiFinalMatches(updatedSemiMatches);
   };
 
-  if (isLoading) {
+  // Show loading spinner
+  if (isLoading || tournamentsListQuery.isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.light.background }]}>
         <Stack.Screen 
@@ -128,7 +148,70 @@ export default function TournamentBracketScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.sabo.primary[500]} />
           <Text style={[styles.loadingText, { color: theme.colors.light.text }]}>
-            Đang tải bảng đấu...
+            {tournamentsListQuery.isLoading ? 'Đang tải danh sách giải đấu...' : 'Đang tải bảng đấu...'}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show tournament selector if no current tournament and tournaments available
+  if (!currentTournamentId && tournamentsListQuery.data?.tournaments?.length > 0) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.light.background }]}>
+        <Stack.Screen 
+          options={{
+            headerShown: true,
+            title: 'Chọn giải đấu',
+            headerTitleAlign: 'center',
+          }}
+        />
+        <View style={styles.selectorContainer}>
+          <Text style={[styles.selectorTitle, { color: theme.colors.light.text }]}>
+            Chọn giải đấu để xem bảng đấu
+          </Text>
+          {tournamentsListQuery.data.tournaments.map((tournament: any) => (
+            <Text 
+              key={tournament.id}
+              style={[styles.tournamentItem, { color: theme.colors.sabo.primary[500], borderColor: theme.colors.sabo.primary[500] }]}
+              onPress={() => setCurrentTournamentId(tournament.id)}
+            >
+              {tournament.name}
+            </Text>
+          ))}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show "Create Tournament" option if no tournaments exist and API didn't fail
+  if (!currentTournamentId && !tournamentsListQuery.isLoading && 
+      (!tournamentsListQuery.data?.tournaments || tournamentsListQuery.data.tournaments.length === 0) &&
+      !tournamentsListQuery.error) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.light.background }]}>
+        <Stack.Screen 
+          options={{
+            headerShown: true,
+            title: 'Bảng đấu',
+            headerTitleAlign: 'center',
+          }}
+        />
+        <View style={styles.selectorContainer}>
+          <Text style={[styles.selectorTitle, { color: theme.colors.light.text }]}>
+            Chưa có giải đấu nào
+          </Text>
+          <Text style={[styles.noTournamentText, { color: theme.colors.light.text, opacity: 0.7 }]}>
+            Hiện tại chưa có giải đấu nào để hiển thị bảng đấu.
+          </Text>
+          <Text 
+            style={[styles.viewDemoButton, { color: theme.colors.sabo.primary[500], borderColor: theme.colors.sabo.primary[500] }]}
+            onPress={() => {
+              // Set a demo tournament ID to show demo bracket
+              setCurrentTournamentId('demo-tournament-2024');
+            }}
+          >
+            📋 Xem Demo Tournament Bracket
           </Text>
         </View>
       </SafeAreaView>
@@ -200,6 +283,40 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     fontWeight: '500',
+  },
+  selectorContainer: {
+    flex: 1,
+    padding: 20,
+    gap: 20,
+  },
+  selectorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  tournamentItem: {
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  noTournamentText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  viewDemoButton: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    padding: 16,
+    borderWidth: 2,
+    borderRadius: 12,
+    marginTop: 10,
   },
   comingSoon: {
     flex: 1,

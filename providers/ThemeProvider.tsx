@@ -30,6 +30,7 @@ const createTheme = (): Theme => ({
   fontStyle: (preset) => {
     const style = typography[preset];
     
+    // Handle case where style is undefined
     if (!style) {
       console.warn(`Typography preset '${preset}' not found, using body as fallback`);
       const fallbackStyle = typography.body;
@@ -51,9 +52,9 @@ const createTheme = (): Theme => ({
     };
     
     return {
-      fontSize: parseInt(style.fontSize),
+      fontSize: style.fontSize ? parseInt(style.fontSize) : 16,
       fontWeight: fontWeightMap[style.fontWeight] || 'normal',
-      lineHeight: parseInt(style.lineHeight),
+      lineHeight: style.lineHeight ? parseInt(style.lineHeight) : 24,
     } as TextStyle;
   },
   
