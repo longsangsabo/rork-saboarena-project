@@ -27,9 +27,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const initializeAuth = async () => {
       try {
-        const currentUser = await authService.getCurrentUser();
+        console.log('🔐 AuthProvider initializing...');
+        // For mock auth, don't auto-login on init
+        // const currentUser = await authService.getCurrentUser();
         if (mounted) {
-          setUser(currentUser);
+          setUser(null); // Start with no user
+          console.log('🔐 AuthProvider initialized with no user');
         }
       } catch (error) {
         console.log('No authenticated user found');
@@ -61,11 +64,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('🔐 AuthProvider.signIn called');
       setLoading(true);
       setError(null);
       const user = await authService.signIn(email, password);
+      console.log('🔐 AuthProvider.signIn success, setting user:', user);
       setUser(user);
     } catch (error: any) {
+      console.error('🔐 AuthProvider.signIn error:', error);
       setError(error.message);
       throw error;
     } finally {

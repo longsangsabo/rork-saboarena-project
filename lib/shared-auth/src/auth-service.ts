@@ -82,15 +82,27 @@ console.log('🔧 Using mock auth service for development');
  */
 export class AuthService {
   async signIn(email: string, password: string): Promise<User> {
+    console.log('🔐 AuthService.signIn called with:', { email, password: '***' });
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) throw error;
-    if (!data.user) throw new Error('No user returned from sign in');
+    console.log('🔐 Supabase response:', { data, error });
 
-    return await this.getCurrentUser();
+    if (error) {
+      console.error('🔐 Auth error:', error);
+      throw error;
+    }
+    if (!data.user) {
+      console.error('🔐 No user returned from sign in');
+      throw new Error('No user returned from sign in');
+    }
+
+    const user = await this.getCurrentUser();
+    console.log('🔐 Final user:', user);
+    return user;
   }
 
   async signUp(email: string, password: string, username?: string): Promise<User> {

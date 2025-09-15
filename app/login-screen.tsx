@@ -18,6 +18,8 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
+    console.log('🔐 Login button pressed');
+    
     if (activeTab === 'phone' && !formData.phone) {
       Alert.alert('Lỗi', 'Vui lòng nhập số điện thoại');
       return;
@@ -35,25 +37,21 @@ export default function LoginScreen() {
 
     try {
       setIsLoading(true);
+      console.log('🔐 Starting login process...');
       
       // For now, use email for both phone and email login
       // In production, you would handle phone authentication differently
       const loginEmail = activeTab === 'email' ? formData.email : `${formData.phone}@sabo.arena`;
+      console.log('🔐 Login email:', loginEmail);
       
       await signIn(loginEmail, formData.password);
+      console.log('🔐 Login successful!');
       
-      Alert.alert(
-        'Đăng nhập thành công!', 
-        'Chào mừng bạn đến với SABO Arena',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(tabs)/home')
-          }
-        ]
-      );
+      // Navigate directly without alert for better UX
+      router.replace('/(tabs)/home');
+      
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('🔐 Login error:', error);
       Alert.alert(
         'Lỗi đăng nhập', 
         error.message || 'Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.',
@@ -200,10 +198,25 @@ export default function LoginScreen() {
           style={[styles.loginButton, (isLoading || loading) && styles.loginButtonDisabled]} 
           onPress={handleLogin}
           disabled={isLoading || loading}
+          activeOpacity={0.8}
+          testID="login-button"
         >
           <Text style={styles.loginButtonText}>
             {isLoading || loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </Text>
+        </TouchableOpacity>
+        
+        {/* Debug Button */}
+        <TouchableOpacity 
+          style={[styles.loginButton, { backgroundColor: '#FF6B6B', marginTop: 10 }]} 
+          onPress={() => {
+            console.log('🔴 Debug button pressed');
+            console.log('Form data:', formData);
+            console.log('Active tab:', activeTab);
+            console.log('Loading states:', { isLoading, loading });
+          }}
+        >
+          <Text style={styles.loginButtonText}>Debug Info</Text>
         </TouchableOpacity>
 
         {/* Social Login */}
