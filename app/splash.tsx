@@ -119,15 +119,23 @@ export default function SplashScreen() {
             <Text style={styles.title}>{currentData.title}</Text>
             
             <View style={styles.optionsContainer}>
-              <View style={styles.optionCard}>
+              <TouchableOpacity 
+                style={styles.optionCard}
+                onPress={() => router.push('/onboarding-player')}
+                activeOpacity={0.7}
+              >
                 <Image source={{ uri: currentData.playerImage }} style={styles.optionImage} />
                 <Text style={styles.optionText}>{currentData.subtitle}</Text>
-              </View>
+              </TouchableOpacity>
               
-              <View style={styles.optionCard}>
+              <TouchableOpacity 
+                style={styles.optionCard}
+                onPress={() => router.push('/onboarding-club')}
+                activeOpacity={0.7}
+              >
                 <Image source={{ uri: currentData.clubImage }} style={styles.optionImage} />
                 <Text style={styles.optionText}>{currentData.subtitle2}</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
         ) : (
