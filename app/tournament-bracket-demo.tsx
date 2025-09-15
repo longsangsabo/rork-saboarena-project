@@ -1,19 +1,28 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { MatchCard, TournamentMatch } from '@/components/tournaments/MatchCard';
-import { generateWinnersBracketData } from '@/lib/demo-data/tournament-bracket-data';
 
 export default function TournamentBracketDemo() {
-  const matches = generateWinnersBracketData();
-  
-  // Organize matches by rounds
-  const rounds = matches.reduce((acc, match) => {
-    if (!acc[match.round]) {
-      acc[match.round] = [];
+  // Simple demo matches
+  const matches: TournamentMatch[] = [
+    {
+      id: 'demo-1',
+      label: 'Demo Match 1',
+      player1: { id: '1', name: 'Player 1', rank: 'A', avatar: '' },
+      player2: { id: '2', name: 'Player 2', rank: 'B', avatar: '' },
+      winner: { id: '1', name: 'Player 1', rank: 'A', avatar: '' },
+      score: { player1: 21, player2: 15 },
+      status: 'completed' as const,
+      gameInfo: {
+        handicap: '0',
+        table: '1',
+        raceType: 'race-to-9'
+      }
     }
-    acc[match.round].push(match);
-    return acc;
-  }, {} as Record<number, TournamentMatch[]>);
+  ];
+  
+  // Organize matches by rounds - simplified for demo
+  const rounds = { 1: matches };
 
   return (
     <View style={styles.container}>
@@ -24,7 +33,7 @@ export default function TournamentBracketDemo() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.bracketContainer}
       >
-        {Object.entries(rounds).map(([roundNum, roundMatches]) => (
+        {Object.entries(rounds).map(([roundNum, roundMatches]: [string, TournamentMatch[]]) => (
           <View key={roundNum} style={styles.roundColumn}>
             <Text style={styles.roundTitle}>
               ROUND {roundNum}
@@ -33,7 +42,7 @@ export default function TournamentBracketDemo() {
               <View key={match.id} style={styles.matchWrapper}>
                 <MatchCard 
                   match={match}
-                  onPress={() => console.log('Match pressed:', match.id)}
+                  onMatchPress={() => console.log('Match pressed:', match.id)}
                 />
               </View>
             ))}
