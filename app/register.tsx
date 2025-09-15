@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar, Alert, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Eye, EyeOff, Phone, Mail, User, Lock } from 'lucide-react-native';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RegisterScreen() {
-  const [activeTab, setActiveTab] = useState<'phone' | 'email'>('phone');
+  const { signUp, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState<'phone' | 'email'>('email');
   const [formData, setFormData] = useState({
     fullName: '',
     nickname: '',
@@ -17,8 +19,9 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!formData.fullName || !formData.nickname || !formData.password || !formData.confirmPassword) {
       Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
       return;
@@ -39,10 +42,36 @@ export default function RegisterScreen() {
       return;
     }
 
-    // Show success message and navigate to main app
-    Alert.alert('Thành công', 'Đăng ký tài khoản thành công!', [
-      { text: 'OK', onPress: () => router.replace('/(tabs)/home') }
-    ]);
+    if (formData.password.length < 6) {
+      Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // For now, use email for both phone and email registration
+      const registerEmail = activeTab === 'email' ? formData.email : `${formData.phone}@sabo.arena`;
+      
+      await signUp(registerEmail, formData.password, formData.nickname);
+      
+      Alert.alert(
+        'Thành công', 
+        'Đăng ký tài khoản thành công! Chào mừng bạn đến với SABO Arena.',
+        [
+          { text: 'OK', onPress: () => router.replace('/(tabs)/home') }
+        ]
+      );
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      Alert.alert(
+        'Lỗi đăng ký', 
+        error.message || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -209,8 +238,14 @@ export default function RegisterScreen() {
         </View>
 
         {/* Register Button */}
-        <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-          <Text style={styles.registerButtonText}>Đăng ký</Text>
+        <TouchableOpacity 
+          style={[styles.registerButton, (isLoading || loading) && styles.registerButtonDisabled]} 
+          onPress={handleRegister}
+          disabled={isLoading || loading}
+        >
+          <Text style={styles.registerButtonText}>
+            {isLoading || loading ? 'Đang đăng ký...' : 'Đăng ký'}
+          </Text>
         </TouchableOpacity>
 
         {/* Social Login */}
@@ -409,6 +444,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  registerButtonDisabled: {
+    backgroundColor: '#999',
+    opacity: 0.7,
   },
   orText: {
     textAlign: 'center',

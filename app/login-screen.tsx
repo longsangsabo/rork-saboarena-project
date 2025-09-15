@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar, Alert, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Eye, EyeOff, Phone, Mail, Lock } from 'lucide-react-native';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginScreen() {
-  const [activeTab, setActiveTab] = useState<'phone' | 'email'>('phone');
+  const { signIn, loading, error } = useAuth();
+  const [activeTab, setActiveTab] = useState<'phone' | 'email'>('email');
   const [formData, setFormData] = useState({
     phone: '',
     email: '',
@@ -13,8 +15,9 @@ export default function LoginScreen() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (activeTab === 'phone' && !formData.phone) {
       Alert.alert('Lỗi', 'Vui lòng nhập số điện thoại');
       return;
@@ -30,17 +33,35 @@ export default function LoginScreen() {
       return;
     }
 
-    // TODO: Add actual authentication logic here
-    Alert.alert(
-      'Đăng nhập thành công!', 
-      'Chào mừng bạn đến với SABO Arena',
-      [
-        {
-          text: 'OK',
-          onPress: () => router.replace('/(tabs)/home')
-        }
-      ]
-    );
+    try {
+      setIsLoading(true);
+      
+      // For now, use email for both phone and email login
+      // In production, you would handle phone authentication differently
+      const loginEmail = activeTab === 'email' ? formData.email : `${formData.phone}@sabo.arena`;
+      
+      await signIn(loginEmail, formData.password);
+      
+      Alert.alert(
+        'Đăng nhập thành công!', 
+        'Chào mừng bạn đến với SABO Arena',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)/home')
+          }
+        ]
+      );
+    } catch (error: any) {
+      console.error('Login error:', error);
+      Alert.alert(
+        'Lỗi đăng nhập', 
+        error.message || 'Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -55,6 +76,15 @@ export default function LoginScreen() {
     router.push('/forgot-password');
   };
 
+  const fillDemoAccount = () => {
+    setFormData({
+      ...formData,
+      email: 'test@example.com',
+      password: '123456'
+    });
+    setActiveTab('email');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
@@ -62,6 +92,16 @@ export default function LoginScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Chào mừng trở lại !</Text>
         <Text style={styles.subtitle}>Đăng nhập để tiếp tục khám phá</Text>
+        
+        {/* Demo Account Info */}
+        <View style={styles.demoInfo}>
+          <Text style={styles.demoTitle}>🎮 Tài khoản Demo</Text>
+          <Text style={styles.demoText}>Email: test@example.com</Text>
+          <Text style={styles.demoText}>Mật khẩu: 123456</Text>
+          <TouchableOpacity style={styles.demoButton} onPress={fillDemoAccount}>
+            <Text style={styles.demoButtonText}>Tự động điền</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.logoContainer}>
@@ -156,8 +196,14 @@ export default function LoginScreen() {
         </View>
 
         {/* Login Button */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Đăng nhập</Text>
+        <TouchableOpacity 
+          style={[styles.loginButton, (isLoading || loading) && styles.loginButtonDisabled]} 
+          onPress={handleLogin}
+          disabled={isLoading || loading}
+        >
+          <Text style={styles.loginButtonText}>
+            {isLoading || loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          </Text>
         </TouchableOpacity>
 
         {/* Social Login */}
@@ -221,6 +267,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
+  },
+  demoInfo: {
+    backgroundColor: '#E8F5E8',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#4A5D23',
+  },
+  demoTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#4A5D23',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  demoText: {
+    fontSize: 12,
+    color: '#4A5D23',
+    textAlign: 'center',
+    fontFamily: 'monospace',
+  },
+  demoButton: {
+    backgroundColor: '#4A5D23',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginTop: 8,
+    alignSelf: 'center',
+  },
+  demoButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   logoContainer: {
     alignItems: 'center',
@@ -374,6 +454,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#999',
+    opacity: 0.7,
   },
   orText: {
     textAlign: 'center',
