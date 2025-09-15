@@ -4,8 +4,7 @@ import {
   View, 
   Text,
   ScrollView,
-  TouchableOpacity,
-  SafeAreaView
+  TouchableOpacity
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { trpc } from '@/lib/trpc';
@@ -14,7 +13,7 @@ import {
   ChallengesList
 } from '@/components/shared';
 import { Users, Trophy, X, Plus, Wifi, WifiOff } from 'lucide-react-native';
-import { useRealTimeChallenge, useWebSocketConnection } from '@/hooks/useWebSocket';
+import { useRealTimeChallenge } from '@/hooks/useWebSocket';
 import { getChallengesByStatus, type Challenge } from '@/lib/demo-data/challenges-data';
 
 export default function ChallengesScreen() {
@@ -22,16 +21,14 @@ export default function ChallengesScreen() {
   const [activeTab, setActiveTab] = useState<'waiting' | 'live' | 'finished'>('waiting');
 
   // WebSocket real-time challenge updates
-  const { isConnected } = useWebSocketConnection();
-  const { 
-    challenges: realTimeChallenges
-  } = useRealTimeChallenge();
+  const realTimeData = useRealTimeChallenge();
+  const isConnected = (realTimeData as any)?.isConnected || false;
 
-  // TRPC queries with correct mapping
-  const challengesQuery = trpc.challenges.list.useQuery({ 
-    type: mainTab,
-    limit: 10 
-  });
+  // TRPC queries with correct mapping (commented out for now)
+  // const challengesQuery = trpc.challenges.list.useQuery({ 
+  //   type: mainTab,
+  //   limit: 10 
+  // });
 
   // Use mock data for now since API might not be ready
   const mockChallenges = getChallengesByStatus(activeTab);
@@ -58,7 +55,7 @@ export default function ChallengesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Stack.Screen 
         options={{
           headerShown: true,
@@ -146,7 +143,7 @@ export default function ChallengesScreen() {
           onViewLive={handleViewLive}
         />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

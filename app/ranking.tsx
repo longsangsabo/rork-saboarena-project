@@ -5,8 +5,7 @@ import {
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { UniversalTabs } from '@/components/shared/UniversalTabs';
-import { RankingList } from '@/components/ranking';
-import { RankingHeaderButtons } from '@/components/ranking/RankingHeader';
+import { RankingList, RankingHeaderButtons } from '@/components/ranking';
 import { mockRankingData } from '@/lib/demo-data/ranking_data';
 import { Users, Trophy, BarChart3 } from 'lucide-react-native';
 

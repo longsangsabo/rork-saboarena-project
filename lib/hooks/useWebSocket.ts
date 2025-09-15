@@ -28,19 +28,19 @@ export const useWebSocket = (config: WebSocketConfig) => {
   });
 
   const ws = useRef<any>(null);
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
   const messageListeners = useRef<Map<string, (data: any) => void>>(new Map());
 
   const { url, reconnectInterval = 3000, maxReconnectAttempts = 5 } = config;
 
   const connect = useCallback(() => {
-    if (ws.current?.readyState === 1) return; // WebSocket.OPEN = 1
+    if (ws.current?.readyState === WebSocket.OPEN) return;
 
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      const websocket = new WebSocket(url) as any;
+      const websocket = new WebSocket(url);
       ws.current = websocket;
 
       websocket.onopen = () => {
@@ -54,7 +54,7 @@ export const useWebSocket = (config: WebSocketConfig) => {
         console.log('WebSocket connected');
       };
 
-      websocket.onmessage = (event: any) => {
+      websocket.onmessage = (event: MessageEvent) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
           setState(prev => ({ ...prev, lastMessage: message }));
@@ -80,7 +80,7 @@ export const useWebSocket = (config: WebSocketConfig) => {
         // Auto-reconnect if not max attempts reached
         if (reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current += 1;
-          reconnectTimer.current = setTimeout(connect, reconnectInterval);
+          reconnectTimer.current = setTimeout(connect, reconnectInterval) as any;
         }
       };
 
@@ -119,7 +119,7 @@ export const useWebSocket = (config: WebSocketConfig) => {
   const sendMessage = useCallback((message: any) => {
     if (!message) return false;
     
-    if (ws.current && ws.current.readyState === 1) { // WebSocket.OPEN = 1
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       try {
         ws.current.send(JSON.stringify(message));
         return true;

@@ -59,17 +59,26 @@ export default function ChallengeCard({
       return renderWaitingPlayer();
     }
     
+    // Ensure player has all required properties with fallbacks
+    const safePlayer = {
+      id: player.id || 'unknown',
+      name: player.name || 'Unknown Player',
+      avatar: player.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face',
+      rank: player.rank || 'N/A',
+      isOnline: player.isOnline ?? false
+    };
+    
     return (
       <View style={[styles.playerContainer, isRight && styles.playerRight]}>
         <View style={styles.avatarContainer}>
           <Image 
-            source={{ uri: player.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face' }} 
+            source={{ uri: safePlayer.avatar }} 
             style={styles.avatar} 
           />
-          <View style={[styles.onlineIndicator, { backgroundColor: player.isOnline ? '#4ECDC4' : '#FF6B6B' }]} />
+          <View style={[styles.onlineIndicator, { backgroundColor: safePlayer.isOnline ? '#4ECDC4' : '#FF6B6B' }]} />
         </View>
-        <Text style={styles.playerName}>{player.name || 'Unknown Player'}</Text>
-        <Text style={styles.playerRank}>Rank {player.rank || 'N/A'}</Text>
+        <Text style={styles.playerName}>{safePlayer.name}</Text>
+        <Text style={styles.playerRank}>Rank {safePlayer.rank}</Text>
       </View>
     );
   };

@@ -48,6 +48,11 @@ const createTheme = (): Theme => ({
   
   // Get color from path (e.g., 'sabo.primary.500')
   colorStyle: (colorPath) => {
+    if (!colorPath || typeof colorPath !== 'string') {
+      console.warn(`Invalid color path '${colorPath}', using fallback`);
+      return '#000000';
+    }
+    
     const path = colorPath.split('.');
     let color: any = colors;
     
