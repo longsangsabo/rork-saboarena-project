@@ -238,7 +238,7 @@ export default function TournamentsScreen() {
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
     refetchInterval: false,
-    enabled: false // Disable tRPC for now, use Supabase directly
+    enabled: true // Enable tRPC to test both approaches
   });
   
   // Handle query state changes
