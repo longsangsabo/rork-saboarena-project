@@ -138,23 +138,27 @@ export default function TournamentsScreen() {
   
   // TRPC queries for real data
   const tournamentsQuery = trpc.tournaments.list.useQuery({ 
-    status: selectedFilter === 'all' ? undefined : selectedFilter,
+    status: selectedFilter === 'all' ? 'all' : selectedFilter,
     limit: 20 
   }, {
-    retry: false,
-    refetchOnWindowFocus: false
+    retry: 3,
+    refetchOnWindowFocus: false,
+    staleTime: 30000 // 30 seconds
   });
   
   // Merge API data with real-time updates
   const allTournaments = React.useMemo(() => {
-    const apiTournaments = tournamentsQuery.data?.tournaments || mockTournaments;
+    const apiTournaments = tournamentsQuery.data?.tournaments || [];
     const rtTournaments = realTimeTournaments || [];
+    
+    // If API data is empty, use mock data as fallback
+    const baseTournaments = apiTournaments.length > 0 ? apiTournaments : mockTournaments;
     
     // Create a map to avoid duplicates, prioritizing real-time data
     const tournamentMap = new Map();
     
-    // Add API tournaments first
-    apiTournaments.forEach((tournament: any) => {
+    // Add base tournaments first
+    baseTournaments.forEach((tournament: any) => {
       tournamentMap.set(tournament.id, tournament);
     });
     
@@ -164,17 +168,21 @@ export default function TournamentsScreen() {
     });
     
     return Array.from(tournamentMap.values());
-  }, [tournamentsQuery.data?.tournaments, realTimeTournaments, mockTournaments]);
+  }, [tournamentsQuery.data?.tournaments, realTimeTournaments]);
 
   // Apply filter to merged data
   const tournaments = allTournaments.filter((t: any) => 
     selectedFilter === 'all' || t.status === selectedFilter
   );
   
-  const joinMutation = trpc.tournaments.list.joinTournament.useMutation({
-    onSuccess: () => {
-      Alert.alert('Thành công', 'Đã tham gia giải đấu thành công!');
-      tournamentsQuery.refetch();
+  const joinMutation = trpc.tournaments.join.useMutation({
+    onSuccess: (result: { success: boolean; message: string }) => {
+      if (result.success) {
+        Alert.alert('Thành công', result.message || 'Đã tham gia giải đấu thành công!');
+        tournamentsQuery.refetch();
+      } else {
+        Alert.alert('Thông báo', result.message || 'Không thể tham gia giải đấu');
+      }
     },
     onError: (error: any) => {
       Alert.alert('Lỗi', error.message || 'Không thể tham gia giải đấu');
@@ -606,11 +614,17 @@ export default function TournamentsScreen() {
         ) : tournamentsQuery.error ? (
           <View style={styles.errorContainer}>
             <Text style={[{ color: theme.colorStyle('light.text'), textAlign: 'center', marginBottom: 10 }]}>
-              Không thể tải danh sách giải đấu
+              Không thể tải danh sách giải đấu từ server
             </Text>
-            <Text style={[{ color: theme.colorStyle('light.textSecondary'), textAlign: 'center', fontSize: 12 }]}>
-              Sử dụng dữ liệu demo thay thế
+            <Text style={[{ color: theme.colorStyle('light.textSecondary'), textAlign: 'center', fontSize: 12, marginBottom: 16 }]}>
+              Hiển thị dữ liệu demo thay thế
             </Text>
+            <TouchableOpacity 
+              style={[styles.retryButton, { backgroundColor: theme.colorStyle('sabo.primary.500') }]}
+              onPress={() => tournamentsQuery.refetch()}
+            >
+              <Text style={styles.retryButtonText}>Thử lại</Text>
+            </TouchableOpacity>
           </View>
         ) : tournaments.length > 0 ? (
           tournaments.map(renderTournamentCard)
@@ -843,5 +857,15 @@ const styles = StyleSheet.create({
   errorContainer: {
     padding: 20,
     alignItems: 'center',
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });

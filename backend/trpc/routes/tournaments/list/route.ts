@@ -44,9 +44,9 @@ export const getTournaments = publicProcedure
 
       const { data: tournaments, error } = await query;
 
-      console.log('🔍 TRPC Debug - Raw tournaments data:', {
+      console.log('🔍 Backend - Raw tournaments data:', {
         count: tournaments?.length || 0,
-        error: error,
+        error: error?.message || null,
         firstTournament: tournaments?.[0] || null
       });
 
@@ -55,28 +55,48 @@ export const getTournaments = publicProcedure
         throw new Error('Failed to fetch tournaments');
       }
 
+      // Get current participants count for each tournament
+      const tournamentsWithParticipants = await Promise.all(
+        (tournaments || []).map(async (tournament) => {
+          const { count: participantCount } = await ctx.supabase
+            .from('tournament_participants')
+            .select('*', { count: 'exact', head: true })
+            .eq('tournament_id', tournament.tournament_id);
+
+          return {
+            ...tournament,
+            current_participants: participantCount || 0
+          };
+        })
+      );
+
       // Transform data to match frontend expectations
-      const transformedTournaments = tournaments?.map(tournament => ({
+      const transformedTournaments = tournamentsWithParticipants.map(tournament => ({
         id: tournament.tournament_id,
         title: tournament.name,
         description: tournament.description,
         image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
-        prize_pool: tournament.total_prize,
-        entry_fee: tournament.entry_fee,
+        prize_pool: tournament.total_prize || 0,
+        entry_fee: tournament.entry_fee || 0,
         current_players: tournament.current_participants || 0,
-        max_players: tournament.max_participants,
-        location: 'SABO Arena', // Default location since not in clubs table
-        club_name: tournament.clubs?.name || 'Unknown club',
-        start_time: tournament.start_time,
+        max_players: tournament.max_participants || 16,
+        min_rank: 'K', // Default values since not in schema
+        max_rank: 'S',
+        location: tournament.clubs?.name ? `${tournament.clubs.name} - SABO Arena` : 'SABO Arena',
+        club_name: tournament.clubs?.name || 'SABO Club',
+        start_time: tournament.start_time || new Date().toISOString(),
+        end_time: tournament.start_time || new Date().toISOString(), // Add end_time
         registration_deadline: tournament.registration_deadline,  
-        status: tournament.status,
+        status: tournament.status === 'registration_open' ? 'upcoming' : 
+                tournament.status === 'in_progress' ? 'live' : 'completed',
         club_id: tournament.club_id,
         created_at: tournament.created_time
-      })) || [];
+      }));
 
-      console.log('🎯 TRPC Debug - Final response:', {
+      console.log('🎯 Backend - Final response:', {
         count: transformedTournaments.length,
-        sample: transformedTournaments[0] || null
+        sample: transformedTournaments[0] || null,
+        allTournaments: transformedTournaments.map(t => ({ id: t.id, title: t.title, status: t.status, current_players: t.current_players }))
       });
 
       return {
@@ -85,7 +105,7 @@ export const getTournaments = publicProcedure
       };
 
     } catch (error) {
-      console.error('Tournament query error:', error);
+      console.error('🚨 Backend - Tournament query error:', error);
       // Fallback to mock data in case of error
       const mockTournaments = [
         {
