@@ -4,10 +4,13 @@ import {
   View, 
   ScrollView, 
   Text,
-  SafeAreaView
+  SafeAreaView,
+  Dimensions
 } from 'react-native';
 import { trpc } from '@/lib/trpc';
 import { useTheme } from '@/providers/ThemeProvider';
+import { spacing } from '@/lib/design-tokens/src/spacing';
+import { useResponsive, getAvatarSize, getCardPadding, getHeaderPadding, responsiveFontSize } from '@/utils/responsive';
 import { RankBadge } from '@/components/shared';
 import { CustomStatusBar, MenuButton, LoadingState, EmptyState } from '@/components/ui';
 import { 
@@ -21,6 +24,17 @@ import { TournamentListItem } from '@/components/tournaments';
 export default function ProfileScreen() {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState<'tournaments' | 'challenges'>('tournaments');
+  
+  // Use responsive utilities
+  const responsive = useResponsive();
+  const avatarSize = getAvatarSize();
+  const headerPadding = getHeaderPadding();
+  const cardPadding = getCardPadding();
+  
+  // Responsive font sizes
+  const titleFontSize = responsiveFontSize(16);
+  const bodyFontSize = responsiveFontSize(12);
+  const smallFontSize = responsiveFontSize(10);
   
   // TRPC queries for real data
   const profileQuery = trpc.user.getProfile.useQuery({ userId: '1' });
@@ -97,7 +111,11 @@ export default function ProfileScreen() {
       {/* Header */}
       <View style={[
         styles.header,
-        { backgroundColor: theme.colors.light.background }
+        { 
+          backgroundColor: theme.colors.light.background,
+          paddingHorizontal: headerPadding,
+          paddingVertical: responsive.isSmallScreen ? 10 : 12
+        }
       ]}>
         <ProfileTag username={user.username} />
         <MenuButton onPress={() => console.log('Menu pressed')} />
@@ -105,34 +123,50 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* User Avatar */}
-        <View style={styles.avatarSection}>
+        <View style={[styles.avatarSection, { paddingVertical: responsive.isSmallScreen ? 20 : 24 }]}>
           <UserAvatar 
             imageUrl={user.avatar}
-            size={120}
+            size={avatarSize}
             showEditButton={true}
             onEditPress={() => console.log('Edit avatar')}
           />
         </View>
 
         {/* Display Name */}
-        <View style={styles.nameSection}>
+        <View style={[
+          styles.nameSection, 
+          { marginBottom: responsive.isSmallScreen ? 12 : 16 }
+        ]}>
           <Text style={[
             styles.displayName,
-            { color: theme.colors.sabo.gray[600] }
+            { 
+              color: theme.colors.sabo.gray[600],
+              fontSize: titleFontSize
+            }
           ]}>
             {user.displayName}
           </Text>
         </View>
 
         {/* Rank Badge */}
-        <View style={styles.rankSection}>
+        <View style={[
+          styles.rankSection,
+          { marginBottom: responsive.isSmallScreen ? 20 : 24 }
+        ]}>
           <View style={[
             styles.rankBadge,
-            { backgroundColor: theme.colors.sabo.secondary[500] }
+            { 
+              backgroundColor: theme.colors.sabo.secondary[500],
+              paddingHorizontal: responsive.isSmallScreen ? 16 : 20,
+              paddingVertical: responsive.isSmallScreen ? 6 : 8
+            }
           ]}>
             <Text style={[
               styles.rankText,
-              { color: 'white' }
+              { 
+                color: 'white',
+                fontSize: responsiveFontSize(14)
+              }
             ]}>
               RANK: {user.rank}
             </Text>
@@ -140,7 +174,14 @@ export default function ProfileScreen() {
         </View>
 
         {/* Stats Grid */}
-        <StatsGrid stats={statsData} style={styles.statsSection} />
+        <StatsGrid 
+          stats={statsData} 
+          style={[
+            styles.statsSection,
+            { marginBottom: responsive.isSmallScreen ? 20 : 24 }
+          ]}
+          isSmallScreen={responsive.isSmallScreen}
+        />
 
         {/* Profile Tabs */}
         <ProfileTabs 
@@ -150,11 +191,18 @@ export default function ProfileScreen() {
         />
 
         {/* Tournament List */}
-        <View style={styles.tournamentList}>
+        <View style={[
+          styles.tournamentList,
+          { paddingHorizontal: headerPadding }
+        ]}>
           {tournaments.map((tournament) => (
             <View key={tournament.id} style={[
               styles.tournamentItem,
-              { backgroundColor: theme.colors.light.card }
+              { 
+                backgroundColor: theme.colors.light.card,
+                padding: cardPadding,
+                marginBottom: responsive.isSmallScreen ? 10 : 12
+              }
             ]}>
               <View style={styles.tournamentRow}>
                 <View style={[
@@ -172,33 +220,51 @@ export default function ProfileScreen() {
                 <View style={styles.tournamentInfo}>
                   <Text style={[
                     styles.tournamentTitle,
-                    { color: theme.colors.sabo.primary[600] }
+                    { 
+                      color: theme.colors.sabo.primary[600],
+                      fontSize: titleFontSize
+                    }
                   ]}>
                     {tournament.title}
                   </Text>
                   
-                  <View style={styles.tournamentDetails}>
+                  <View style={[
+                    styles.tournamentDetails,
+                    { gap: responsive.isSmallScreen ? 8 : 12 }
+                  ]}>
                     <Text style={[
                       styles.tournamentDate,
-                      { color: theme.colors.sabo.gray[500] }
+                      { 
+                        color: theme.colors.sabo.gray[500],
+                        fontSize: bodyFontSize
+                      }
                     ]}>
                       📅 {tournament.date}
                     </Text>
                     <Text style={[
                       styles.tournamentParticipants,
-                      { color: theme.colors.sabo.error[500] }
+                      { 
+                        color: theme.colors.sabo.error[500],
+                        fontSize: bodyFontSize
+                      }
                     ]}>
                       👥 {tournament.participants}
                     </Text>
                     <Text style={[
                       styles.tournamentPrize,
-                      { color: theme.colors.sabo.success[500] }
+                      { 
+                        color: theme.colors.sabo.success[500],
+                        fontSize: bodyFontSize
+                      }
                     ]}>
                       💰 {tournament.prize}
                     </Text>
                     <Text style={[
                       styles.tournamentMatches,
-                      { color: theme.colors.sabo.gray[600] }
+                      { 
+                        color: theme.colors.sabo.gray[600],
+                        fontSize: bodyFontSize
+                      }
                     ]}>
                       {tournament.matches}
                     </Text>
@@ -207,7 +273,10 @@ export default function ProfileScreen() {
                 
                 <Text style={[
                   styles.tournamentLocation,
-                  { color: theme.colors.sabo.gray[500] }
+                  { 
+                    color: theme.colors.sabo.gray[500],
+                    fontSize: responsiveFontSize(14)
+                  }
                 ]}>
                   {tournament.location}
                 </Text>
@@ -228,50 +297,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    // Dynamic padding applied inline
   },
   scrollView: {
     flex: 1,
   },
   avatarSection: {
     alignItems: 'center',
-    paddingVertical: 24,
+    // Dynamic padding applied inline
   },
   nameSection: {
     alignItems: 'center',
-    marginBottom: 16,
+    // Dynamic margin applied inline
   },
   displayName: {
-    fontSize: 16,
     fontWeight: '500',
+    // Dynamic fontSize applied inline
   },
   rankSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    // Dynamic margin applied inline
   },
   rankBadge: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
     borderRadius: 20,
+    // Dynamic padding applied inline
   },
   rankText: {
-    fontSize: 14,
     fontWeight: 'bold',
+    // Dynamic fontSize applied inline
   },
   statsSection: {
-    marginBottom: 24,
+    // Dynamic margin applied inline
   },
   tabsSection: {
     marginBottom: 0,
   },
   tournamentList: {
-    paddingHorizontal: 16,
+    // Dynamic padding applied inline
   },
   tournamentItem: {
-    marginBottom: 12,
     borderRadius: 12,
-    padding: 16,
+    // Dynamic padding and margin applied inline
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -301,30 +367,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tournamentTitle: {
-    fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
+    // Dynamic fontSize applied inline
   },
   tournamentDetails: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    // Dynamic gap applied inline
   },
   tournamentDate: {
-    fontSize: 12,
+    // Dynamic fontSize applied inline
   },
   tournamentParticipants: {
-    fontSize: 12,
+    // Dynamic fontSize applied inline
   },
   tournamentPrize: {
-    fontSize: 12,
+    // Dynamic fontSize applied inline
   },
   tournamentMatches: {
-    fontSize: 12,
+    // Dynamic fontSize applied inline
   },
   tournamentLocation: {
-    fontSize: 14,
     fontWeight: '500',
     marginLeft: 8,
+    // Dynamic fontSize applied inline
   },
 });
