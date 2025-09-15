@@ -7,7 +7,7 @@ export const getTournaments = publicProcedure
     limit: z.number().optional().default(10),
     club_id: z.string().optional()
   }))
-  .query(async ({ input, ctx }: { input: any; ctx: any }) => {
+  .query(async ({ input, ctx }) => {
     const startTime = Date.now();
     
     try {
@@ -63,7 +63,7 @@ export const getTournaments = publicProcedure
       }
 
       // Transform data efficiently
-      const transformedTournaments = (tournaments || []).map((tournament: any) => {
+      const transformedTournaments = (tournaments || []).map((tournament) => {
         // For now, use mock participant count since we simplified the query
         const participantCount = Math.floor(Math.random() * tournament.max_participants || 16);
           
@@ -168,7 +168,7 @@ export const joinTournament = publicProcedure
   .input(z.object({ 
     tournamentId: z.string() 
   }))
-  .mutation(async ({ input, ctx }: { input: any; ctx: any }) => {
+  .mutation(async ({ input, ctx }) => {
     try {
       // For now, we'll allow anonymous joins, but in production should require auth
       const userId = ctx.user?.id || 'anonymous-user';

@@ -22,7 +22,22 @@ app.use(
 
 // Simple health check endpoint
 app.get("/", (c) => {
-  return c.json({ status: "ok", message: "API is running" });
+  return c.json({ 
+    status: "ok", 
+    message: "SABO Arena API is running",
+    timestamp: new Date().toISOString(),
+    version: "1.0.0"
+  });
+});
+
+// Test endpoint for debugging
+app.get("/test", (c) => {
+  return c.json({ 
+    message: "Test endpoint working",
+    url: c.req.url,
+    method: c.req.method,
+    userAgent: c.req.header('user-agent') || 'unknown'
+  });
 });
 
 export default app;

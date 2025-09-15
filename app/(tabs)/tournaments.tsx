@@ -141,8 +141,8 @@ export default function TournamentsScreen() {
     status: selectedFilter,
     limit: 20 
   }, {
-    retry: 2,
-    retryDelay: 1000,
+    retry: 3,
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: false // Disable auto-refresh for now
@@ -557,12 +557,20 @@ export default function TournamentsScreen() {
           ]}>
             Giải đấu
           </Text>
-          <TouchableOpacity 
-            style={styles.headerButton}
-            onPress={handleShowRanking}
-          >
-            <Award size={24} color={theme.colorStyle('sabo.primary.500')} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={() => router.push('/test-connection')}
+            >
+              <Text style={{ fontSize: 12, color: theme.colorStyle('sabo.primary.500') }}>Test</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={handleShowRanking}
+            >
+              <Award size={24} color={theme.colorStyle('sabo.primary.500')} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Quick Stats */}
