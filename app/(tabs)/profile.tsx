@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Dimensions
 } from 'react-native';
+import { router } from 'expo-router';
 import { trpc } from '@/lib/trpc';
 import { useTheme } from '@/providers/ThemeProvider';
 import { RankBadge } from '@/components/shared';
@@ -14,7 +15,8 @@ import { CustomStatusBar, MenuButton, LoadingState, EmptyState } from '@/compone
 import { 
   UserAvatar, 
   ProfileTag, 
-  ProfileTabs 
+  ProfileTabs,
+  ProfileActions
 } from '@/components/profile';
 import { TournamentListItem } from '@/components/tournaments';
 
@@ -22,16 +24,15 @@ export default function ProfileScreen() {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState<'tournaments' | 'challenges'>('tournaments');
   
-  // Mock data matching screenshot exactly
-  
   // TRPC queries for real data
   const profileQuery = trpc.user.getProfile.useQuery({ userId: '1' });
+  const gameDataQuery = trpc.user.getGameData.useQuery();
   const tournamentsQuery = trpc.tournaments.list.useQuery({ 
     status: 'registration_open',
     limit: 10
   });
   
-  // Mock data matching screenshot
+  // Use real data with fallback
   const user = profileQuery.data || {
     id: "1",
     username: "username",
@@ -44,8 +45,10 @@ export default function ProfileScreen() {
     matches: 37,
   };
 
-  // Tournament data matching screenshot
-  const tournaments = [
+  const gameStats = gameDataQuery.data;
+
+  // Tournament data - use real data or fallback to mock
+  const tournaments = tournamentsQuery.data || [
     {
       id: '1',
       number: '8',
@@ -100,7 +103,7 @@ export default function ProfileScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.username}>@{user.username}</Text>
-        <MenuButton onPress={() => console.log('Menu pressed')} />
+        <MenuButton onPress={() => router.push('/edit-profile')} />
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -110,7 +113,7 @@ export default function ProfileScreen() {
             imageUrl={user.avatar}
             size={120}
             showEditButton={true}
-            onEditPress={() => console.log('Edit avatar')}
+            onEditPress={() => router.push('/edit-profile')}
           />
         </View>
 
@@ -130,27 +133,35 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Profile Actions */}
+        <ProfileActions 
+          userId={user.id}
+          isOwnProfile={true}
+          onMessage={() => {/* Navigate to messages */}}
+          onChallenge={() => {/* Navigate to challenge */}}
+        />
+
         {/* Stats Grid */}
         <View style={styles.statsSection}>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
               <Text style={styles.statIcon}>🏆</Text>
-              <Text style={styles.statValue}>1485</Text>
+              <Text style={styles.statValue}>{gameStats?.elo || user.elo}</Text>
               <Text style={styles.statLabel}>ELO</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statIcon}>⭐</Text>
-              <Text style={styles.statValue}>320</Text>
+              <Text style={styles.statValue}>{gameStats?.spa_points || user.spa}</Text>
               <Text style={styles.statLabel}>SPA</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statIcon}>📈</Text>
-              <Text style={styles.statValue}>#89</Text>
+              <Text style={styles.statValue}>#{gameStats?.ranking_position || user.ranking}</Text>
               <Text style={styles.statLabel}>XH</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statIcon}>∞</Text>
-              <Text style={styles.statValue}>37</Text>
+              <Text style={styles.statValue}>{gameStats?.total_matches || user.matches}</Text>
               <Text style={styles.statLabel}>TRẬN</Text>
             </View>
           </View>

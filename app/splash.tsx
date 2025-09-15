@@ -49,6 +49,7 @@ const onboardingData = [
 export default function SplashScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAuth, setShowAuth] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<'player' | 'club' | null>(null);
 
   const handleNext = () => {
     if (currentIndex < onboardingData.length - 1) {
@@ -70,6 +71,20 @@ export default function SplashScreen() {
 
   const handleGetStarted = () => {
     router.replace('/(tabs)/home');
+  };
+
+  const handlePlayerSelection = () => {
+    setSelectedOption('player');
+    setTimeout(() => {
+      router.push('/onboarding-player');
+    }, 200); // Small delay for visual feedback
+  };
+
+  const handleClubSelection = () => {
+    setSelectedOption('club');
+    setTimeout(() => {
+      router.push('/onboarding-club');
+    }, 200); // Small delay for visual feedback
   };
 
   if (showAuth) {
@@ -117,17 +132,32 @@ export default function SplashScreen() {
             </View>
             
             <Text style={styles.title}>{currentData.title}</Text>
+            <Text style={styles.subtitle}>Chọn vai trò của bạn để bắt đầu</Text>
             
             <View style={styles.optionsContainer}>
-              <View style={styles.optionCard}>
+              <TouchableOpacity 
+                style={[
+                  styles.optionCard,
+                  selectedOption === 'player' && styles.optionCardSelected
+                ]}
+                onPress={handlePlayerSelection}
+                activeOpacity={0.8}
+              >
                 <Image source={{ uri: currentData.playerImage }} style={styles.optionImage} />
                 <Text style={styles.optionText}>{currentData.subtitle}</Text>
-              </View>
+              </TouchableOpacity>
               
-              <View style={styles.optionCard}>
+              <TouchableOpacity 
+                style={[
+                  styles.optionCard,
+                  selectedOption === 'club' && styles.optionCardSelected
+                ]}
+                onPress={handleClubSelection}
+                activeOpacity={0.8}
+              >
                 <Image source={{ uri: currentData.clubImage }} style={styles.optionImage} />
                 <Text style={styles.optionText}>{currentData.subtitle2}</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
         ) : (
@@ -227,8 +257,15 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 8,
     color: '#1a1a1a',
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 30,
+    color: '#666',
+    fontWeight: '500',
   },
   optionsContainer: {
     flexDirection: 'row',
@@ -239,17 +276,39 @@ const styles = StyleSheet.create({
   optionCard: {
     alignItems: 'center',
     padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    marginHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    minWidth: 140,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   optionImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
     marginBottom: 15,
+    borderWidth: 3,
+    borderColor: '#4A5D23',
   },
   optionText: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1a1a1a',
+    textAlign: 'center',
+  },
+  optionCardSelected: {
+    borderColor: '#4A5D23',
+    backgroundColor: '#f0f8f0',
+    transform: [{ scale: 0.98 }],
   },
   screenContent: {
     alignItems: 'center',

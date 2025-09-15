@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { ChevronLeft, Camera, Copy } from 'lucide-react-native';
+import { trpc } from '@/lib/trpc';
+import { LoadingState } from '@/components/ui';
 
 interface ProfileData {
-  clubName: string;
+  displayName: string;
   username: string;
-  link: string;
-  address: string;
+  bio: string;
+  location: string;
   instagram: string;
   facebook: string;
   tiktok: string;
@@ -18,26 +20,64 @@ interface ProfileData {
 
 export default function EditProfileScreen() {
   const [profileData, setProfileData] = useState<ProfileData>({
-    clubName: 'SABO Billiards',
-    username: 'sabobilliards',
-    link: 'saboarena.com@lsabobilliards',
-    address: '601A Nguyễn An Ninh – TP Vũng Tàu',
-    instagram: 'Thêm Instagram vào hồ sơ của bạn',
-    facebook: 'Thêm Facebook vào hồ sơ của bạn',
-    tiktok: 'Thêm Tiktok vào hồ sơ của bạn'
+    displayName: '',
+    username: '',
+    bio: '',
+    location: '',
+    instagram: '',
+    facebook: '',
+    tiktok: ''
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSave = () => {
-    console.log('Saving profile data:', profileData);
+  // Get current user profile
+  const profileQuery = trpc.user.getProfile.useQuery({ userId: undefined });
+  const updateProfileMutation = trpc.user.updateProfile.useMutation();
+
+  useEffect(() => {
+    if (profileQuery.data) {
+      setProfileData({
+        displayName: profileQuery.data.displayName || '',
+        username: profileQuery.data.username || '',
+        bio: profileQuery.data.bio || '',
+        location: profileQuery.data.location || '',
+        instagram: '',
+        facebook: '',
+        tiktok: '',
+        avatarUrl: profileQuery.data.avatar
+      });
+      setIsLoading(false);
+    }
+  }, [profileQuery.data]);
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true);
+      await updateProfileMutation.mutateAsync({
+        displayName: profileData.displayName,
+        bio: profileData.bio,
+        avatar: profileData.avatarUrl
+      });
+      Alert.alert('Thành công', 'Cập nhật hồ sơ thành công!', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Lỗi', 'Không thể cập nhật hồ sơ. Vui lòng thử lại.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCopyLink = () => {
-    console.log('Copying link:', profileData.link);
+    // Copy functionality would be implemented here
+    Alert.alert('Thông báo', 'Link đã được sao chép!');
   };
 
   const handleImagePicker = (type: 'avatar' | 'background') => {
     if (!type?.trim()) return;
-    console.log('Selecting image for:', type);
+    // Image picker functionality would be implemented here
+    Alert.alert('Thông báo', `Chọn ${type === 'avatar' ? 'ảnh đại diện' : 'ảnh nền'}`);
   };
 
   const renderImagePicker = (title: string, type: 'avatar' | 'background') => {
@@ -70,7 +110,7 @@ export default function EditProfileScreen() {
         <TextInput
           style={[styles.input, hasAction && styles.inputWithAction]}
           value={value}
-          onChangeText={(text) => setProfileData(prev => ({ ...prev, [key]: text }))}
+          onChangeText={(text: string) => setProfileData((prev: ProfileData) => ({ ...prev, [key]: text }))}
           placeholder={`Nhập ${label.toLowerCase()}`}
         />
         {hasAction && (
@@ -84,6 +124,10 @@ export default function EditProfileScreen() {
       </View>
     </View>
   );
+
+  if (isLoading || profileQuery.isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -111,16 +155,10 @@ export default function EditProfileScreen() {
         </View>
 
         <View style={styles.formSection}>
-          {renderInputField('Tên CLB', profileData.clubName, 'clubName')}
+          {renderInputField('Tên hiển thị', profileData.displayName, 'displayName')}
           {renderInputField('Username', profileData.username, 'username')}
-          {renderInputField(
-            'Link', 
-            profileData.link, 
-            'link', 
-            true, 
-            <Copy size={20} color="#666" />
-          )}
-          {renderInputField('Địa chỉ', profileData.address, 'address')}
+          {renderInputField('Tiểu sử', profileData.bio, 'bio')}
+          {renderInputField('Địa chỉ', profileData.location, 'location')}
           {renderInputField('Instagram', profileData.instagram, 'instagram')}
           {renderInputField('Facebook', profileData.facebook, 'facebook')}
           {renderInputField('Tiktok', profileData.tiktok, 'tiktok')}

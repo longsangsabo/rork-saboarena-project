@@ -52,16 +52,25 @@ const createTheme = (): Theme => ({
     let color: any = colors;
     
     for (const key of path) {
-      color = color[key];
-      if (!color) return '#000000'; // fallback
+      if (color && typeof color === 'object' && key in color) {
+        color = color[key];
+      } else {
+        console.warn(`Color path '${colorPath}' not found, using fallback`);
+        return '#000000'; // fallback
+      }
     }
     
-    return color;
+    return typeof color === 'string' ? color : '#000000';
   },
   
   // Convert spacing token to number
   spacingStyle: (size) => {
-    return parseInt(spacing[size].replace('px', ''));
+    const value = spacing[size];
+    if (!value) {
+      console.warn(`Spacing size '${size}' not found, using fallback`);
+      return 16; // fallback
+    }
+    return parseInt(value.replace('px', ''));
   }
 });
 

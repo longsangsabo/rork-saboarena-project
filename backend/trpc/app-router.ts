@@ -8,6 +8,7 @@ import { getClubDetails, getClubLeaderboard, leaveClub, updateMemberRole } from 
 import { createClubTournament, getClubTournaments } from "./routes/clubs/tournaments/route";
 import { getChallenges, createChallenge, likeChallenge, joinChallenge } from "./routes/challenges/list/route";
 import { getFeed, interactWithPost } from "./routes/social/feed/route";
+import { followUser, unfollowUser, getRelationshipStatus, getUserFollowers, getUserFollowing } from "./routes/social/relationships/route";
 import { rankingRouter } from "./routes/ranking/route";
 
 export const appRouter = createTRPCRouter({
@@ -43,6 +44,11 @@ export const appRouter = createTRPCRouter({
   social: createTRPCRouter({
     getFeed: getFeed,
     interact: interactWithPost,
+    follow: followUser,
+    unfollow: unfollowUser,
+    getRelationship: getRelationshipStatus,
+    getFollowers: getUserFollowers,
+    getFollowing: getUserFollowing,
   }),
   ranking: rankingRouter,
 });
