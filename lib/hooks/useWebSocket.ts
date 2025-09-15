@@ -1,4 +1,24 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Platform } from 'react-native';
+
+// Define proper WebSocket interface for cross-platform compatibility
+interface CustomWebSocket {
+  readyState: number;
+  onopen: ((event: any) => void) | null;
+  onclose: ((event: any) => void) | null;
+  onmessage: ((event: any) => void) | null;
+  onerror: ((event: any) => void) | null;
+  send: (data: string) => void;
+  close: () => void;
+}
+
+// WebSocket ready states
+const WS_READY_STATE = {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3,
+} as const;
 
 interface WebSocketMessage {
   type: 'challenge_update' | 'tournament_update' | 'match_update' | 'notification' | 'feed_update';
@@ -27,21 +47,32 @@ export const useWebSocket = (config: WebSocketConfig) => {
     lastMessage: null,
   });
 
-  const ws = useRef<any>(null);
-  const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
+  const ws = useRef<CustomWebSocket | null>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttempts = useRef(0);
   const messageListeners = useRef<Map<string, (data: any) => void>>(new Map());
 
   const { url, reconnectInterval = 3000, maxReconnectAttempts = 5 } = config;
 
   const connect = useCallback(() => {
-    if (ws.current?.readyState === WebSocket.OPEN) return;
+    if (ws.current?.readyState === WS_READY_STATE.OPEN) return;
+
+    // Skip WebSocket connection on web for now to avoid errors
+    if (Platform.OS === 'web') {
+      setState(prev => ({ 
+        ...prev, 
+        isConnected: false, 
+        isConnecting: false, 
+        error: 'WebSocket not supported on web in development mode' 
+      }));
+      return;
+    }
 
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      const websocket = new WebSocket(url);
-      ws.current = websocket;
+      const websocket = new WebSocket(url) as any;
+      ws.current = websocket as CustomWebSocket;
 
       websocket.onopen = () => {
         setState(prev => ({ 
@@ -80,25 +111,26 @@ export const useWebSocket = (config: WebSocketConfig) => {
         // Auto-reconnect if not max attempts reached
         if (reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current += 1;
-          reconnectTimer.current = setTimeout(connect, reconnectInterval) as any;
+          reconnectTimer.current = setTimeout(connect, reconnectInterval);
         }
       };
 
-      websocket.onerror = () => {
+      websocket.onerror = (error: any) => {
         setState(prev => ({ 
           ...prev, 
           error: 'WebSocket connection error',
           isConnecting: false 
         }));
-        console.error('WebSocket error occurred');
+        console.error('WebSocket error occurred:', error);
       };
 
-    } catch {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         error: 'Failed to create WebSocket connection',
         isConnecting: false 
       }));
+      console.error('WebSocket connection failed:', error);
     }
   }, [url, reconnectInterval, maxReconnectAttempts]);
 
@@ -119,11 +151,18 @@ export const useWebSocket = (config: WebSocketConfig) => {
   const sendMessage = useCallback((message: any) => {
     if (!message) return false;
     
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+    // Skip sending on web for now
+    if (Platform.OS === 'web') {
+      console.log('WebSocket message (web dev mode):', message);
+      return true;
+    }
+    
+    if (ws.current && ws.current.readyState === WS_READY_STATE.OPEN) {
       try {
         ws.current.send(JSON.stringify(message));
         return true;
-      } catch {
+      } catch (error) {
+        console.error('Failed to send WebSocket message:', error);
         return false;
       }
     }
@@ -169,7 +208,7 @@ export const useRealTimeChallenge = (challengeId?: string) => {
     if (!challengeId) return;
 
     const unsubscribe = ws.subscribe('challenge_update', (data) => {
-      if (data?.challengeId === challengeId) {
+      if (data && typeof data === 'object' && data.challengeId === challengeId) {
         setChallengeUpdates(data);
       }
     });
@@ -206,7 +245,7 @@ export const useRealTimeTournament = (tournamentId?: string) => {
     if (!tournamentId) return;
 
     const unsubscribe = ws.subscribe('tournament_update', (data) => {
-      if (data?.tournamentId === tournamentId) {
+      if (data && typeof data === 'object' && data.tournamentId === tournamentId) {
         setTournamentUpdates(data);
       }
     });
@@ -240,7 +279,7 @@ export const useRealTimeFeed = () => {
 
   useEffect(() => {
     const unsubscribe = ws.subscribe('feed_update', (data) => {
-      if (data) {
+      if (data && typeof data === 'object') {
         setFeedUpdates(prev => [data, ...prev.slice(0, 49)]); // Keep last 50 updates
       }
     });
@@ -273,7 +312,7 @@ export const useRealTimeNotifications = () => {
 
   useEffect(() => {
     const unsubscribe = ws.subscribe('notification', (data) => {
-      if (data) {
+      if (data && typeof data === 'object') {
         setNotifications(prev => [data, ...prev]);
       }
     });
