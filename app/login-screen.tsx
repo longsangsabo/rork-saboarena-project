@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Eye, EyeOff, Phone, Mail } from 'lucide-react-native';
+import { Eye, EyeOff, Phone, Mail, Lock } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const [activeTab, setActiveTab] = useState<'phone' | 'email'>('phone');
@@ -16,26 +16,35 @@ export default function LoginScreen() {
 
   const handleLogin = () => {
     if (activeTab === 'phone' && !formData.phone) {
-      console.log('Vui lòng nhập số điện thoại');
+      Alert.alert('Lỗi', 'Vui lòng nhập số điện thoại');
       return;
     }
 
     if (activeTab === 'email' && !formData.email) {
-      console.log('Vui lòng nhập email');
+      Alert.alert('Lỗi', 'Vui lòng nhập email');
       return;
     }
 
     if (!formData.password) {
-      console.log('Vui lòng nhập mật khẩu');
+      Alert.alert('Lỗi', 'Vui lòng nhập mật khẩu');
       return;
     }
 
-    // Navigate to main app
-    router.replace('/(tabs)/home');
+    // TODO: Add actual authentication logic here
+    Alert.alert(
+      'Đăng nhập thành công!', 
+      'Chào mừng bạn đến với SABO Arena',
+      [
+        {
+          text: 'OK',
+          onPress: () => router.replace('/(tabs)/home')
+        }
+      ]
+    );
   };
 
   const handleSocialLogin = (provider: string) => {
-    console.log(`Đăng nhập bằng ${provider} đang được phát triển`);
+    Alert.alert('Thông báo', `Đăng nhập bằng ${provider} đang được phát triển`);
   };
 
   const goToRegister = () => {

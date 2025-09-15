@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Eye, EyeOff, Phone, Mail, User, Lock } from 'lucide-react-native';
@@ -20,31 +20,33 @@ export default function RegisterScreen() {
 
   const handleRegister = () => {
     if (!formData.fullName || !formData.nickname || !formData.password || !formData.confirmPassword) {
-      console.log('Vui lòng điền đầy đủ thông tin');
+      Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
       return;
     }
 
     if (activeTab === 'phone' && !formData.phone) {
-      console.log('Vui lòng nhập số điện thoại');
+      Alert.alert('Lỗi', 'Vui lòng nhập số điện thoại');
       return;
     }
 
     if (activeTab === 'email' && !formData.email) {
-      console.log('Vui lòng nhập email');
+      Alert.alert('Lỗi', 'Vui lòng nhập email');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      console.log('Mật khẩu xác nhận không khớp');
+      Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
       return;
     }
 
-    // Navigate to main app
-    router.replace('/(tabs)/home');
+    // Show success message and navigate to main app
+    Alert.alert('Thành công', 'Đăng ký tài khoản thành công!', [
+      { text: 'OK', onPress: () => router.replace('/(tabs)/home') }
+    ]);
   };
 
   const handleSocialLogin = (provider: string) => {
-    console.log(`Đăng nhập bằng ${provider} đang được phát triển`);
+    Alert.alert('Thông báo', `Đăng nhập bằng ${provider} đang được phát triển`);
   };
 
   const goToLogin = () => {
@@ -55,37 +57,47 @@ export default function RegisterScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       
-      <View style={styles.header}>
-        <Text style={styles.title}>Tạo tài khoản</Text>
-        <Text style={styles.subtitle}>
-          Bạn đã có tài khoản rồi u? <Text style={styles.linkText} onPress={goToLogin}>Đăng nhập ngay !</Text>
-        </Text>
-      </View>
-
-      <View style={styles.logoContainer}>
-        <View style={styles.logoBackground}>
-          <Text style={styles.logoText}>SABO</Text>
-          <Text style={styles.logoSubtext}>ARENA</Text>
-        </View>
-      </View>
-
-      {/* Tab Selector */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'phone' && styles.activeTab]}
-          onPress={() => setActiveTab('phone')}
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Text style={[styles.tabText, activeTab === 'phone' && styles.activeTabText]}>Số điện thoại</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'email' && styles.activeTab]}
-          onPress={() => setActiveTab('email')}
-        >
-          <Text style={[styles.tabText, activeTab === 'email' && styles.activeTabText]}>Email</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.header}>
+            <Text style={styles.title}>Tạo tài khoản</Text>
+            <Text style={styles.subtitle}>
+              Bạn đã có tài khoản rồi u? <Text style={styles.linkText} onPress={goToLogin}>Đăng nhập ngay !</Text>
+            </Text>
+          </View>
 
-      <View style={styles.form}>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoBackground}>
+              <Text style={styles.logoText}>SABO</Text>
+              <Text style={styles.logoSubtext}>ARENA</Text>
+            </View>
+          </View>
+
+          {/* Tab Selector */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'phone' && styles.activeTab]}
+              onPress={() => setActiveTab('phone')}
+            >
+              <Text style={[styles.tabText, activeTab === 'phone' && styles.activeTabText]}>Số điện thoại</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'email' && styles.activeTab]}
+              onPress={() => setActiveTab('email')}
+            >
+              <Text style={[styles.tabText, activeTab === 'email' && styles.activeTabText]}>Email</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.form}>
         {/* Full Name */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Họ và Tên</Text>
@@ -229,7 +241,9 @@ export default function RegisterScreen() {
             </View>
           </TouchableOpacity>
         </View>
-      </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -238,6 +252,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   header: {
     alignItems: 'center',

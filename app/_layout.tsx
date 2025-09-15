@@ -28,7 +28,10 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="splash" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding-player" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding-club" options={{ headerShown: false }} />
       <Stack.Screen name="register" options={{ headerShown: false }} />
+      <Stack.Screen name="register-club" options={{ headerShown: false }} />
       <Stack.Screen name="login-screen" options={{ headerShown: false }} />
       <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
       <Stack.Screen name="modal" options={{ presentation: "modal" }} />

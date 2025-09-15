@@ -70,7 +70,8 @@ export default function SplashScreen() {
   };
 
   const handleGetStarted = () => {
-    router.replace('/(tabs)/home');
+    // Navigate to login instead of directly to home
+    router.push('/login-screen');
   };
 
   const handlePlayerSelection = () => {
