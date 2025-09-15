@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProcedure } from "../../create-context";
+import { publicProcedure } from "@/backend/trpc/create-context";
 
 export const getClubs = publicProcedure
   .input(z.object({ 
@@ -152,18 +152,21 @@ export const getClubMembers = publicProcedure
       }
 
       // Transform data
-      const transformedMembers = memberships?.map(membership => ({
-        id: membership.users?.id || membership.user_id,
-        name: membership.users?.username || 'Unknown User',
-        rank: membership.users?.rank || 'K',
-        avatar: membership.users?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-        isOnline: membership.users?.last_seen ? 
-          new Date(membership.users.last_seen) > new Date(Date.now() - 5 * 60 * 1000) : false,
-        joinDate: new Date(membership.joined_date).toLocaleDateString('vi-VN'),
-        elo: membership.users?.elo || 1200,
-        matches: membership.users?.total_matches || 0,
-        role: membership.role
-      })) || [];
+      const transformedMembers = memberships?.map((membership: any) => {
+        const user = Array.isArray(membership.users) ? membership.users[0] : membership.users;
+        return {
+          id: user?.id || membership.user_id,
+          name: user?.username || 'Unknown User',
+          rank: user?.rank || 'K',
+          avatar: user?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+          isOnline: user?.last_seen ? 
+            new Date(user.last_seen) > new Date(Date.now() - 5 * 60 * 1000) : false,
+          joinDate: new Date(membership.joined_date).toLocaleDateString('vi-VN'),
+          elo: user?.elo || 1200,
+          matches: user?.total_matches || 0,
+          role: membership.role
+        };
+      }) || [];
 
       return {
         members: transformedMembers,

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { publicProcedure } from "../../create-context";
+import { publicProcedure } from "@/backend/trpc/create-context";
 import { authService } from "../../../../lib/shared-auth/src";
 
 // Login endpoint

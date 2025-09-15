@@ -141,10 +141,11 @@ export default function TournamentsScreen() {
     status: selectedFilter,
     limit: 20 
   }, {
-    retry: 3,
+    retry: 2,
+    retryDelay: 1000,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 30000 // Auto-refresh every 30 seconds
+    refetchInterval: false // Disable auto-refresh for now
   });
   
   // Handle query state changes

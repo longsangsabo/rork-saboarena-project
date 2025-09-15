@@ -11,13 +11,8 @@ const getBaseUrl = () => {
     return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
   }
 
-  // Use localhost for development
-  if (__DEV__) {
-    return 'http://localhost:3000';
-  }
-
-  // Production fallback
-  return 'https://api.rork.com';
+  // Use the Rork platform URL for development and production
+  return 'https://greetings-project-scb4vi6.rork.com';
 };
 
 console.log('🔗 tRPC Base URL:', getBaseUrl());
@@ -27,6 +22,9 @@ export const trpcClient = trpc.createClient({
     httpLink({
       url: `${getBaseUrl()}/api/trpc`,
       transformer: superjson,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     }),
   ],
 });
