@@ -41,16 +41,16 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
     <View style={[
       styles.tournamentSection,
       {
-        backgroundColor: theme.colorStyle('sabo.background.50'),
-        marginTop: theme.spacingStyle(5), // 20px
-        padding: theme.spacingStyle(5),
+        backgroundColor: theme.colorStyle('light.background'),
+        marginTop: theme.spacingStyle('xl'), // 20px
+        padding: theme.spacingStyle('xl'),
       }
     ]}>
       <Text style={[
         theme.fontStyle('h3'),
         {
-          color: theme.colorStyle('sabo.text.800'),
-          marginBottom: theme.spacingStyle(4), // 16px
+          color: theme.colorStyle('light.text'),
+          marginBottom: theme.spacingStyle('lg'), // 16px
         }
       ]}>
         Giải đấu
@@ -60,9 +60,9 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
       <View style={[
         styles.tabContainer,
         {
-          backgroundColor: theme.colorStyle('sabo.background.100'),
-          padding: theme.spacingStyle(1), // 4px
-          marginBottom: theme.spacingStyle(4), // 16px
+          backgroundColor: theme.colorStyle('light.card'),
+          padding: theme.spacingStyle('xs'), // 4px
+          marginBottom: theme.spacingStyle('lg'), // 16px
         }
       ]}>
         {tabs.map((tab) => (
@@ -71,11 +71,11 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
             style={[
               styles.tab,
               {
-                paddingVertical: theme.spacingStyle(2), // 8px
-                paddingHorizontal: theme.spacingStyle(3), // 12px
+                paddingVertical: theme.spacingStyle('sm'), // 8px
+                paddingHorizontal: theme.spacingStyle('md'), // 12px
               },
               activeTab === tab.key && {
-                backgroundColor: theme.colorStyle('sabo.background.50'),
+                backgroundColor: theme.colorStyle('light.background'),
               }
             ]}
             onPress={() => onTabChange(tab.key)}
@@ -85,7 +85,7 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
               {
                 color: activeTab === tab.key 
                   ? theme.colorStyle('sabo.primary.600') 
-                  : theme.colorStyle('sabo.text.500')
+                  : theme.colorStyle('sabo.gray.500')
               }
             ]}>
               {tab.label}
@@ -99,12 +99,12 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
         {isLoading ? (
           <View style={[
             styles.loadingContainer,
-            { paddingVertical: theme.spacingStyle(5) } // 20px
+            { paddingVertical: theme.spacingStyle('xl') } // 20px
           ]}>
             <ActivityIndicator size="small" color={theme.colorStyle('sabo.primary.500')} />
             <Text style={[
               theme.fontStyle('bodySmall'),
-              { color: theme.colorStyle('sabo.text.500') }
+              { color: theme.colorStyle('sabo.gray.500') }
             ]}>
               Đang tải giải đấu...
             </Text>
@@ -114,16 +114,16 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
             <TouchableOpacity key={tournament.id} style={[
               styles.tournamentItem,
               {
-                paddingVertical: theme.spacingStyle(3), // 12px
-                borderBottomColor: theme.colorStyle('sabo.border.light'),
+                paddingVertical: theme.spacingStyle('md'), // 12px
+                borderBottomColor: theme.colorStyle('light.border'),
               }
             ]}>
               <Text style={[
                 theme.fontStyle('body'),
                 {
-                  color: theme.colorStyle('sabo.text.800'),
-                  fontWeight: '600',
-                  marginBottom: theme.spacingStyle(2), // 8px
+                  color: theme.colorStyle('light.text'),
+                  fontWeight: '600' as const,
+                  marginBottom: theme.spacingStyle('sm'), // 8px
                 }
               ]}>
                 {tournament.title}
@@ -145,7 +145,7 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
                       theme.fontStyle('caption'),
                       { 
                         color: theme.colorStyle('sabo.error.600'),
-                        marginRight: theme.spacingStyle(2), // 8px
+                        marginRight: theme.spacingStyle('sm'), // 8px
                       }
                     ]}>
                       {tournament.participants}/{tournament.max_participants}
@@ -165,11 +165,11 @@ export const ProfileTournamentList: React.FC<ProfileTournamentListProps> = ({
         ) : (
           <View style={[
             styles.emptyContainer,
-            { paddingVertical: theme.spacingStyle(10) } // 40px
+            { paddingVertical: theme.spacingStyle('4xl') } // 40px
           ]}>
             <Text style={[
               theme.fontStyle('body'),
-              { color: theme.colorStyle('sabo.text.500') }
+              { color: theme.colorStyle('sabo.gray.500') }
             ]}>
               Không có giải đấu nào
             </Text>
