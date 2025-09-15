@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProcedure } from "../../create-context";
+import { publicProcedure, type Context } from "@/backend/trpc/create-context";
 
 export const getTournaments = publicProcedure
   .input(z.object({ 
@@ -7,7 +7,7 @@ export const getTournaments = publicProcedure
     limit: z.number().optional().default(10),
     club_id: z.string().optional()
   }))
-  .query(async ({ input, ctx }) => {
+  .query(async ({ input, ctx }: { input: { status: 'all' | 'registration_open' | 'in_progress' | 'completed'; limit: number; club_id?: string }; ctx: Context }) => {
     try {
       // Build query based on filters
       let query = ctx.supabase
@@ -57,7 +57,7 @@ export const getTournaments = publicProcedure
 
       // Get current participants count for each tournament
       const tournamentsWithParticipants = await Promise.all(
-        (tournaments || []).map(async (tournament) => {
+        (tournaments || []).map(async (tournament: any) => {
           const { count: participantCount } = await ctx.supabase
             .from('tournament_participants')
             .select('*', { count: 'exact', head: true })
@@ -138,7 +138,7 @@ export const joinTournament = publicProcedure
   .input(z.object({ 
     tournamentId: z.string() 
   }))
-  .mutation(async ({ input, ctx }) => {
+  .mutation(async ({ input, ctx }: { input: { tournamentId: string }; ctx: Context }) => {
     try {
       // For now, we'll allow anonymous joins, but in production should require auth
       const userId = ctx.user?.id || 'anonymous-user';
