@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -23,9 +23,12 @@ import {
   Target,
   Award,
   Search,
-  Filter
+  Filter,
+  Wifi,
+  WifiOff
 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import { useRealTimeTournament, useWebSocketConnection } from '@/hooks/useWebSocket';
 import { 
   TournamentDetail,
   TournamentListItem,
@@ -124,20 +127,86 @@ export default function TournamentsScreen() {
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'upcoming' | 'live' | 'completed'>('all');
   const [currentView, setCurrentView] = useState<'list' | 'detail' | 'ranking'>('list');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+
+  // WebSocket real-time tournament updates
+  const { isConnected, status } = useWebSocketConnection();
+  const { 
+    tournaments: realTimeTournaments, 
+    tournamentUpdate,
+    clearUpdate 
+  } = useRealTimeTournament();
   
-  // Use mock data for now, can be replaced with real API
-  const tournaments = mockTournaments.filter(t => 
+  // TRPC queries for real data
+  const tournamentsQuery = trpc.tournaments.list.useQuery({ 
+    status: selectedFilter === 'all' ? undefined : selectedFilter,
+    limit: 20 
+  });
+  
+  // Merge API data with real-time updates
+  const allTournaments = React.useMemo(() => {
+    const apiTournaments = tournamentsQuery.data?.tournaments || mockTournaments;
+    const rtTournaments = realTimeTournaments || [];
+    
+    // Create a map to avoid duplicates, prioritizing real-time data
+    const tournamentMap = new Map();
+    
+    // Add API tournaments first
+    apiTournaments.forEach((tournament: any) => {
+      tournamentMap.set(tournament.id, tournament);
+    });
+    
+    // Override with real-time tournaments (more recent data)
+    rtTournaments.forEach((tournament: any) => {
+      tournamentMap.set(tournament.id, tournament);
+    });
+    
+    return Array.from(tournamentMap.values());
+  }, [tournamentsQuery.data?.tournaments, realTimeTournaments, mockTournaments]);
+
+  // Apply filter to merged data
+  const tournaments = allTournaments.filter((t: any) => 
     selectedFilter === 'all' || t.status === selectedFilter
   );
   
   const joinMutation = trpc.tournaments.join.useMutation({
     onSuccess: () => {
       Alert.alert('Thành công', 'Đã tham gia giải đấu thành công!');
+      tournamentsQuery.refetch();
     },
     onError: (error: any) => {
       Alert.alert('Lỗi', error.message || 'Không thể tham gia giải đấu');
     }
   });
+
+  // Handle tournament update notifications
+  useEffect(() => {
+    if (tournamentUpdate) {
+      const { type, tournamentName, message } = tournamentUpdate;
+      
+      let title = '';
+      switch (type) {
+        case 'started':
+          title = 'Giải đấu bắt đầu!';
+          break;
+        case 'ended':
+          title = 'Giải đấu kết thúc!';
+          break;
+        case 'player_joined':
+          title = 'Có người tham gia!';
+          break;
+        default:
+          title = 'Cập nhật giải đấu';
+      }
+      
+      Alert.alert(
+        title,
+        `${tournamentName}: ${message}`,
+        [
+          { text: 'OK', onPress: clearUpdate }
+        ]
+      );
+    }
+  }, [tournamentUpdate, clearUpdate]);
 
   const handleJoinTournament = (tournamentId: string) => {
     Alert.alert(
@@ -410,6 +479,24 @@ export default function TournamentsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colorStyle('light.background') }]}>
+      {/* WebSocket Connection Status */}
+      <View style={[
+        styles.connectionStatus,
+        { backgroundColor: isConnected ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)' }
+      ]}>
+        {isConnected ? (
+          <Wifi size={12} color="#22c55e" />
+        ) : (
+          <WifiOff size={12} color="#ef4444" />
+        )}
+        <Text style={[
+          styles.connectionStatusText,
+          { color: isConnected ? '#22c55e' : '#ef4444' }
+        ]}>
+          {isConnected ? 'Live' : 'Offline'}
+        </Text>
+      </View>
+
       {/* Header */}
       <View style={[styles.header, { paddingHorizontal: theme.spacingStyle('md') }]}>
         <View style={styles.headerTop}>
@@ -511,7 +598,18 @@ export default function TournamentsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: theme.spacingStyle('md') }}
       >
-        {tournaments.length > 0 ? (
+        {tournamentsQuery.isLoading ? (
+          <TournamentLoadingState />
+        ) : tournamentsQuery.error ? (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text style={[{ color: theme.colorStyle('light.text'), textAlign: 'center', marginBottom: 10 }]}>
+              Không thể tải danh sách giải đấu
+            </Text>
+            <Text style={[{ color: theme.colorStyle('light.textSecondary'), textAlign: 'center', fontSize: 12 }]}>
+              Sử dụng dữ liệu demo thay thế
+            </Text>
+          </View>
+        ) : tournaments.length > 0 ? (
           tournaments.map(renderTournamentCard)
         ) : (
           <TournamentEmptyState />
@@ -720,5 +818,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: 'white',
+  },
+
+  // WebSocket connection status styles
+  connectionStatus: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    zIndex: 10,
+  },
+  connectionStatusText: {
+    fontSize: 10,
+    fontWeight: '500',
   },
 });

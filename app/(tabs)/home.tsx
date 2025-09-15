@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,8 +17,11 @@ import { useTheme } from '@/providers/ThemeProvider';
 import { AppHeader } from '@/components/layout';
 import { TabNavigation } from '@/components/shared';
 import { RankBadge } from '@/components/shared';
+import { trpc } from '@/lib/trpc';
+import { FeedItem } from '@/components/home/FeedItem';
+import { useRealTimeFeed } from '@/lib/hooks/useWebSocket';
 
-// Mock feed data
+// Mock feed data (fallback for when API is not ready)
 const mockFeedData = [
   {
     id: '1',
@@ -106,13 +109,84 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<'lancaan' | 'dafollow'>('lancaan');
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [page, setPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreData, setHasMoreData] = useState(true);
+  const [allFeedData, setAllFeedData] = useState<any[]>([]);
+
+  // TRPC queries for real data with pagination
+  const feedQuery = trpc.social?.getFeed?.useQuery({ 
+    type: activeTab,
+    limit: 10,
+    page: page
+  }) || { data: null, isLoading: false, error: null };
+
+  const challengesQuery = trpc.challenges?.list?.useQuery({
+    status: 'waiting',
+    limit: 5
+  }) || { data: null, isLoading: false, error: null };
+
+  // Real-time WebSocket connection
+  const { 
+    isConnected: wsConnected, 
+    feedUpdates, 
+    clearUpdates 
+  } = useRealTimeFeed();
+
+  // Use real data or fallback to mock data
+  const baseFeedData = feedQuery.data?.posts || mockFeedData;
+  
+  // Update all feed data when new data arrives
+  useEffect(() => {
+    if (feedQuery.data?.posts) {
+      if (page === 1) {
+        // First load or refresh
+        setAllFeedData(feedQuery.data.posts);
+      } else {
+        // Load more - append to existing data
+        setAllFeedData(prev => [...prev, ...feedQuery.data.posts]);
+      }
+      setIsLoadingMore(false);
+      
+      // Check if there's more data
+      if (feedQuery.data.posts.length < 10) {
+        setHasMoreData(false);
+      }
+    }
+  }, [feedQuery.data, page]);
+
+  // Merge real-time updates with accumulated data
+  const feedData = feedUpdates.length > 0 
+    ? [...feedUpdates, ...allFeedData]
+    : allFeedData.length > 0 ? allFeedData : baseFeedData;
 
   const screenHeight = Dimensions.get('window').height;
 
   const handleScroll = (event: any) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const offsetY = contentOffset.y;
     const index = Math.floor(offsetY / screenHeight);
     setCurrentIndex(index);
+
+    // Check if user is near the end (within 2 screens)
+    const distanceFromEnd = contentSize.height - (offsetY + layoutMeasurement.height);
+    if (distanceFromEnd < screenHeight * 2) {
+      handleLoadMore();
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMoreData && !feedQuery.isLoading) {
+      setIsLoadingMore(true);
+      setPage(prev => prev + 1);
+    }
+  };
+
+  const handleRefresh = () => {
+    setPage(1);
+    setHasMoreData(true);
+    setAllFeedData([]);
+    feedQuery.refetch();
   };
 
   const formatCount = (count: number) => {
@@ -133,6 +207,19 @@ export default function HomeScreen() {
             onMessagesPress={() => {}}
             onNotificationsPress={() => {}}
           />
+          
+          {/* WebSocket Status Indicator */}
+          <View style={[styles.wsStatus, { 
+            backgroundColor: wsConnected ? '#10B981' : '#EF4444',
+            opacity: wsConnected ? 0.8 : 0.6
+          }]}>
+            <View style={[styles.wsIndicator, {
+              backgroundColor: wsConnected ? '#34D399' : '#F87171'
+            }]} />
+            <Text style={styles.wsText}>
+              {wsConnected ? 'Live' : 'Offline'}
+            </Text>
+          </View>
           
           <View style={styles.tabContainer}>
             <TabNavigation
@@ -155,119 +242,42 @@ export default function HomeScreen() {
           scrollEventThrottle={16}
           style={styles.scrollView}
         >
-          {mockFeedData.map((item, index) => (
-            <View key={item.id} style={[styles.feedItem, { height: screenHeight }]}>
-              <ImageBackground
-                source={{ uri: item.content.backgroundImage }}
-                style={styles.backgroundImage}
-                resizeMode="cover"
-              >
-                <View style={styles.overlay}>
-                  {/* Main Content Area */}
-                  <View style={styles.contentWrapper}>
-                    {/* Left Side - Profile & Content */}
-                    <View style={styles.leftContent}>
-                      {/* Profile Info */}
-                      <View style={styles.profileInfo}>
-                        <Image 
-                          source={{ uri: item.user.avatar }}
-                          style={styles.avatar}
-                        />
-                        <View style={styles.userInfo}>
-                          <Text style={[styles.displayName, { color: theme.colorStyle('light.text') }]}>
-                            {item.user.name}
-                          </Text>
-                          <Text style={[styles.username, { color: theme.colorStyle('light.textSecondary') }]}>
-                            {item.user.username}
-                          </Text>
-                          <View style={styles.metaInfo}>
-                            <RankBadge rank={item.user.rank} />
-                            <Text style={[styles.timestamp, { color: theme.colorStyle('light.textSecondary') }]}>
-                              {item.content.timestamp}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Post Content */}
-                      <Text style={[styles.postText, { color: theme.colorStyle('light.text') }]}>
-                        {item.content.text}
-                      </Text>
-
-                      {/* Club Info */}
-                      <View style={styles.clubInfo}>
-                        <Image 
-                          source={{ uri: item.club.avatar }}
-                          style={styles.clubAvatar}
-                        />
-                        <View>
-                          <Text style={[styles.clubName, { color: theme.colorStyle('light.text') }]}>
-                            {item.club.name}
-                          </Text>
-                          <Text style={[styles.clubLocation, { color: theme.colorStyle('light.textSecondary') }]}>
-                            {item.club.location} • {item.club.members} thành viên
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Right Side - Actions */}
-                    <View style={styles.rightActions}>
-                      <TouchableOpacity style={styles.actionButton}>
-                        <View style={[styles.actionIcon, { backgroundColor: theme.colorStyle('sabo.primary.500') }]}>
-                          <Users size={24} color="white" />
-                        </View>
-                        <Text style={[styles.actionCount, { color: theme.colorStyle('light.text') }]}>
-                          {formatCount(item.stats.playNow)}
-                        </Text>
-                        <Text style={[styles.actionLabel, { color: theme.colorStyle('light.textSecondary') }]}>
-                          Chơi ngay
-                        </Text>
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity style={styles.actionButton}>
-                        <View style={[styles.actionIcon, { backgroundColor: theme.colorStyle('sabo.secondary.500') }]}>
-                          <Clock size={24} color="white" />
-                        </View>
-                        <Text style={[styles.actionCount, { color: theme.colorStyle('light.text') }]}>
-                          {formatCount(item.stats.schedule)}
-                        </Text>
-                        <Text style={[styles.actionLabel, { color: theme.colorStyle('light.textSecondary') }]}>
-                          Hẹn lịch
-                        </Text>
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity style={styles.actionButton}>
-                        <View style={[styles.actionIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                          <Share size={24} color="white" />
-                        </View>
-                        <Text style={[styles.actionCount, { color: theme.colorStyle('light.text') }]}>
-                          {formatCount(item.stats.shares)}
-                        </Text>
-                        <Text style={[styles.actionLabel, { color: theme.colorStyle('light.textSecondary') }]}>
-                          Chia sẻ
-                        </Text>
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity style={styles.actionButton}>
-                        <View style={[styles.actionIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                          <MessageCircle size={24} color="white" />
-                        </View>
-                        <Text style={[styles.actionLabel, { color: theme.colorStyle('light.textSecondary') }]}>
-                          Nhắn tin
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              </ImageBackground>
+          {feedQuery.isLoading ? (
+            <View style={[styles.feedItem, { height: screenHeight, justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={[styles.loadingText, { color: theme.colorStyle('light.text') }]}>
+                Đang tải feed...
+              </Text>
             </View>
-          ))}
+          ) : feedQuery.error ? (
+            <View style={[styles.feedItem, { height: screenHeight, justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={[styles.errorText, { color: theme.colorStyle('light.text') }]}>
+                Không thể tải feed. Sử dụng dữ liệu demo.
+              </Text>
+            </View>
+          ) : (
+            feedData.map((item, index) => (
+              <FeedItem
+                key={item.id}
+                item={item}
+                screenHeight={screenHeight}
+                formatCount={formatCount}
+              />
+            ))
+          )}
+          
+          {/* Loading More Indicator */}
+          {isLoadingMore && (
+            <View style={[styles.feedItem, { height: screenHeight, justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={[styles.loadingText, { color: theme.colorStyle('light.text') }]}>
+                Đang tải thêm...
+              </Text>
+            </View>
+          )}
         </ScrollView>
 
         {/* Feed Indicator */}
         <View style={[styles.feedIndicator, { bottom: insets.bottom + 20 }]}>
-          {mockFeedData.map((_, index) => (
+          {feedData.map((_, index) => (
             <View
               key={index}
               style={[
@@ -427,5 +437,34 @@ const styles = StyleSheet.create({
     width: 4,
     height: 20,
     borderRadius: 2,
+  },
+  loadingText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  connectionStatus: {
+    position: 'absolute',
+    top: 100,
+    right: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  errorText: {
+    fontSize: 14,
+    textAlign: 'center',
+    opacity: 0.7,
   },
 });
