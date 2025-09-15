@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { publicProcedure } from "@/backend/trpc/create-context";
 
+
 export const getTournaments = publicProcedure
   .input(z.object({ 
     status: z.enum(['all', 'registration_open', 'in_progress', 'completed']).optional().default('all'),
@@ -63,7 +64,7 @@ export const getTournaments = publicProcedure
       }
 
       // Transform data efficiently
-      const transformedTournaments = (tournaments || []).map((tournament) => {
+      const transformedTournaments = (tournaments || []).map((tournament: any) => {
         // For now, use mock participant count since we simplified the query
         const participantCount = Math.floor(Math.random() * tournament.max_participants || 16);
           

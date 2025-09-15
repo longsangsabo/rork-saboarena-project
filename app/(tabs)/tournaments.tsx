@@ -27,7 +27,7 @@ import {
   Wifi,
   WifiOff
 } from 'lucide-react-native';
-import { trpc } from '@/lib/trpc';
+import { trpc, apiService } from '@/lib/trpc';
 import { createClient } from '@supabase/supabase-js';
 import { useRealTimeTournament, useWebSocketConnection } from '@/hooks/useWebSocket';
 import { 
@@ -152,81 +152,38 @@ export default function TournamentsScreen() {
     error: Error | null;
   }>({ tournaments: [], isLoading: true, error: null });
 
-  // Load tournaments directly from Supabase
-  const loadTournamentsFromSupabase = React.useCallback(async () => {
+  // Load tournaments using the new API service
+  const loadTournamentsFromAPI = React.useCallback(async () => {
     try {
       setSupabaseData(prev => ({ ...prev, isLoading: true, error: null }));
-      console.log('🔄 Loading tournaments directly from Supabase...');
+      console.log('🔄 Loading tournaments using API service...');
       
-      let query = supabase
-        .from('tournaments')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      // Apply status filter
-      if (selectedFilter !== 'all') {
-        const statusMap: Record<string, string> = {
-          'registration_open': 'registration_open',
-          'in_progress': 'in_progress', 
-          'completed': 'completed'
-        };
-        if (statusMap[selectedFilter]) {
-          query = query.eq('status', statusMap[selectedFilter]);
-        }
-      }
-
-      const { data: tournaments, error } = await query;
-      
-      if (error) {
-        console.error('❌ Supabase query error:', error);
-        throw error;
-      }
-
-      // Transform data to match expected format
-      const transformedTournaments = (tournaments || []).map((tournament) => {
-        const participantCount = Math.floor(Math.random() * (tournament.max_participants || 16));
-        
-        return {
-          id: tournament.id,
-          title: tournament.name,
-          description: tournament.description || 'Giải đấu bi-a chuyên nghiệp',
-          image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
-          prize_pool: tournament.total_prize || 0,
-          entry_fee: tournament.entry_fee || 0,
-          current_players: participantCount,
-          max_players: tournament.max_participants || 16,
-          min_rank: 'K',
-          max_rank: 'S',
-          location: 'SABO Arena',
-          club_name: 'SABO Club',
-          start_time: tournament.start_time || new Date().toISOString(),
-          end_time: tournament.start_time || new Date().toISOString(),
-          registration_deadline: tournament.registration_deadline,
-          status: tournament.status === 'registration_open' ? 'upcoming' : 
-                  tournament.status === 'in_progress' ? 'live' : 'completed',
-          club_id: tournament.club_id,
-          created_at: tournament.created_at
-        };
+      const result = await apiService.getTournaments({
+        status: selectedFilter,
+        limit: 20
       });
-
-      console.log('✅ Loaded tournaments from Supabase:', transformedTournaments.length);
-      setSupabaseData({ tournaments: transformedTournaments, isLoading: false, error: null });
+      
+      console.log('✅ Loaded tournaments from API service:', result.tournaments.length);
+      setSupabaseData({ 
+        tournaments: result.tournaments, 
+        isLoading: false, 
+        error: null 
+      });
       
     } catch (error) {
-      console.error('🚨 Supabase load error:', error);
+      console.error('🚨 API service load error:', error);
       setSupabaseData(prev => ({ 
         ...prev, 
         isLoading: false, 
         error: error instanceof Error ? error : new Error('Unknown error')
       }));
     }
-  }, [supabase, selectedFilter]);
+  }, [selectedFilter]);
 
   // Load tournaments on mount and filter change
   React.useEffect(() => {
-    loadTournamentsFromSupabase();
-  }, [loadTournamentsFromSupabase]);
+    loadTournamentsFromAPI();
+  }, [loadTournamentsFromAPI]);
 
   // TRPC queries for real data with optimized caching (as fallback)
   const tournamentsQuery = trpc.tournaments.list.useQuery({ 
@@ -664,12 +621,12 @@ export default function TournamentsScreen() {
           ]}>
             Giải đấu
           </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={styles.headerActions}>
             <TouchableOpacity 
               style={styles.headerButton}
               onPress={() => router.push('/test-connection')}
             >
-              <Text style={{ fontSize: 12, color: theme.colorStyle('sabo.primary.500') }}>Test</Text>
+              <Text style={styles.testButtonText}>Test</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.headerButton}
@@ -759,7 +716,7 @@ export default function TournamentsScreen() {
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: theme.spacingStyle('md') }}
+        contentContainerStyle={styles.scrollContent}
       >
         {supabaseData.isLoading ? (
           <TournamentLoadingState />
@@ -773,7 +730,7 @@ export default function TournamentsScreen() {
             </Text>
             <TouchableOpacity 
               style={[styles.retryButton, { backgroundColor: theme.colorStyle('sabo.primary.500') }]}
-              onPress={() => loadTournamentsFromSupabase()}
+              onPress={() => loadTournamentsFromAPI()}
             >
               <Text style={styles.retryButtonText}>Thử lại</Text>
             </TouchableOpacity>
@@ -1019,5 +976,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
     fontSize: 14,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  testButtonText: {
+    fontSize: 12,
+    color: '#3B82F6',
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
   },
 });
