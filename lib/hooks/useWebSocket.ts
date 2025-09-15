@@ -27,22 +27,23 @@ export const useWebSocket = (config: WebSocketConfig) => {
     lastMessage: null,
   });
 
-  const ws = useRef<WebSocket | null>(null);
-  const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
+  const ws = useRef<any>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttempts = useRef(0);
   const messageListeners = useRef<Map<string, (data: any) => void>>(new Map());
 
   const { url, reconnectInterval = 3000, maxReconnectAttempts = 5 } = config;
 
   const connect = useCallback(() => {
-    if (ws.current?.readyState === WebSocket.OPEN) return;
+    if (ws.current?.readyState === 1) return; // WebSocket.OPEN = 1
 
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      ws.current = new WebSocket(url);
+      const websocket = new WebSocket(url) as any;
+      ws.current = websocket;
 
-      ws.current.onopen = () => {
+      websocket.onopen = () => {
         setState(prev => ({ 
           ...prev, 
           isConnected: true, 
@@ -53,7 +54,7 @@ export const useWebSocket = (config: WebSocketConfig) => {
         console.log('WebSocket connected');
       };
 
-      ws.current.onmessage = (event) => {
+      websocket.onmessage = (event: any) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
           setState(prev => ({ ...prev, lastMessage: message }));
@@ -68,7 +69,7 @@ export const useWebSocket = (config: WebSocketConfig) => {
         }
       };
 
-      ws.current.onclose = () => {
+      websocket.onclose = () => {
         setState(prev => ({ 
           ...prev, 
           isConnected: false, 
@@ -83,16 +84,16 @@ export const useWebSocket = (config: WebSocketConfig) => {
         }
       };
 
-      ws.current.onerror = (error) => {
+      websocket.onerror = () => {
         setState(prev => ({ 
           ...prev, 
           error: 'WebSocket connection error',
           isConnecting: false 
         }));
-        console.error('WebSocket error:', error);
+        console.error('WebSocket error occurred');
       };
 
-    } catch (error) {
+    } catch {
       setState(prev => ({ 
         ...prev, 
         error: 'Failed to create WebSocket connection',
@@ -116,14 +117,22 @@ export const useWebSocket = (config: WebSocketConfig) => {
   }, []);
 
   const sendMessage = useCallback((message: any) => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify(message));
-      return true;
+    if (!message) return false;
+    
+    if (ws.current && ws.current.readyState === 1) { // WebSocket.OPEN = 1
+      try {
+        ws.current.send(JSON.stringify(message));
+        return true;
+      } catch {
+        return false;
+      }
     }
     return false;
   }, []);
 
   const subscribe = useCallback((messageType: string, callback: (data: any) => void) => {
+    if (!messageType?.trim()) return () => {};
+    
     messageListeners.current.set(messageType, callback);
     
     return () => {
@@ -160,7 +169,7 @@ export const useRealTimeChallenge = (challengeId?: string) => {
     if (!challengeId) return;
 
     const unsubscribe = ws.subscribe('challenge_update', (data) => {
-      if (data.challengeId === challengeId) {
+      if (data?.challengeId === challengeId) {
         setChallengeUpdates(data);
       }
     });
@@ -197,7 +206,7 @@ export const useRealTimeTournament = (tournamentId?: string) => {
     if (!tournamentId) return;
 
     const unsubscribe = ws.subscribe('tournament_update', (data) => {
-      if (data.tournamentId === tournamentId) {
+      if (data?.tournamentId === tournamentId) {
         setTournamentUpdates(data);
       }
     });
@@ -231,7 +240,9 @@ export const useRealTimeFeed = () => {
 
   useEffect(() => {
     const unsubscribe = ws.subscribe('feed_update', (data) => {
-      setFeedUpdates(prev => [data, ...prev.slice(0, 49)]); // Keep last 50 updates
+      if (data) {
+        setFeedUpdates(prev => [data, ...prev.slice(0, 49)]); // Keep last 50 updates
+      }
     });
 
     ws.sendMessage({
@@ -262,7 +273,9 @@ export const useRealTimeNotifications = () => {
 
   useEffect(() => {
     const unsubscribe = ws.subscribe('notification', (data) => {
-      setNotifications(prev => [data, ...prev]);
+      if (data) {
+        setNotifications(prev => [data, ...prev]);
+      }
     });
 
     ws.sendMessage({
@@ -275,6 +288,8 @@ export const useRealTimeNotifications = () => {
   }, [ws]);
 
   const markAsRead = useCallback((notificationId: string) => {
+    if (!notificationId?.trim()) return;
+    
     ws.sendMessage({
       type: 'mark_notification_read',
       notificationId,
