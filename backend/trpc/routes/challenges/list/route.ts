@@ -4,7 +4,9 @@ import { publicProcedure } from "@/backend/trpc/create-context";
 export const getChallenges = publicProcedure
   .input(z.object({ 
     type: z.enum(['giaoluu', 'thachdau']).optional().default('giaoluu'),
-    limit: z.number().optional().default(10)
+    limit: z.number().optional().default(10),
+    clubId: z.string().optional(),
+    status: z.enum(['waiting', 'live', 'finished']).optional().default('waiting')
   }))
   .query(async ({ input, ctx }) => {
     try {

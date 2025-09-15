@@ -14,7 +14,6 @@ import {
   RankingCard
 } from '@/components/shared';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
-import { getChallengesByStatus } from '@/lib/demo-data/challenges-data';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ClubsScreen() {
@@ -43,6 +42,9 @@ export default function ClubsScreen() {
   const clubsQuery = trpc.clubs.list.useQuery({ limit: 10 });
   const membersQuery = trpc.clubs.getMembers.useQuery({ 
     clubId: selectedClubId // Use dynamic club ID
+  });
+  const challengesQuery = trpc.challenges.list.useQuery({ 
+    status: challengeTab 
   });
   
   // Use real data or fallback to mock data
@@ -163,11 +165,7 @@ export default function ClubsScreen() {
           headerTitleAlign: 'left',
           headerStyle: {
             backgroundColor: '#F8F9FA',
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 1,
-            borderBottomColor: '#E9ECEF',
-          },
+          } as any,
           headerTitleStyle: {
             fontSize: 20,
             fontWeight: '700',
@@ -691,15 +689,30 @@ export default function ClubsScreen() {
                     onTabChange={handleChallengeTabChange}
                   />
                   <ScrollView style={styles.challengesList}>
-                    {getChallengesByStatus(challengeTab).map((challenge) => (
-                      <ChallengeCard
-                        key={challenge.id}
-                        challenge={challenge}
-                        onAccept={() => console.log('Accept challenge:', challenge.id)}
-                        onDecline={() => console.log('Decline challenge:', challenge.id)}
-                        onView={() => console.log('View challenge:', challenge.id)}
-                      />
-                    ))}
+                    {challengesQuery.isLoading ? (
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#0A5C6D" />
+                        <Text style={styles.loadingText}>Đang tải thách đấu...</Text>
+                      </View>
+                    ) : challengesQuery.data?.challenges && challengesQuery.data.challenges.length > 0 ? (
+                      challengesQuery.data.challenges.map((challenge: any) => (
+                        <ChallengeCard
+                          key={challenge.id}
+                          challenge={challenge}
+                          onJoin={() => console.log('Join challenge:', challenge.id)}
+                          onCancel={() => console.log('Cancel challenge:', challenge.id)}
+                          onViewLive={() => console.log('View live challenge:', challenge.id)}
+                        />
+                      ))
+                    ) : (
+                      <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyText}>
+                          {challengeTab === 'waiting' && 'Không có thách đấu đang chờ'}
+                          {challengeTab === 'live' && 'Không có thách đấu đang diễn ra'}
+                          {challengeTab === 'finished' && 'Không có thách đấu đã hoàn thành'}
+                        </Text>
+                      </View>
+                    )}
                   </ScrollView>
                 </View>
               )}
