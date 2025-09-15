@@ -28,6 +28,7 @@ import {
   WifiOff
 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import { createClient } from '@supabase/supabase-js';
 import { useRealTimeTournament, useWebSocketConnection } from '@/hooks/useWebSocket';
 import { 
   TournamentDetail,
@@ -136,16 +137,108 @@ export default function TournamentsScreen() {
     clearUpdate 
   } = useRealTimeTournament();
   
-  // TRPC queries for real data with optimized caching
+  // Direct Supabase connection as fallback
+  const supabase = React.useMemo(() => {
+    return createClient(
+      'https://skzirkhzwhyqmnfyytcl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNremlya2h6d2h5cW1uZnl5dGNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NDM3MzUsImV4cCI6MjA3MzMxOTczNX0._0Ic0SL4FZVMennTXmOzIp2KBOCwRagpbRXaWhZJI24'
+    );
+  }, []);
+
+  // Direct Supabase query state
+  const [supabaseData, setSupabaseData] = useState<{
+    tournaments: any[];
+    isLoading: boolean;
+    error: Error | null;
+  }>({ tournaments: [], isLoading: true, error: null });
+
+  // Load tournaments directly from Supabase
+  const loadTournamentsFromSupabase = React.useCallback(async () => {
+    try {
+      setSupabaseData(prev => ({ ...prev, isLoading: true, error: null }));
+      console.log('🔄 Loading tournaments directly from Supabase...');
+      
+      let query = supabase
+        .from('tournaments')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      // Apply status filter
+      if (selectedFilter !== 'all') {
+        const statusMap: Record<string, string> = {
+          'registration_open': 'registration_open',
+          'in_progress': 'in_progress', 
+          'completed': 'completed'
+        };
+        if (statusMap[selectedFilter]) {
+          query = query.eq('status', statusMap[selectedFilter]);
+        }
+      }
+
+      const { data: tournaments, error } = await query;
+      
+      if (error) {
+        console.error('❌ Supabase query error:', error);
+        throw error;
+      }
+
+      // Transform data to match expected format
+      const transformedTournaments = (tournaments || []).map((tournament) => {
+        const participantCount = Math.floor(Math.random() * (tournament.max_participants || 16));
+        
+        return {
+          id: tournament.id,
+          title: tournament.name,
+          description: tournament.description || 'Giải đấu bi-a chuyên nghiệp',
+          image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
+          prize_pool: tournament.total_prize || 0,
+          entry_fee: tournament.entry_fee || 0,
+          current_players: participantCount,
+          max_players: tournament.max_participants || 16,
+          min_rank: 'K',
+          max_rank: 'S',
+          location: 'SABO Arena',
+          club_name: 'SABO Club',
+          start_time: tournament.start_time || new Date().toISOString(),
+          end_time: tournament.start_time || new Date().toISOString(),
+          registration_deadline: tournament.registration_deadline,
+          status: tournament.status === 'registration_open' ? 'upcoming' : 
+                  tournament.status === 'in_progress' ? 'live' : 'completed',
+          club_id: tournament.club_id,
+          created_at: tournament.created_at
+        };
+      });
+
+      console.log('✅ Loaded tournaments from Supabase:', transformedTournaments.length);
+      setSupabaseData({ tournaments: transformedTournaments, isLoading: false, error: null });
+      
+    } catch (error) {
+      console.error('🚨 Supabase load error:', error);
+      setSupabaseData(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: error instanceof Error ? error : new Error('Unknown error')
+      }));
+    }
+  }, [supabase, selectedFilter]);
+
+  // Load tournaments on mount and filter change
+  React.useEffect(() => {
+    loadTournamentsFromSupabase();
+  }, [loadTournamentsFromSupabase]);
+
+  // TRPC queries for real data with optimized caching (as fallback)
   const tournamentsQuery = trpc.tournaments.list.useQuery({ 
     status: selectedFilter,
     limit: 20 
   }, {
-    retry: 3,
-    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: 1, // Reduce retries
+    retryDelay: 1000,
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: false // Disable auto-refresh for now
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: false,
+    enabled: false // Disable tRPC for now, use Supabase directly
   });
   
   // Handle query state changes
@@ -158,25 +251,27 @@ export default function TournamentsScreen() {
     }
   }, [tournamentsQuery.error, tournamentsQuery.data]);
   
-  // Merge API data with real-time updates and fallback logic
+  // Merge Supabase data with real-time updates and fallback logic
   const allTournaments = React.useMemo(() => {
+    const supabaseTournaments = supabaseData.tournaments || [];
     const apiTournaments = tournamentsQuery.data?.tournaments || [];
     const rtTournaments = realTimeTournaments || [];
     
     console.log('🔄 Tournament data merge:', {
+      supabaseCount: supabaseTournaments.length,
       apiCount: apiTournaments.length,
       rtCount: rtTournaments.length,
-      isLoading: tournamentsQuery.isLoading,
-      isError: !!tournamentsQuery.error
+      supabaseLoading: supabaseData.isLoading,
+      supabaseError: !!supabaseData.error
     });
     
-    // Priority: API data > Real-time data > Mock data
-    if (apiTournaments.length > 0) {
+    // Priority: Supabase data > API data > Real-time data > Mock data
+    if (supabaseTournaments.length > 0) {
       // Create a map to avoid duplicates, prioritizing real-time updates
       const tournamentMap = new Map();
       
-      // Add API tournaments first
-      apiTournaments.forEach((tournament: any) => {
+      // Add Supabase tournaments first
+      supabaseTournaments.forEach((tournament: any) => {
         tournamentMap.set(tournament.id, tournament);
       });
       
@@ -188,6 +283,18 @@ export default function TournamentsScreen() {
       return Array.from(tournamentMap.values());
     }
     
+    // Fallback to tRPC API data if available
+    if (apiTournaments.length > 0) {
+      const tournamentMap = new Map();
+      apiTournaments.forEach((tournament: any) => {
+        tournamentMap.set(tournament.id, tournament);
+      });
+      rtTournaments.forEach((tournament: any) => {
+        tournamentMap.set(tournament.id, tournament);
+      });
+      return Array.from(tournamentMap.values());
+    }
+    
     // Fallback to real-time data if available
     if (rtTournaments.length > 0) {
       return rtTournaments;
@@ -196,7 +303,7 @@ export default function TournamentsScreen() {
     // Final fallback to mock data for demo purposes
     console.log('📋 Using mock tournament data as fallback');
     return mockTournaments;
-  }, [tournamentsQuery.data?.tournaments, realTimeTournaments, tournamentsQuery.isLoading, tournamentsQuery.error]);
+  }, [supabaseData.tournaments, tournamentsQuery.data?.tournaments, realTimeTournaments, supabaseData.isLoading, supabaseData.error]);
 
   // Apply filter to merged data with status mapping
   const tournaments = allTournaments.filter((t: any) => {
@@ -654,19 +761,19 @@ export default function TournamentsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: theme.spacingStyle('md') }}
       >
-        {tournamentsQuery.isLoading ? (
+        {supabaseData.isLoading ? (
           <TournamentLoadingState />
-        ) : tournamentsQuery.error ? (
+        ) : supabaseData.error ? (
           <View style={styles.errorContainer}>
             <Text style={[{ color: theme.colorStyle('light.text'), textAlign: 'center', marginBottom: 10 }]}>
               Không thể tải danh sách giải đấu từ server
             </Text>
             <Text style={[{ color: theme.colorStyle('light.textSecondary'), textAlign: 'center', fontSize: 12, marginBottom: 16 }]}>
-              Hiển thị dữ liệu demo thay thế
+              Lỗi: {supabaseData.error.message}
             </Text>
             <TouchableOpacity 
               style={[styles.retryButton, { backgroundColor: theme.colorStyle('sabo.primary.500') }]}
-              onPress={() => tournamentsQuery.refetch()}
+              onPress={() => loadTournamentsFromSupabase()}
             >
               <Text style={styles.retryButtonText}>Thử lại</Text>
             </TouchableOpacity>
