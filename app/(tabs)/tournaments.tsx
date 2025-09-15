@@ -124,7 +124,7 @@ const formatShortCurrency = (amount: number) => {
 
 export default function TournamentsScreen() {
   const theme = useTheme();
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'upcoming' | 'live' | 'completed'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'registration_open' | 'in_progress' | 'completed'>('all');
   const [currentView, setCurrentView] = useState<'list' | 'detail' | 'ranking'>('list');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
 
@@ -136,44 +136,80 @@ export default function TournamentsScreen() {
     clearUpdate 
   } = useRealTimeTournament();
   
-  // TRPC queries for real data
+  // TRPC queries for real data with optimized caching
   const tournamentsQuery = trpc.tournaments.list.useQuery({ 
-    status: selectedFilter === 'all' ? 'all' : selectedFilter,
+    status: selectedFilter,
     limit: 20 
   }, {
     retry: 3,
     refetchOnWindowFocus: false,
-    staleTime: 30000 // 30 seconds
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 30000 // Auto-refresh every 30 seconds
   });
   
-  // Merge API data with real-time updates
+  // Handle query state changes
+  React.useEffect(() => {
+    if (tournamentsQuery.error) {
+      console.error('🚨 Tournament query error:', tournamentsQuery.error);
+    }
+    if (tournamentsQuery.data) {
+      console.log('✅ Tournament query success:', tournamentsQuery.data?.tournaments?.length || 0, 'tournaments');
+    }
+  }, [tournamentsQuery.error, tournamentsQuery.data]);
+  
+  // Merge API data with real-time updates and fallback logic
   const allTournaments = React.useMemo(() => {
     const apiTournaments = tournamentsQuery.data?.tournaments || [];
     const rtTournaments = realTimeTournaments || [];
     
-    // If API data is empty, use mock data as fallback
-    const baseTournaments = apiTournaments.length > 0 ? apiTournaments : mockTournaments;
-    
-    // Create a map to avoid duplicates, prioritizing real-time data
-    const tournamentMap = new Map();
-    
-    // Add base tournaments first
-    baseTournaments.forEach((tournament: any) => {
-      tournamentMap.set(tournament.id, tournament);
+    console.log('🔄 Tournament data merge:', {
+      apiCount: apiTournaments.length,
+      rtCount: rtTournaments.length,
+      isLoading: tournamentsQuery.isLoading,
+      isError: !!tournamentsQuery.error
     });
     
-    // Override with real-time tournaments (more recent data)
-    rtTournaments.forEach((tournament: any) => {
-      tournamentMap.set(tournament.id, tournament);
-    });
+    // Priority: API data > Real-time data > Mock data
+    if (apiTournaments.length > 0) {
+      // Create a map to avoid duplicates, prioritizing real-time updates
+      const tournamentMap = new Map();
+      
+      // Add API tournaments first
+      apiTournaments.forEach((tournament: any) => {
+        tournamentMap.set(tournament.id, tournament);
+      });
+      
+      // Override with real-time tournaments (more recent data)
+      rtTournaments.forEach((tournament: any) => {
+        tournamentMap.set(tournament.id, tournament);
+      });
+      
+      return Array.from(tournamentMap.values());
+    }
     
-    return Array.from(tournamentMap.values());
-  }, [tournamentsQuery.data?.tournaments, realTimeTournaments]);
+    // Fallback to real-time data if available
+    if (rtTournaments.length > 0) {
+      return rtTournaments;
+    }
+    
+    // Final fallback to mock data for demo purposes
+    console.log('📋 Using mock tournament data as fallback');
+    return mockTournaments;
+  }, [tournamentsQuery.data?.tournaments, realTimeTournaments, tournamentsQuery.isLoading, tournamentsQuery.error]);
 
-  // Apply filter to merged data
-  const tournaments = allTournaments.filter((t: any) => 
-    selectedFilter === 'all' || t.status === selectedFilter
-  );
+  // Apply filter to merged data with status mapping
+  const tournaments = allTournaments.filter((t: any) => {
+    if (selectedFilter === 'all') return true;
+    
+    // Map frontend filter to backend status
+    const statusMap: Record<string, string[]> = {
+      'registration_open': ['upcoming', 'registration_open'],
+      'in_progress': ['live', 'in_progress'],
+      'completed': ['completed']
+    };
+    
+    return statusMap[selectedFilter]?.includes(t.status) || false;
+  });
   
   const joinMutation = trpc.tournaments.join.useMutation({
     onSuccess: (result: { success: boolean; message: string }) => {
@@ -532,7 +568,7 @@ export default function TournamentsScreen() {
         <View style={styles.quickStats}>
           <View style={styles.quickStatItem}>
             <Text style={[styles.quickStatNumber, { color: theme.colorStyle('sabo.primary.500') }]}>
-              {tournaments.filter(t => t.status === 'upcoming').length}
+              {tournaments.filter(t => ['upcoming', 'registration_open'].includes(t.status)).length}
             </Text>
             <Text style={[styles.quickStatLabel, { color: theme.colorStyle('light.textSecondary') }]}>
               Sắp diễn ra
@@ -540,7 +576,7 @@ export default function TournamentsScreen() {
           </View>
           <View style={styles.quickStatItem}>
             <Text style={[styles.quickStatNumber, { color: '#10B981' }]}>
-              {tournaments.filter(t => t.status === 'live').length}
+              {tournaments.filter(t => ['live', 'in_progress'].includes(t.status)).length}
             </Text>
             <Text style={[styles.quickStatLabel, { color: theme.colorStyle('light.textSecondary') }]}>
               Đang live
@@ -548,7 +584,7 @@ export default function TournamentsScreen() {
           </View>
           <View style={styles.quickStatItem}>
             <Text style={[styles.quickStatNumber, { color: theme.colorStyle('light.text') }]}>
-              {tournaments.reduce((sum, t) => sum + t.current_players, 0)}
+              {tournaments.reduce((sum: number, t: any) => sum + (t.current_players || 0), 0)}
             </Text>
             <Text style={[styles.quickStatLabel, { color: theme.colorStyle('light.textSecondary') }]}>
               Người chơi
@@ -562,8 +598,8 @@ export default function TournamentsScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll}>
           {[
             { key: 'all', label: 'Tất cả', icon: Trophy },
-            { key: 'upcoming', label: 'Sắp diễn ra', icon: Calendar },
-            { key: 'live', label: 'Đang live', icon: TrendingUp },
+            { key: 'registration_open', label: 'Sắp diễn ra', icon: Calendar },
+            { key: 'in_progress', label: 'Đang live', icon: TrendingUp },
             { key: 'completed', label: 'Đã kết thúc', icon: Award },
           ].map((filter) => {
             const Icon = filter.icon;
