@@ -7,7 +7,7 @@ export const getTournaments = publicProcedure
     limit: z.number().optional().default(10),
     club_id: z.string().optional()
   }))
-  .query(async ({ input, ctx }) => {
+  .query(async ({ input, ctx }: { input: any; ctx: any }) => {
     const startTime = Date.now();
     
     try {
@@ -21,7 +21,7 @@ export const getTournaments = publicProcedure
       let query = ctx.supabase
         .from('tournaments')
         .select(`
-          tournament_id,
+          id,
           name,
           description,
           max_participants,
@@ -29,7 +29,7 @@ export const getTournaments = publicProcedure
           total_prize,
           status,
           club_id,
-          created_time,
+          created_at,
           start_time,
           registration_deadline
         `);
@@ -46,7 +46,7 @@ export const getTournaments = publicProcedure
 
       // Apply limit and ordering
       query = query
-        .order('created_time', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(input.limit);
 
       const { data: tournaments, error } = await query;
@@ -63,12 +63,12 @@ export const getTournaments = publicProcedure
       }
 
       // Transform data efficiently
-      const transformedTournaments = (tournaments || []).map((tournament) => {
+      const transformedTournaments = (tournaments || []).map((tournament: any) => {
         // For now, use mock participant count since we simplified the query
         const participantCount = Math.floor(Math.random() * tournament.max_participants || 16);
           
         return {
-          id: tournament.tournament_id,
+          id: tournament.id,
           title: tournament.name,
           description: tournament.description || 'Giải đấu bi-a chuyên nghiệp',
           image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
@@ -86,7 +86,7 @@ export const getTournaments = publicProcedure
           status: tournament.status === 'registration_open' ? 'upcoming' : 
                   tournament.status === 'in_progress' ? 'live' : 'completed',
           club_id: tournament.club_id,
-          created_at: tournament.created_time
+          created_at: tournament.created_at
         };
       });
 
@@ -168,7 +168,7 @@ export const joinTournament = publicProcedure
   .input(z.object({ 
     tournamentId: z.string() 
   }))
-  .mutation(async ({ input, ctx }) => {
+  .mutation(async ({ input, ctx }: { input: any; ctx: any }) => {
     try {
       // For now, we'll allow anonymous joins, but in production should require auth
       const userId = ctx.user?.id || 'anonymous-user';
