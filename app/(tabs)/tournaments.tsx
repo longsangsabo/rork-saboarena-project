@@ -327,7 +327,7 @@ export default function TournamentsScreen() {
                 styles.tournamentTitle,
                 { 
                   color: theme.colorStyle('light.text'),
-                  ...theme.fontStyle('headingSmall')
+                  ...theme.fontStyle('h4')
                 }
               ]}>
                 {tournament.title}
@@ -504,7 +504,7 @@ export default function TournamentsScreen() {
             styles.headerTitle,
             { 
               color: theme.colorStyle('light.text'),
-              ...theme.fontStyle('headingLarge')
+              ...theme.fontStyle('h1')
             }
           ]}>
             Giải đấu

@@ -29,6 +29,17 @@ const createTheme = (): Theme => ({
   // Convert typography preset to React Native style
   fontStyle: (preset) => {
     const style = typography[preset];
+    
+    if (!style) {
+      console.warn(`Typography preset '${preset}' not found, using body as fallback`);
+      const fallbackStyle = typography.body;
+      return {
+        fontSize: parseInt(fallbackStyle.fontSize),
+        fontWeight: 'normal',
+        lineHeight: parseInt(fallbackStyle.lineHeight),
+      } as TextStyle;
+    }
+    
     // Map font weight strings to React Native acceptable values
     const fontWeightMap: Record<string, TextStyle['fontWeight']> = {
       '300': '300',
