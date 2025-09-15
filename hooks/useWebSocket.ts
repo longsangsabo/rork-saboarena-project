@@ -127,36 +127,53 @@ export function useWebSocketSender() {
   return { sendMessage };
 }
 
+// Tournament update notification interface
+interface TournamentUpdate {
+  type: 'started' | 'ended' | 'player_joined' | 'player_left';
+  tournamentName: string;
+  message: string;
+  timestamp: string;
+}
+
 // Real-time tournament updates hook
-export function useRealTimeTournament(tournamentId?: string) {
-  const [tournamentData, setTournamentData] = useState<any>(null);
+export function useRealTimeTournament() {
+  const [tournaments, setTournaments] = useState<any[] | null>(null);
+  const [tournamentUpdate, setTournamentUpdate] = useState<TournamentUpdate | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const clearUpdate = useCallback(() => {
+    setTournamentUpdate(null);
+  }, []);
+
   useEffect(() => {
-    if (!tournamentId) return;
-
-    setIsLoading(true);
-
-    // Mock tournament updates
+    // Mock tournament updates for development
     if (__DEV__) {
-      setTimeout(() => {
-        setTournamentData({
-          id: tournamentId,
-          status: 'live',
-          participants: [],
-          matches: []
-        });
-        setIsLoading(false);
-      }, 1000);
+      // Simulate receiving tournament updates
+      const interval = setInterval(() => {
+        // Randomly trigger tournament notifications for testing
+        if (Math.random() > 0.98) {
+          setTournamentUpdate({
+            type: 'player_joined',
+            tournamentName: 'SABO Championship 2025',
+            message: 'Có người chơi mới tham gia!',
+            timestamp: new Date().toISOString()
+          });
+        }
+      }, 10000);
+
+      return () => clearInterval(interval);
     }
 
+    // In production, listen to WebSocket messages for tournament updates
     return () => {
-      setIsLoading(false);
+      // Cleanup listeners
     };
-  }, [tournamentId]);
+  }, []);
 
   return {
-    tournamentData,
+    tournaments,
+    tournamentUpdate,
+    clearUpdate,
     isLoading
   };
 }

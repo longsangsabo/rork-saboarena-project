@@ -140,6 +140,9 @@ export default function TournamentsScreen() {
   const tournamentsQuery = trpc.tournaments.list.useQuery({ 
     status: selectedFilter === 'all' ? undefined : selectedFilter,
     limit: 20 
+  }, {
+    retry: false,
+    refetchOnWindowFocus: false
   });
   
   // Merge API data with real-time updates
@@ -168,7 +171,7 @@ export default function TournamentsScreen() {
     selectedFilter === 'all' || t.status === selectedFilter
   );
   
-  const joinMutation = trpc.tournaments.join.useMutation({
+  const joinMutation = trpc.tournaments.list.joinTournament.useMutation({
     onSuccess: () => {
       Alert.alert('Thành công', 'Đã tham gia giải đấu thành công!');
       tournamentsQuery.refetch();
@@ -601,7 +604,7 @@ export default function TournamentsScreen() {
         {tournamentsQuery.isLoading ? (
           <TournamentLoadingState />
         ) : tournamentsQuery.error ? (
-          <View style={{ padding: 20, alignItems: 'center' }}>
+          <View style={styles.errorContainer}>
             <Text style={[{ color: theme.colorStyle('light.text'), textAlign: 'center', marginBottom: 10 }]}>
               Không thể tải danh sách giải đấu
             </Text>
@@ -836,5 +839,9 @@ const styles = StyleSheet.create({
   connectionStatusText: {
     fontSize: 10,
     fontWeight: '500',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
   },
 });
