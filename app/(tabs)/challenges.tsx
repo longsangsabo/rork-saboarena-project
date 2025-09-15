@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -18,7 +18,8 @@ import {
   ChallengeActions
 } from '@/components/shared';
 import { AppHeader } from '@/components/layout';
-import { Users, Trophy, X, Search, Plus, Filter, MapPin, Clock, Zap } from 'lucide-react-native';
+import { Users, Trophy, X, Search, Plus, Filter, MapPin, Clock, Zap, Wifi, WifiOff } from 'lucide-react-native';
+import { useRealTimeChallenge, useWebSocketConnection } from '@/hooks/useWebSocket';
 import { getChallengesByStatus, type Challenge } from '@/lib/demo-data/challenges-data';
 
 export default function ChallengesScreen() {
@@ -27,12 +28,41 @@ export default function ChallengesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const insets = useSafeAreaInsets();
 
+  // WebSocket real-time challenge updates
+  const { isConnected, status } = useWebSocketConnection();
+  const { 
+    challenges: realTimeChallenges, 
+    newChallengeNotification,
+    clearNotification 
+  } = useRealTimeChallenge();
+
   // TRPC queries with correct mapping
   const challengesQuery = trpc.challenges.list.useQuery({ 
     type: mainTab, // 'giaoluu' | 'thachdau' based on main tab selection
     status: activeTab, // 'waiting' | 'live' | 'finished' for sub-tab
     limit: 10 
   });
+
+  // Merge API data with real-time updates
+  const allChallenges = React.useMemo(() => {
+    const apiChallenges = challengesQuery.data || [];
+    const rtChallenges = realTimeChallenges || [];
+    
+    // Create a map to avoid duplicates, prioritizing real-time data
+    const challengeMap = new Map();
+    
+    // Add API challenges first
+    apiChallenges.forEach(challenge => {
+      challengeMap.set(challenge.id, challenge);
+    });
+    
+    // Override with real-time challenges (more recent data)
+    rtChallenges.forEach(challenge => {
+      challengeMap.set(challenge.id, challenge);
+    });
+    
+    return Array.from(challengeMap.values());
+  }, [challengesQuery.data, realTimeChallenges]);
   
   const joinChallengeMutation = trpc.challenges.join?.useMutation({
     onSuccess: () => {
@@ -75,13 +105,31 @@ export default function ChallengesScreen() {
     setActiveTab(tabKey as 'waiting' | 'live' | 'finished');
   };
 
-  // Use real data or fallback to mock data
-  const challengesData = challengesQuery.data || getChallengesByStatus(activeTab);
-  const challenges = Array.isArray(challengesData) ? challengesData : challengesData.challenges || [];
+  // Use merged data from API and WebSocket
+  const challenges = allChallenges.filter(challenge => 
+    challenge.status === activeTab && challenge.type === mainTab
+  );
   
   // Handle loading and error states
   const isLoading = challengesQuery.isLoading;
   const hasError = challengesQuery.error;
+
+  // Handle new challenge notifications
+  useEffect(() => {
+    if (newChallengeNotification) {
+      Alert.alert(
+        'Thách đấu mới!',
+        `${newChallengeNotification.challengerName} đã tạo thách đấu mới`,
+        [
+          { text: 'Bỏ qua', onPress: clearNotification },
+          { text: 'Xem', onPress: () => {
+            // Navigate to challenge details
+            clearNotification();
+          }}
+        ]
+      );
+    }
+  }, [newChallengeNotification, clearNotification]);
 
   return (
     <View style={styles.container}>
@@ -113,6 +161,24 @@ export default function ChallengesScreen() {
         }}
       />
       
+      {/* WebSocket Connection Status */}
+      <View style={[
+        styles.connectionStatus,
+        { backgroundColor: isConnected ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)' }
+      ]}>
+        {isConnected ? (
+          <Wifi size={12} color="#22c55e" />
+        ) : (
+          <WifiOff size={12} color="#ef4444" />
+        )}
+        <Text style={[
+          styles.statusText,
+          { color: isConnected ? '#22c55e' : '#ef4444' }
+        ]}>
+          {isConnected ? 'Kết nối' : 'Mất kết nối'}
+        </Text>
+      </View>
+
       {/* Main Tab Navigation - Giao lưu vs Thách đấu */}
       <View style={styles.mainTabContainer}>
         <TouchableOpacity 
@@ -522,7 +588,24 @@ const styles = StyleSheet.create({
     color: 'white',
   },
 
-  
+  // WebSocket connection status styles
+  connectionStatus: {
+    position: 'absolute',
+    top: 10,
+    right: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    zIndex: 10,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '500',
+  },
+
   // Content styles
   scrollView: {
     flex: 1,
