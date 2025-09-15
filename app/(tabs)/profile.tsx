@@ -19,13 +19,17 @@ import {
   ProfileActions
 } from '@/components/profile';
 import { TournamentListItem } from '@/components/tournaments';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfileScreen() {
   const theme = useTheme();
+  const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'tournaments' | 'challenges'>('tournaments');
   
   // TRPC queries for real data
-  const profileQuery = trpc.user.getProfile.useQuery({ userId: '1' });
+  const profileQuery = trpc.user.getProfile.useQuery({ 
+    userId: authUser?.id || '1' // Use auth user ID or fallback
+  });
   const gameDataQuery = trpc.user.getGameData.useQuery();
   const tournamentsQuery = trpc.tournaments.list.useQuery({ 
     status: 'registration_open',

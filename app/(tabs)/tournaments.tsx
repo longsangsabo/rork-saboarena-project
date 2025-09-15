@@ -125,14 +125,21 @@ export default function TournamentsScreen() {
   const [currentView, setCurrentView] = useState<'list' | 'detail' | 'ranking'>('list');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   
-  // Use mock data for now, can be replaced with real API
-  const tournaments = mockTournaments.filter(t => 
+  // TRPC queries for real data
+  const tournamentsQuery = trpc.tournaments.list.useQuery({ 
+    status: selectedFilter === 'all' ? undefined : selectedFilter,
+    limit: 20 
+  });
+  
+  // Use real data or fallback to mock data
+  const tournaments = tournamentsQuery.data?.tournaments || mockTournaments.filter(t => 
     selectedFilter === 'all' || t.status === selectedFilter
   );
   
   const joinMutation = trpc.tournaments.join.useMutation({
     onSuccess: () => {
       Alert.alert('Thành công', 'Đã tham gia giải đấu thành công!');
+      tournamentsQuery.refetch();
     },
     onError: (error: any) => {
       Alert.alert('Lỗi', error.message || 'Không thể tham gia giải đấu');
@@ -511,7 +518,18 @@ export default function TournamentsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: theme.spacingStyle('md') }}
       >
-        {tournaments.length > 0 ? (
+        {tournamentsQuery.isLoading ? (
+          <TournamentLoadingState />
+        ) : tournamentsQuery.error ? (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text style={[{ color: theme.colorStyle('light.text'), textAlign: 'center', marginBottom: 10 }]}>
+              Không thể tải danh sách giải đấu
+            </Text>
+            <Text style={[{ color: theme.colorStyle('light.textSecondary'), textAlign: 'center', fontSize: 12 }]}>
+              Sử dụng dữ liệu demo thay thế
+            </Text>
+          </View>
+        ) : tournaments.length > 0 ? (
           tournaments.map(renderTournamentCard)
         ) : (
           <TournamentEmptyState />

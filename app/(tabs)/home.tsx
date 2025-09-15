@@ -17,8 +17,9 @@ import { useTheme } from '@/providers/ThemeProvider';
 import { AppHeader } from '@/components/layout';
 import { TabNavigation } from '@/components/shared';
 import { RankBadge } from '@/components/shared';
+import { trpc } from '@/lib/trpc';
 
-// Mock feed data
+// Mock feed data (fallback for when API is not ready)
 const mockFeedData = [
   {
     id: '1',
@@ -107,6 +108,21 @@ export default function HomeScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // TRPC queries for real data
+  const feedQuery = trpc.social?.getFeed?.useQuery({ 
+    type: activeTab,
+    limit: 10,
+    offset: currentIndex * 10
+  }) || { data: null, isLoading: false, error: null };
+
+  const challengesQuery = trpc.challenges?.list?.useQuery({
+    status: 'waiting',
+    limit: 5
+  }) || { data: null, isLoading: false, error: null };
+
+  // Use real data or fallback to mock data
+  const feedData = feedQuery.data?.posts || mockFeedData;
+
   const screenHeight = Dimensions.get('window').height;
 
   const handleScroll = (event: any) => {
@@ -155,7 +171,20 @@ export default function HomeScreen() {
           scrollEventThrottle={16}
           style={styles.scrollView}
         >
-          {mockFeedData.map((item, index) => (
+          {feedQuery.isLoading ? (
+            <View style={[styles.feedItem, { height: screenHeight, justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={[styles.loadingText, { color: theme.colorStyle('light.text') }]}>
+                Đang tải feed...
+              </Text>
+            </View>
+          ) : feedQuery.error ? (
+            <View style={[styles.feedItem, { height: screenHeight, justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={[styles.errorText, { color: theme.colorStyle('light.text') }]}>
+                Không thể tải feed. Sử dụng dữ liệu demo.
+              </Text>
+            </View>
+          ) : (
+            feedData.map((item, index) => (
             <View key={item.id} style={[styles.feedItem, { height: screenHeight }]}>
               <ImageBackground
                 source={{ uri: item.content.backgroundImage }}
@@ -262,12 +291,13 @@ export default function HomeScreen() {
                 </View>
               </ImageBackground>
             </View>
-          ))}
+            ))
+          )}
         </ScrollView>
 
         {/* Feed Indicator */}
         <View style={[styles.feedIndicator, { bottom: insets.bottom + 20 }]}>
-          {mockFeedData.map((_, index) => (
+          {feedData.map((_, index) => (
             <View
               key={index}
               style={[
@@ -427,5 +457,14 @@ const styles = StyleSheet.create({
     width: 4,
     height: 20,
     borderRadius: 2,
+  },
+  loadingText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    textAlign: 'center',
+    opacity: 0.7,
   },
 });

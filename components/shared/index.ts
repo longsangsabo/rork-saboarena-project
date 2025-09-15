@@ -11,6 +11,7 @@ export { RankingCard } from './RankingCard';
 
 export { UniversalTabs } from './UniversalTabs';
 export { UniversalCard } from './UniversalCard';
+export { ErrorState, LoadingState } from './ErrorAndLoadingStates';
 
 // Tournament components - temporary exports (will be removed when tabs are recreated)
 export { TournamentCard } from '../tournaments/TournamentCard';

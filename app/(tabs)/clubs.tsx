@@ -15,15 +15,18 @@ import {
 } from '@/components/shared';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
 import { getChallengesByStatus } from '@/lib/demo-data/challenges-data';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ClubsScreen() {
   const theme = useTheme();
+  const { user } = useAuth();
   const [mainTab, setMainTab] = useState<'clb' | 'discover'>('clb');
   const [activeTab, setActiveTab] = useState<'members' | 'tournaments' | 'ranking' | 'challenges'>('members');
   const [tournamentTab, setTournamentTab] = useState<'ready' | 'live' | 'done'>('ready');
   const [rankingTab, setRankingTab] = useState<'prizepool' | 'elo' | 'spa'>('prizepool');
   const [challengeTab, setChallengeTab] = useState<'waiting' | 'live' | 'finished'>('waiting');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedClubId, setSelectedClubId] = useState<string>('1'); // Dynamic club selection
 
   // Define tabs for UniversalTabs
   const challengeTabs = [
@@ -38,7 +41,9 @@ export default function ClubsScreen() {
   
   // TRPC queries for real data
   const clubsQuery = trpc.clubs.list.useQuery({ limit: 10 });
-  const membersQuery = trpc.clubs.getMembers.useQuery({ clubId: '1' });
+  const membersQuery = trpc.clubs.getMembers.useQuery({ 
+    clubId: selectedClubId // Use dynamic club ID
+  });
   
   // Use real data or fallback to mock data
   const mockClub = {

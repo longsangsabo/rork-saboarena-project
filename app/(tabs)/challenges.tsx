@@ -27,13 +27,10 @@ export default function ChallengesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const insets = useSafeAreaInsets();
 
-  // Map UI tab to backend type
-  const getBackendType = (tab: 'waiting' | 'live' | 'finished'): 'giaoluu' | 'thachdau' => {
-    return tab === 'live' ? 'thachdau' : 'giaoluu';
-  };
-
+  // TRPC queries with correct mapping
   const challengesQuery = trpc.challenges.list.useQuery({ 
-    type: getBackendType(activeTab),
+    type: mainTab, // 'giaoluu' | 'thachdau' based on main tab selection
+    status: activeTab, // 'waiting' | 'live' | 'finished' for sub-tab
     limit: 10 
   });
   
@@ -41,6 +38,9 @@ export default function ChallengesScreen() {
     onSuccess: () => {
       Alert.alert('Thành công', 'Đã tham gia thách đấu!');
       challengesQuery.refetch();
+    },
+    onError: (error: any) => {
+      Alert.alert('Lỗi', error.message || 'Không thể tham gia thách đấu');
     }
   });
 
@@ -75,9 +75,13 @@ export default function ChallengesScreen() {
     setActiveTab(tabKey as 'waiting' | 'live' | 'finished');
   };
 
-  // Use mock data for now, replace with real data when available
+  // Use real data or fallback to mock data
   const challengesData = challengesQuery.data || getChallengesByStatus(activeTab);
   const challenges = Array.isArray(challengesData) ? challengesData : challengesData.challenges || [];
+  
+  // Handle loading and error states
+  const isLoading = challengesQuery.isLoading;
+  const hasError = challengesQuery.error;
 
   return (
     <View style={styles.container}>
